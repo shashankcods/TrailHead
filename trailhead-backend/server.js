@@ -1,6 +1,6 @@
 import "./src/config/env.js";
-console.log("✅ ENV file loaded:", process.cwd());
-console.log("✅ ORS_API_KEY =", process.env.ORS_API_KEY);
+// console.log("✅ ENV file loaded:", process.cwd());
+// console.log("✅ ORS_API_KEY =", process.env.ORS_API_KEY);
 import app from "./src/app.js";
 import { connectDB } from "./src/db/connect.js";
 
