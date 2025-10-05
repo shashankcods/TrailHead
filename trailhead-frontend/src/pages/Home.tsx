@@ -5,7 +5,6 @@ const Home: React.FC = () => {
   return (
     <div>
       <LandingPage />
-      {/* Future components: InputForm, TripSummary, etc. */}
     </div>
   );
 };

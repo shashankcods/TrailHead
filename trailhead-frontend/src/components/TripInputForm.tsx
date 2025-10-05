@@ -1,7 +1,6 @@
-"use client"
-
 import React, { useState, useRef, useEffect } from "react"
 import { Calendar } from "./ui/calendar"
+import type { DateRange } from "react-day-picker"
 
 interface TripInputFormProps {
   onSubmit: (data: {
@@ -15,23 +14,18 @@ interface TripInputFormProps {
 export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
   const [source, setSource] = useState("")
   const [destination, setDestination] = useState("")
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date())
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date())
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
-  const [showStartCalendar, setShowStartCalendar] = useState(false)
-  const [showEndCalendar, setShowEndCalendar] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [picking, setPicking] = useState<"from" | "to" | undefined>(undefined)
 
-  const startRef = useRef<HTMLDivElement>(null)
-  const endRef = useRef<HTMLDivElement>(null)
+  const rangeRef = useRef<HTMLDivElement>(null)
 
-  // Close calendars when clicking outside
+  // Close calendar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (startRef.current && !startRef.current.contains(event.target as Node)) {
-        setShowStartCalendar(false)
-      }
-      if (endRef.current && !endRef.current.contains(event.target as Node)) {
-        setShowEndCalendar(false)
+      if (rangeRef.current && !rangeRef.current.contains(event.target as Node)) {
+        setShowCalendar(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -40,7 +34,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit({ source, destination, startDate, endDate })
+    onSubmit({ source, destination, startDate: dateRange?.from, endDate: dateRange?.to })
   }
 
   return (
@@ -66,68 +60,94 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
         className="flex-1 min-w-[180px] p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
       />
 
-      {/* Depart */}
-      <div ref={startRef} className="relative flex-1 min-w-[160px]">
-      <input
-          type="text"
-          placeholder="Depart"
-          value={startDate ? startDate.toLocaleDateString() : ""}
-          readOnly
-          onClick={() => setShowStartCalendar(!showStartCalendar)}
-          className="flex-1 min-w-[160px] p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
-        />
-        {showStartCalendar && (
+      {/* Depart / Return (Range) */}
+      <div ref={rangeRef} className="relative flex-1 min-w-[360px]">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Depart"
+            value={dateRange?.from ? dateRange.from.toLocaleDateString() : ""}
+            readOnly
+            onClick={() => {
+              setPicking("from")
+              setShowCalendar(!showCalendar)
+            }}
+            className="flex-1 min-w-[160px] p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
+          />
+          <input
+            type="text"
+            placeholder="Return"
+            value={dateRange?.to ? dateRange.to.toLocaleDateString() : ""}
+            readOnly
+            onClick={() => {
+              setPicking("to")
+              setShowCalendar(!showCalendar)
+            }}
+            className="flex-1 min-w-[160px] p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
+          />
+        </div>
+        {showCalendar && (
           <div className="absolute top-full mt-2 z-50">
             <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={(date) => {
-                    setStartDate(date)
-                    setShowStartCalendar(false)
-                }}
-                defaultMonth={startDate}
-                className="rounded-lg border bg-transparent backdrop-blur-sm"
-                classNames={{
-                    today: "border border-white text-white bg-transparent font-semibold rounded-lg"
-                }}
+              mode="range"
+              numberOfMonths={2}
+              selected={dateRange}
+              onDayClick={(day) => {
+                setDateRange((prev) => {
+                  const current = prev ?? { from: undefined, to: undefined }
+                  let next: DateRange = { from: current.from, to: current.to }
+
+                  if (picking === "from") {
+                    if (current.to && day > current.to) {
+                      next = { from: day, to: undefined }
+                    } else {
+                      next = { from: day, to: current.to }
+                    }
+                    // After selecting start, auto-advance to picking return
+                    if (!next.to) {
+                      setPicking("to")
+                    }
+                  } else if (picking === "to") {
+                    if (current.from && day < current.from) {
+                      next = { from: day, to: current.from }
+                    } else {
+                      next = { from: current.from ?? day, to: day }
+                    }
+                  } else {
+                    // No explicit picking: mimic natural range selection
+                    if (!current.from || (current.from && current.to)) {
+                      next = { from: day, to: undefined }
+                      setPicking("to")
+                    } else if (current.from && !current.to) {
+                      if (day < current.from) {
+                        next = { from: day, to: current.from }
+                      } else {
+                        next = { from: current.from, to: day }
+                      }
+                    }
+                  }
+
+                  // Auto close if both ends chosen
+                  if (next.from && next.to) {
+                    setShowCalendar(false)
+                    setPicking(undefined)
+                  }
+                  return next
+                })
+              }}
+              defaultMonth={dateRange?.from ?? dateRange?.to ?? new Date()}
+              className="rounded-lg border bg-black/20 backdrop-blur-sm"
+              classNames={{
+                today: "border border-white text-white bg-transparent font-semibold rounded-lg"
+              }}
             />
           </div>
         )}
       </div>
-
-      {/* Return */}
-      <div ref={endRef} className="relative flex-1 min-w-[160px]">
-      <input
-          type="text"
-          placeholder="Return"
-          value={endDate ? endDate.toLocaleDateString() : ""}
-          readOnly
-          onClick={() => setShowEndCalendar(!showEndCalendar)}
-          className="flex-1 min-w-[160px] p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
-        />
-        {showEndCalendar && (
-          <div className="absolute top-full mt-2 z-50">
-            <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={(date) => {
-                    setEndDate(date)
-                    setShowEndCalendar(false)
-                }}
-                defaultMonth={endDate}
-                className="rounded-lg border bg-transparent backdrop-blur-sm"
-                classNames={{
-                    today: "border border-white text-white bg-transparent font-semibold rounded-lg"
-                }}
-            /> 
-          </div>
-        )}
-      </div>
-
       {/* Submit */}
       <button
         type="submit"
-        className="bg-white text-[#3A1C71] font-semibold py-2 px-6 rounded-lg hover:scale-105 hover:bg-gray-100 transition duration-300"
+        className="bg-white text-[#3A1C71] font-semibold py-2 px-10 rounded-lg hover:scale-105 hover:bg-gray-100 transition duration-300 shrink-0"
       >
         Plan My Trip
       </button>
