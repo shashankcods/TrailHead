@@ -1,10 +1,24 @@
 import axios from "axios";
 
-export const getWeatherFromOpenMeteo = async (lat, lon, start_date, end_date) => {
+export const getWeatherFromOpenMeteo = async (destination, start_date, end_date) => {
   try {
+    const geoUrl = "https://geocoding-api.open-meteo.com/v1/search";
+    const geoRes = await axios.get(geoUrl, { params: {name: destination } });
+    const location = geoRes.data.results?.[0];
+
+    if (!location) {
+      throw new Error("Location not found");
+    }
+
+    const latitude = location.latitude;
+    const longitude = location.longitude;
+    const country = location.country || "Unknown";
+
+    console.log(`Geocoded ${destination} → ${latitude}, ${longitude}`)
+
     const params = {
-      latitude: lat,
-      longitude: lon,
+      latitude,
+      longitude,
       daily: "temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode",
       timezone: "auto",
     };
@@ -14,13 +28,11 @@ export const getWeatherFromOpenMeteo = async (lat, lon, start_date, end_date) =>
       params.end_date = end_date;
     }
 
-    console.log("Fetching forecast for:", params);
+    console.log("Fetching forecast with parameters:", params);
 
     const response = await axios.get("https://api.open-meteo.com/v1/forecast", { params });
-
-    console.log("Forecast API Status:", response.status);
-
     const daily = response.data.daily;
+
     if (!daily || !daily.time) {
       throw new Error("Invalid response from Open-Meteo API");
     }
@@ -33,7 +45,7 @@ export const getWeatherFromOpenMeteo = async (lat, lon, start_date, end_date) =>
       condition: weatherCodeToText(daily.weathercode[i]),
     }));
 
-    return { lat, lon, forecast };
+    return { destination, country, forecast };
 
   } catch (error) {
     console.error("Weather Service Error:", error.response?.status, error.response?.data || error.message);
