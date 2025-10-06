@@ -37,7 +37,6 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
             min={100}
             max={100000}
             step={50}
- // sets slider width
           />
         </div>
       </div>

@@ -8,6 +8,7 @@ export type Currency = {
   symbol: string
 }
 
+// using chosen currencies for now to implement currency conversion feature
 export const currencies: Currency[] = [
   { code: "USD", symbol: "$" },
   { code: "INR", symbol: "₹" },
@@ -28,6 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-white/5">
       <Link to="/">
+      {/* navbar logo redirecting to landing page */}
         <h1 className="text-white text-4xl font-bold font-family-ubuntu cursor-pointer">
           TrailHead
         </h1>
@@ -35,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
       <Listbox value={selectedCurrency} onChange={setSelectedCurrency}>
         <div className="relative w-32">
+          {/* navbar currency button */}
           <Listbox.Button className="relative w-full cursor-pointer bg-black/20 text-white border border-gray-400 rounded-md px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-white flex justify-between items-center">
             {selectedCurrency.symbol} {selectedCurrency.code}
             <ChevronUpDownIcon className="w-5 h-5 ml-2 text-white" />
@@ -44,6 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
+            {/* dropdown menu with list of currencies */}
             <Listbox.Options className="absolute mt-1 w-full bg-black/90 text-white rounded-md shadow-lg max-h-60 overflow-auto z-50">
               {currencies.map((currency) => (
                 <Listbox.Option

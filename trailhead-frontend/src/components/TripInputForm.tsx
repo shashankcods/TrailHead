@@ -192,6 +192,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
           onKeyDown={(e) => {
             if (destinationSuggestions.length === 0) return;
 
+            {/* for navigation through results displayed from OSM nomatim */}
             if (e.key === "ArrowDown") {
               e.preventDefault();
               setDestinationHighlight(
@@ -274,6 +275,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
                   const current = prev ?? { from: undefined, to: undefined };
                   let next: DateRange = { from: current.from, to: current.to };
 
+                  {/* logic of picking from and to date within the range calendar */}
                   if (picking === "from") {
                     if (current.to && day > current.to) {
                       next = { from: day, to: undefined };
