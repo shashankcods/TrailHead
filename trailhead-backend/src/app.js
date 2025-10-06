@@ -3,6 +3,7 @@ import express from "express";
 import mapsRoute from "./agents/maps/maps.route.js";
 import orchestratorRoute from "./orchestrator/orchestrator.route.js";
 import weatherRoute from "./agents/weather/weather.route.js";
+import eventsRoute from "./agents/events/events.route.js";
 
 const app = express();
 
@@ -16,5 +17,6 @@ app.get("/", (req, res) => {
 app.use("/api/maps", mapsRoute);
 app.use("/api/orchestrator", orchestratorRoute);
 app.use("/api/weather", weatherRoute);
+app.use("/api/events", eventsRoute);
 
 export default app;
