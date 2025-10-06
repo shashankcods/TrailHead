@@ -1,17 +1,25 @@
 import { getRouteFromORS } from "../agents/maps/maps.service.js";
 import { getWeatherFromOpenMeteo } from "../agents/weather/weather.service.js";
+import { getRestaurants } from "../agents/food/food.service.js";
+import { getEvents } from "../agents/events/events.service.js";
 
 export const orchestrateTripService = async (tripDetails) => {
   const { source, destination, startDate, endDate, budget } = tripDetails;
 
   try{
-    const mapsData = await getRouteFromORS(source, destination);
-    const weatherData = await getWeatherFromOpenMeteo(destination, startDate, endDate);
+    const [mapsData, weatherData, foodData, eventsData] = await Promise.all([
+      getRouteFromORS(source, destination),
+      getWeatherFromOpenMeteo(destination, startDate, endDate),
+      getRestaurants(destination),
+      getEvents(destination, startDate, endDate),
+    ]);
 
     return {
       summary: "Trip plan generated successfully!",
       maps: mapsData,
       weather: weatherData,
+      food: foodData,
+      events: eventsData,
       meta: {
         source,
         destination,
