@@ -1,10 +1,16 @@
 import React from "react";
 import LandingPage from "../components/LandingPage";
+import type { Currency } from "../components/Navbar";
 
-const Home: React.FC = () => {
+interface HomeProps {
+  selectedCurrency: Currency;
+  setSelectedCurrency: React.Dispatch<React.SetStateAction<Currency>>;
+}
+
+const Home: React.FC<HomeProps> = ({ selectedCurrency, setSelectedCurrency }) => {
   return (
     <div>
-      <LandingPage />
+      <LandingPage selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} />
     </div>
   );
 };
