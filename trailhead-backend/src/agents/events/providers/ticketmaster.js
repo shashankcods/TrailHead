@@ -3,7 +3,8 @@ import axios from "axios";
 export const getEventsFromTicketmaster = async (location, startDate, endDate) => {
   try {
     const apiKey = process.env.TICKETMASTER_KEY;
-
+    
+    // Ticketmaster Discovery API endpoint
     const res = await axios.get("https://app.ticketmaster.com/discovery/v2/events.json", {
       params: {
         apikey: apiKey,
@@ -14,8 +15,10 @@ export const getEventsFromTicketmaster = async (location, startDate, endDate) =>
       },
     });
 
+    // If no events found, return an empty array
     if (!res.data._embedded?.events) return [];
 
+    // Map response to a standard format
     return res.data._embedded.events.map((e) => ({
       source: "Ticketmaster",
       title: e.name,
