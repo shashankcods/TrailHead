@@ -17,8 +17,8 @@ const MainPage: React.FC = () => {
     <GradientBackground>
       <div className="flex flex-col min-h-screen text-white">
         <Navbar />
-        <div className="flex-grow flex items-center justify-center px-4">
-          <TripInputForm onSubmit={handleFormSubmit} />
+        <div className="flex-grow flex items-start justify-center px-4 pt-20">
+  <         TripInputForm onSubmit={handleFormSubmit} />
         </div>
       </div>
     </GradientBackground>

@@ -6,7 +6,7 @@ interface Props {
 
 const GradientBackground: React.FC<Props> = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-r from-[#3A1C71] to-[#D76D77]">
+    <div className="min-h-screen flex flex-col bg-[#0f0c29]">
       {children}
     </div>
   );
