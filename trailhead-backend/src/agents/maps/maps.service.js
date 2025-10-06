@@ -39,7 +39,7 @@ export const getRouteFromORS = async (from, to) => {
       to,
       distance_km: (summary.distance / 1000).toFixed(1),
       duration_hr: (summary.duration / 3600).toFixed(1),
-      geometry: decodedCoords, // now it’s readable!
+      // geometry: decodedCoords, // this gives the full route path, every pt on the road from one place to another
     };
   } catch (err) {
     console.error("Error:", err.message);

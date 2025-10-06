@@ -1,7 +1,7 @@
 import express from "express";
 // import cors from "cors";
 import mapsRoute from "./agents/maps/maps.route.js";
-
+import orchestratorRoute from "./orchestrator/orchestrator.route.js";
 const app = express();
 
 // app.use(cors());
@@ -12,5 +12,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/maps", mapsRoute);
+app.use("/api/orchestrator", orchestratorRoute);
 
 export default app;
