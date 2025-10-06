@@ -4,6 +4,8 @@ import mapsRoute from "./agents/maps/maps.route.js";
 import orchestratorRoute from "./orchestrator/orchestrator.route.js";
 import weatherRoute from "./agents/weather/weather.route.js";
 import eventsRoute from "./agents/events/events.route.js";
+import foodRoute from "./agents/food/food.route.js";
+import redditRoute from "./agents/reddit/reddit.route.js";
 
 const app = express();
 
@@ -18,5 +20,7 @@ app.use("/api/maps", mapsRoute);
 app.use("/api/orchestrator", orchestratorRoute);
 app.use("/api/weather", weatherRoute);
 app.use("/api/events", eventsRoute);
+app.use("/api/food", foodRoute);
+app.use("/api/reddit", redditRoute);
 
 export default app;
