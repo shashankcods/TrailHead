@@ -38,13 +38,13 @@ export const getRouteFromORS = async (from, to) => {
 
     // const decodedCoords = polyline.decode(geometry);
 
-    // Return clean route summary object
+    // Returning the route summary object
     return {
       from,
       to,
       distance_km: (summary.distance / 1000).toFixed(1),
       duration_hr: (summary.duration / 3600).toFixed(1),
-      // geometry: decodedCoords, // this gives the full route path, every pt on the road from one place to another
+      // geometry: decodedCoords, // this gives the full route path, every pt on the road, used for visual map of the route
     };
   } catch (err) {
     console.error("Error:", err.message);
