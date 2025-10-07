@@ -5,9 +5,10 @@ import MainPage from "./pages/MainPage";
 import type { Currency } from "./components/Navbar";
 
 const App: React.FC = () => {
+    // global state for currency setting (interaction b/w navbar and slider)
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>({
-    code: "USD",
-    symbol: "$",
+    code: "INR",
+    symbol: "₹",
   });
 
   return (

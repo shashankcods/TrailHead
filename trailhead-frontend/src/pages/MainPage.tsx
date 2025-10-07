@@ -11,23 +11,25 @@ interface MainPageProps {
 
 const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurrency }) => {
   const [budget, setBudget] = useState(1000)
-  const [minBudget, setMinBudget] = useState(10)
-  const [maxBudget, setMaxBudget] = useState(50000)
+  const [minBudget, setMinBudget] = useState(1000)
+  const [maxBudget, setMaxBudget] = useState(500000)
   const [exchangeRate, setExchangeRate] = useState(1)
 
   // fetching conversion rate whenever currency is changed
   useEffect(() => {
     const fetchRate = async () => {
-      if (selectedCurrency.code === "USD") {
+      // If the selected currency is INR, no conversion is needed
+      if (selectedCurrency.code === "INR") {
         setExchangeRate(1)
-        setMinBudget(10)
-        setMaxBudget(50000)
+        setMinBudget(1000)
+        setMaxBudget(5000000)
         return
       }
 
       try {
+        // Fetch rate with INR as base
         const res = await fetch(
-          `https://hexarate.paikama.co/api/rates/latest/USD?target=${selectedCurrency.code}`
+          `https://hexarate.paikama.co/api/rates/latest/INR?target=${selectedCurrency.code}`
         )
         const data = await res.json()
 
@@ -35,9 +37,9 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
           const rate = data.data.mid
           setExchangeRate(rate)
 
-          // setting new bounds of slider according to currency change
-          const newMin = Math.round(10 * rate)
-          const newMax = Math.round(50000 * rate)
+          // Calculate new slider values (rounded for neatness)
+          const newMin = Math.round((1000 * rate) / 10) * 10
+          const newMax = Math.round((500000 * rate) / 100) * 100
           const newBudget = Math.round(budget * rate)
 
           setMinBudget(newMin)
@@ -66,7 +68,6 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
 
     console.log("Sending to backend:", tripData)
 
-    // Example POST request to backend
     fetch("http://localhost:5000/api/trips", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,18 +86,18 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
         <div className="flex-grow flex flex-col items-center justify-start px-4 pt-20 space-y-5">
           <TripInputForm onSubmit={handleFormSubmit} />
 
-						<CurrencySlider
+          <CurrencySlider
             label="Trip Budget"
             value={budget}
             onChange={setBudget}
             selectedCurrency={selectedCurrency}
             min={minBudget}
             max={maxBudget}
-            step={Math.round((maxBudget - minBudget) / 100)}
+            step={Math.round((maxBudget - minBudget) / 1000)}
           />
 
           <p className="text-gray-400 text-sm">
-            1 USD = {exchangeRate.toFixed(2)} {selectedCurrency.code}
+            1 INR = {exchangeRate.toFixed(3)} {selectedCurrency.code}
           </p>
         </div>
       </div>
@@ -105,6 +106,7 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
 }
 
 export default MainPage
+
 
 
 
