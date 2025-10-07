@@ -10,8 +10,8 @@ export type Currency = {
 
 // using chosen currencies for now to implement currency conversion feature
 export const currencies: Currency[] = [
-  { code: "USD", symbol: "$" },
   { code: "INR", symbol: "₹" },
+  { code: "USD", symbol: "$" },
   { code: "EUR", symbol: "€" },
   { code: "AED", symbol: "د.إ" },
   { code: "KWD", symbol: "د.ك" },

@@ -119,7 +119,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-wrap justify-center items-center gap-6 w-full max-w-6xl bg-black/20 backdrop-blur-md p-6 rounded-2xl shadow-lg relative"
+      className="flex flex-wrap justify-center items-center gap-6 w-full max-w-6xl bg-black/20 backdrop-blur-md p-6 rounded-2xl shadow-lg relative z-1"
     >
       {/* source input */}
       <div className="w-[200px] relative">
@@ -310,10 +310,10 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
                 });
               }}
               defaultMonth={dateRange?.from ?? dateRange?.to ?? new Date()}
-              className="rounded-lg border bg-black/20 backdrop-blur-sm"
+              className="rounded-lg border bg-black"
               classNames={{
                 today:
-                  "border border-white text-white bg-transparent font-semibold rounded-lg",
+                  "border border-white text-white font-semibold rounded-lg",
               }}
             />
           </div>
