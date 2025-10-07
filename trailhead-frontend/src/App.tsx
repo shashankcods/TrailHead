@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/Home";
 import MainPage from "./pages/MainPage";
+import LoginPage from "./pages/LoginPage";
 import type { Currency } from "./components/Navbar";
 
 const App: React.FC = () => {
@@ -17,6 +18,10 @@ const App: React.FC = () => {
         <Route
           path="/"
           element={<LandingPage selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} />}
+        />
+        <Route
+          path="/auth"
+          element={<LoginPage selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} />}
         />
         <Route
           path="/main"
