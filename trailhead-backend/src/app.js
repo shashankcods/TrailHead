@@ -11,6 +11,9 @@ import foodRoute from "./agents/food/food.route.js";
 import redditRoute from "./agents/reddit/reddit.route.js";
 import accommodationRoute from "./agents/accommodation/accommodation.route.js";
 
+// Auth route
+import authRoute from "./agents/auth/auth.route.js";
+
 // Initialize express app instance
 const app = express();
 
@@ -22,6 +25,9 @@ app.use(express.json());  // Parse incoming JSON automatically
 app.get("/", (req, res) => {
     res.send("TrailHead is live");
 });
+
+// Auth routes(register/login/profile)
+app.use("/api/auth", authRoute);
 
 // Adding all the agent routes under their own base URL
 app.use("/api/maps", mapsRoute);
