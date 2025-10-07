@@ -24,7 +24,7 @@ const CurrencySlider: React.FC<CurrencySliderProps> = ({
   className,
 }) => {
   return (
-    <div className={`w-full max-w-md p-4 bg-white/10 rounded-2xl shadow-md text-white ${className ?? ""}`}>
+    <div className={`w-full max-w-md p-4 bg-white/10 rounded-2xl shadow-md text-white z-0 ${className ?? ""}`}>
       <div className="flex justify-between mb-2">
         <span className="font-medium">{label}</span>
         <span className="font-semibold">
