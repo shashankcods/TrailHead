@@ -42,7 +42,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     }
 
     try {
-      const endpoint = mode === "signin" ? "/api/login" : "/api/signup";
+      const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/register";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
