@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/Home";
 import MainPage from "./pages/MainPage";
 import type { Currency } from "./components/Navbar";
-import { AuthProvider } from "./context/AuthContext"; // <-- import this
+import { AuthProvider } from "./context/AuthContext"; 
 
 const App: React.FC = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>({
