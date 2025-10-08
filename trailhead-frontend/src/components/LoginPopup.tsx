@@ -11,7 +11,6 @@ interface LoginPopupProps {
 const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose }) => {
   const { login } = useAuth();   
   const navigate = useNavigate();     
-
   if (!isOpen) return null;
 
   // parent component of authform
