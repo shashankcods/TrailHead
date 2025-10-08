@@ -13,21 +13,16 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ selectedCurrency, setSelectedCurrency }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleButtonClick = () => {
     if (isAuthenticated) {
       navigate("/main");
     } else {
-      setIsLoginOpen(true); // <- opens popup
+      setIsLoginOpen(true); // opens popup or else navigates directly to main if already authenticated
     }
   };  
-
-  const handleLoginSuccess = () => {
-    login();          // mark user as authenticated
-    navigate("/main"); // go to main page
-  };
 
   return (
     <GradientBackground>
