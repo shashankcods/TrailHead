@@ -10,49 +10,49 @@ interface MainPageProps {
 }
 
 const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurrency }) => {
-  const [budget, setBudget] = useState(1000)
+  const [baseBudget] = useState(1000) // always in INR
+  const [budget, setBudget] = useState(baseBudget) // in selected currency
   const [minBudget, setMinBudget] = useState(1000)
   const [maxBudget, setMaxBudget] = useState(500000)
   const [exchangeRate, setExchangeRate] = useState(1)
 
   // fetching conversion rate whenever currency is changed
   useEffect(() => {
-    const fetchRate = async () => {
-      // If the selected currency is INR, no conversion is needed
-      if (selectedCurrency.code === "INR") {
-        setExchangeRate(1)
-        setMinBudget(1000)
-        setMaxBudget(5000000)
-        return
-      }
-
-      try {
-        // Fetch rate with INR as base
-        const res = await fetch(
-          `https://hexarate.paikama.co/api/rates/latest/INR?target=${selectedCurrency.code}`
-        )
-        const data = await res.json()
-
-        if (data?.data?.mid) {
-          const rate = data.data.mid
-          setExchangeRate(rate)
-
-          // Calculate new slider values (rounded for neatness)
-          const newMin = Math.round((1000 * rate) / 10) * 10
-          const newMax = Math.round((500000 * rate) / 100) * 100
-          const newBudget = Math.round(budget * rate)
-
-          setMinBudget(newMin)
-          setMaxBudget(newMax)
-          setBudget(newBudget)
-        }
-      } catch (error) {
-        console.error("Error fetching exchange rate:", error)
-      }
+  const fetchRate = async () => {
+    if (selectedCurrency.code === "INR") {
+      setExchangeRate(1)
+      setMinBudget(1000)
+      setMaxBudget(500000)
+      setBudget(baseBudget) // use baseBudget as initial budget
+      return
     }
 
-    fetchRate()
-  }, [selectedCurrency])
+    try {
+      const res = await fetch(
+        `https://hexarate.paikama.co/api/rates/latest/INR?target=${selectedCurrency.code}`
+      )
+      const data = await res.json()
+
+      if (data?.data?.mid) {
+        const rate = data.data.mid
+        setExchangeRate(rate)
+
+        const newMin = Math.round(1000 * rate)
+        const newMax = Math.round(500000 * rate)
+        const newBudget = Math.round(baseBudget * rate)
+
+        setMinBudget(newMin)
+        setMaxBudget(newMax)
+        setBudget(newBudget)
+      }
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error)
+    }
+  }
+
+  fetchRate()
+}, [selectedCurrency, baseBudget])
+
 
   const handleFormSubmit = (data: {
     source: string
