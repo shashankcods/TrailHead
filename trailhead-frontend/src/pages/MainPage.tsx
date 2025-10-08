@@ -3,6 +3,7 @@ import Navbar, { type Currency } from "../components/Navbar"
 import GradientBackground from "@/components/GradientBackground"
 import { TripInputForm } from "@/components/TripInputForm"
 import CurrencySlider from "@/components/Slider"
+import WeatherForecast, { type WeatherData } from "@/components/Weather"
 
 interface MainPageProps {
   selectedCurrency: Currency
@@ -10,49 +11,71 @@ interface MainPageProps {
 }
 
 const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurrency }) => {
-  const [baseBudget] = useState(1000) // always in INR
-  const [budget, setBudget] = useState(baseBudget) // in selected currency
+  const [budget, setBudget] = useState(1000)
   const [minBudget, setMinBudget] = useState(1000)
   const [maxBudget, setMaxBudget] = useState(500000)
   const [exchangeRate, setExchangeRate] = useState(1)
 
+  // **Default mock weather data to show on page load**
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([
+    {
+      date: new Date().toISOString(),
+      maxTemp: 28,
+      minTemp: 18,
+      rainChance: 10,
+      condition: 'sunny'
+    },
+    {
+      date: new Date(Date.now() + 86400000).toISOString(),
+      maxTemp: 25,
+      minTemp: 16,
+      rainChance: 60,
+      condition: 'rain'
+    },
+    {
+      date: new Date(Date.now() + 172800000).toISOString(),
+      maxTemp: 22,
+      minTemp: 14,
+      rainChance: 30,
+      condition: 'cloudy'
+    },
+  ])
+
   // fetching conversion rate whenever currency is changed
   useEffect(() => {
-  const fetchRate = async () => {
-    if (selectedCurrency.code === "INR") {
-      setExchangeRate(1)
-      setMinBudget(1000)
-      setMaxBudget(500000)
-      setBudget(baseBudget) // use baseBudget as initial budget
-      return
-    }
-
-    try {
-      const res = await fetch(
-        `https://hexarate.paikama.co/api/rates/latest/INR?target=${selectedCurrency.code}`
-      )
-      const data = await res.json()
-
-      if (data?.data?.mid) {
-        const rate = data.data.mid
-        setExchangeRate(rate)
-
-        const newMin = Math.round(1000 * rate)
-        const newMax = Math.round(500000 * rate)
-        const newBudget = Math.round(baseBudget * rate)
-
-        setMinBudget(newMin)
-        setMaxBudget(newMax)
-        setBudget(newBudget)
+    const fetchRate = async () => {
+      if (selectedCurrency.code === "INR") {
+        setExchangeRate(1)
+        setMinBudget(1000)
+        setMaxBudget(5000000)
+        return
       }
-    } catch (error) {
-      console.error("Error fetching exchange rate:", error)
+
+      try {
+        const res = await fetch(
+          `https://hexarate.paikama.co/api/rates/latest/INR?target=${selectedCurrency.code}`
+        )
+        const data = await res.json()
+
+        if (data?.data?.mid) {
+          const rate = data.data.mid
+          setExchangeRate(rate)
+
+          const newMin = Math.round((1000 * rate) / 10) * 10
+          const newMax = Math.round((500000 * rate) / 100) * 100
+          const newBudget = Math.round(budget * rate)
+
+          setMinBudget(newMin)
+          setMaxBudget(newMax)
+          setBudget(newBudget)
+        }
+      } catch (error) {
+        console.error("Error fetching exchange rate:", error)
+      }
     }
-  }
 
-  fetchRate()
-}, [selectedCurrency, baseBudget])
-
+    fetchRate()
+  }, [selectedCurrency])
 
   const handleFormSubmit = (data: {
     source: string
@@ -74,7 +97,33 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
       body: JSON.stringify(tripData),
     })
       .then((res) => res.json())
-      .then((response) => console.log("Backend response:", response))
+      .then((response) => {
+        console.log("Backend response:", response)
+        // Replace weather data with new mock/demo data after submission
+        setWeatherData([
+          {
+            date: new Date().toISOString(),
+            maxTemp: 28,
+            minTemp: 18,
+            rainChance: 10,
+            condition: 'sunny'
+          },
+          {
+            date: new Date(Date.now() + 86400000).toISOString(),
+            maxTemp: 25,
+            minTemp: 16,
+            rainChance: 60,
+            condition: 'rain'
+          },
+          {
+            date: new Date(Date.now() + 172800000).toISOString(),
+            maxTemp: 22,
+            minTemp: 14,
+            rainChance: 30,
+            condition: 'cloudy'
+          },
+        ])
+      })
       .catch((err) => console.error("Error sending trip data:", err))
   }
 
@@ -99,6 +148,10 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
           <p className="text-gray-400 text-sm">
             1 INR = {exchangeRate.toFixed(3)} {selectedCurrency.code}
           </p>
+          
+          {/* Render Weather Forecast */}
+          {weatherData.length > 0 && <WeatherForecast weatherData={weatherData} />}
+          
         </div>
       </div>
     </GradientBackground>
@@ -106,6 +159,7 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
 }
 
 export default MainPage
+
 
 
 
