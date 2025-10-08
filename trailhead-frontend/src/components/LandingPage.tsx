@@ -1,15 +1,33 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar, { type Currency } from "../components/Navbar";
-import GradientBackground from "../components/GradientBackground";
+import { useState } from "react";
+import LoginPopup from "../components/LoginPopup";
+import { useAuth } from "../context/AuthContext";
+import GradientBackground from "./GradientBackground";
 
 interface LandingPageProps {
-  selectedCurrency: Currency;
-  setSelectedCurrency: React.Dispatch<React.SetStateAction<Currency>>;
-}
+    selectedCurrency: Currency;
+    setSelectedCurrency: React.Dispatch<React.SetStateAction<Currency>>;
+  }
 
 const LandingPage: React.FC<LandingPageProps> = ({ selectedCurrency, setSelectedCurrency }) => {
   const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  const handleButtonClick = () => {
+    if (isAuthenticated) {
+      navigate("/main");
+    } else {
+      setIsLoginOpen(true); // <- opens popup
+    }
+  };  
+
+  const handleLoginSuccess = () => {
+    login();          // mark user as authenticated
+    navigate("/main"); // go to main page
+  };
 
   return (
     <GradientBackground>
@@ -22,12 +40,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ selectedCurrency, setSelected
           Get community-driven travel tips from fellow travelers, estimate your trip budget with sustainability scores, 
           discover local food experiences, check area safety, and adjust plans with interactive budget ranges and group size options — all in one place.
         </p>
-        <button 
-          onClick={() => navigate("/main")}
-          className="mt-6 px-6 py-3 bg-white text-[#3A1C71] font-bold rounded-lg shadow-lg hover:bg-gray-100 hover:scale-105 transition duration-300">
+        <button
+          onClick={handleButtonClick}
+          className="mt-6 px-6 py-3 bg-white text-[#3A1C71] font-bold rounded-lg shadow-lg hover:bg-gray-100 hover:scale-105 transition duration-300"
+        >
           Create your own trail
         </button>
       </div>
+
+      <LoginPopup
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+      />
+
 
       <footer className="py-6 text-center text-sm font-family-opensans bg-black/5 text-white">
         © {new Date().getFullYear()} TrailHead. Made with ❤️ by Team Figma Boys.
