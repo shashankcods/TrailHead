@@ -75,7 +75,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       // FAKE backend call
       await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
   
-      // Simulate success response
+      // simulating success response
       const resOk = true; // pretend the server responded with 200 OK
       const data = { message: "Success" };
   
@@ -90,7 +90,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     }
   };
 
-  return (
+  return (  // signup/signin form 
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       {mode === "signup" && (
         <input
