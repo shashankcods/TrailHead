@@ -4,7 +4,7 @@ export interface WeatherData {
   date: string;
   maxTemp: number;
   minTemp: number;
-  rainChance: number;
+  rainAmount: number;
   condition: string;
 }
 
@@ -57,7 +57,6 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
   const scrollRightFn = () =>
     scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" });
 
-  // using downloaded svg files to display weather icon
   const getWeatherIcon = (condition: string) => {
     const c = condition.toLowerCase();
     if (c.includes("clear")) return "/weather/clear.svg";
@@ -81,7 +80,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
   };
 
   return (
-    <div className="w-full backdrop-blur-md rounded-2xl p-4 mt-1 relative group">
+    <div className="w-full mt-4 mb-10 relative group p-4">
       <h3 className="text-white text-2xl font-bold mb-6 text-center">
         Weather Forecast for your trip
       </h3>
@@ -111,7 +110,13 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
           {weatherData.map((day, index) => (
             <div
               key={index}
-              className="flex-shrink-0 w-45 bg-black/20 rounded-xl p-5 text-white text-center hover:bg-black/30 transition-colors duration-300"
+              className="flex-shrink-0 w-45
+              bg-gradient-to-br from-white/10 via-white/5 to-transparent
+              backdrop-blur-2xl
+              border border-white/20
+              rounded-xl p-5 text-white text-center
+              hover:bg-white/20
+              transition-all duration-300"
             >
               <div className="font-semibold text-sm mb-4">
                 {formatDate(day.date)}
@@ -119,7 +124,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
               <img
                 src={getWeatherIcon(day.condition)}
                 alt={day.condition}
-                className="w-10 h-10 mx-auto mb-2 font-family-opensans"
+                className="w-13 h-10 mx-auto mb-2 font-family-opensans"
               />
               <div className="text-s text-gray-200 mb-2 capitalize">
                 {day.condition}
@@ -128,13 +133,12 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
                 <span className="text-red-300">H: {day.maxTemp}°</span>
                 <span className="text-blue-300">L: {day.minTemp}°</span>
               </div>
-              <div className="text-xs text-cyan-300">💧 {day.rainChance}%</div>
+              <div className="text-xs text-cyan-300">💧 {day.rainAmount}mm</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* style to hide scrollbar */}
       <style>{`
         .hide-scrollbar {
           scrollbar-width: none;
@@ -149,6 +153,9 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
 };
 
 export default WeatherForecast;
+
+
+
 
 
 
