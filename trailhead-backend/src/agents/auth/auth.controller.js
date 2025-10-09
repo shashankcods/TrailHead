@@ -1,3 +1,4 @@
+import passport from "passport";
 import { registerUserService, loginUserService } from "./auth.service.js";
 
 export const registerUser = async (req, res) => {
@@ -50,3 +51,29 @@ export const loginUser = async (req, res) => {
     res.status(401).json({ error: error.message });
   }
 };
+
+// Google Auth (start login)
+export const googleAuth = (req, res, next) => {
+  console.log("✅ Google OAuth route hit"); // Debug log
+  passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+};
+
+// Google callback (handle redirect)
+export const googleCallback = (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, data) => {
+    if (err || !data) {
+      console.error("Google OAuth Error:", err);
+      return res.redirect("/login?error=oauth_failed");
+    }
+
+    const { token, user } = data;
+    const redirectUrl = `http://localhost:5173/oauth-success?token=${token}&username=${encodeURIComponent(
+      user.username
+    )}`;
+
+    console.log("✅ Google OAuth success for:", user.email);
+
+    return res.redirect(redirectUrl);
+  })(req, res, next);
+};
+

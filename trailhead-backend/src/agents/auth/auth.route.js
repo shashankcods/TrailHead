@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser } from "./auth.controller.js";
+import { registerUser, loginUser, googleAuth, googleCallback } from "./auth.controller.js";
 import { verifyToken } from "../../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -8,7 +8,11 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// Protected Route (requires valid JWT)
+// Google OAuth routes
+router.get("/google", googleAuth);
+router.get("/google/callback", googleCallback);
+
+// Protected Route
 router.get("/profile", verifyToken, (req, res) => {
   res.status(200).json({
     message: "Protected route accessed successfully",
