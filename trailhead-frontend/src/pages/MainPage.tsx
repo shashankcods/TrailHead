@@ -5,6 +5,7 @@ import { TripInputForm } from "@/components/TripInputForm"
 import CurrencySlider from "@/components/Slider"
 import WeatherForecast, { type WeatherData } from "@/components/Weather"
 import RedditInsights from "@/components/RedditInsights"
+import FoodInsights, { type Restaurant } from "@/components/Restaurants"
 
 // reddit insights component
 type RedditPost = {
@@ -31,8 +32,20 @@ const MainPage: React.FC<MainPageProps> = ({
 
   const [weatherData, setWeatherData] = useState<WeatherData[]>([
     { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
-    { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 60, condition: 'rain' },
-    { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'cloudy' },
+    { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 5, condition: 'partly cloudy' },
+    { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'rain' },
+    { date: new Date(Date.now() + 3 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
+    { date: new Date(Date.now() + 4 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 20, condition: 'drizzle' },
+    { date: new Date(Date.now() + 5 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
+    { date: new Date(Date.now() + 6 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 0, condition: 'sunny' },
+    { date: new Date(Date.now() + 7 * 86400000).toISOString(), maxTemp: 24, minTemp: 16, rainAmount: 15, condition: 'rain' },
+    { date: new Date(Date.now() + 8 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
+    { date: new Date(Date.now() + 9 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 5, condition: 'partly cloudy' },
+    { date: new Date(Date.now() + 10 * 86400000).toISOString(), maxTemp: 25, minTemp: 17, rainAmount: 0, condition: 'sunny' },
+    { date: new Date(Date.now() + 11 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 10, condition: 'rain' },
+    { date: new Date(Date.now() + 12 * 86400000).toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 0, condition: 'sunny' },
+    { date: new Date(Date.now() + 13 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
+    { date: new Date(Date.now() + 14 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 5, condition: 'partly cloudy' },
   ])
 
   const [redditPosts] = useState<RedditPost[]>([
@@ -52,8 +65,33 @@ const MainPage: React.FC<MainPageProps> = ({
       subreddit: "travel",
       url: "https://www.reddit.com/r/travel/comments/yyyyyy",
     },
-  ])
+    {
+      title: "Hidden gems around Shibuya?",
+      comment:
+        "Check out Nonbei Yokocho and Miyashita Park — both have amazing food and atmosphere away from the crowds.",
+      upvotes: 55,
+      subreddit: "Tokyo",
+      url: "https://www.reddit.com/r/Tokyo/comments/zzzzzz",
+    },
+    {
+      title: "Tokyo metro pass worth it?",
+      comment:
+        "Only if you're using the subway multiple times a day. Otherwise, just stick to Suica or Pasmo for flexibility.",
+      upvotes: 27,
+      subreddit: "solotravel",
+      url: "https://www.reddit.com/r/solotravel/comments/aaaaaa",
+    },
+  ]);
 
+
+  // Dummy restaurants
+  const [restaurants] = useState<Restaurant[]>([
+    { name: "Sushi Dai", address: "Tsukiji Market, Tokyo", rating: 4.8, totalReviews: 340, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/abc123" },
+    { name: "Ichiran Ramen", address: "Shibuya, Tokyo", rating: 4.5, totalReviews: 1200, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/def456" },
+    { name: "Tempura Kondo", address: "Ginza, Tokyo", rating: 4.7, totalReviews: 450, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/ghi789" },
+    { name: "Kyubey", address: "Ginza, Tokyo", rating: 4.6, totalReviews: 890, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/jkl012" },
+    { name: "Afuri Ramen", address: "Ebisu, Tokyo", rating: 4.4, totalReviews: 620, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/mno345" },
+  ])
 
   // fetching conversion rate whenever currency is changed
   useEffect(() => {
@@ -113,12 +151,6 @@ const MainPage: React.FC<MainPageProps> = ({
       .then((res) => res.json())
       .then((response) => {
         console.log("Backend response:", response)
-        // Mock weather update
-        setWeatherData([
-          { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
-          { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 60, condition: 'rain' },
-          { date: new Date(Date.now() + 172800000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'cloudy' },
-        ])
       })
       .catch((err) => console.error("Error sending trip data:", err))
   }
@@ -148,12 +180,22 @@ const MainPage: React.FC<MainPageProps> = ({
             1 INR = {exchangeRate.toFixed(3)} {selectedCurrency.code}
           </p>
 
-          {/* weather forecast */}
-          {weatherData.length > 0 && <WeatherForecast weatherData={weatherData} />}
+          {/* Weather, Food & Reddit Insights side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8 w-full">
+            <div className="h-full">
+              {weatherData.length > 0 && <WeatherForecast weatherData={weatherData} />}
+            </div>
 
-          {/* reddit insights */}
-          <div className="mb-10">
-            <RedditInsights posts={redditPosts} />
+            <div className="h-full">
+              <FoodInsights
+                restaurants={restaurants}
+                selectedCurrency={selectedCurrency}
+              />
+            </div>
+
+            <div className="h-full flex items-center">
+              <RedditInsights posts={redditPosts} />
+            </div>
           </div>
         </div>
       </div>
@@ -162,6 +204,8 @@ const MainPage: React.FC<MainPageProps> = ({
 }
 
 export default MainPage
+
+
 
 
 

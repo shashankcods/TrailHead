@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React from "react";
 
 export interface WeatherData {
   date: string;
@@ -13,50 +13,6 @@ interface WeatherForecastProps {
 }
 
 const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // scrolling using drag
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    let isDown = false;
-    let startX = 0;
-    let scrollLeft = 0;
-
-    const startDragging = (e: MouseEvent) => {
-      isDown = true;
-      startX = e.pageX - el.offsetLeft;
-      scrollLeft = el.scrollLeft;
-    };
-    const stopDragging = () => (isDown = false);
-    const onDrag = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      el.scrollLeft = scrollLeft - walk;
-    };
-
-    el.addEventListener("mousedown", startDragging);
-    el.addEventListener("mouseleave", stopDragging);
-    el.addEventListener("mouseup", stopDragging);
-    el.addEventListener("mousemove", onDrag);
-
-    return () => {
-      el.removeEventListener("mousedown", startDragging);
-      el.removeEventListener("mouseleave", stopDragging);
-      el.removeEventListener("mouseup", stopDragging);
-      el.removeEventListener("mousemove", onDrag);
-    };
-  }, []);
-
-  // arrow scroll
-  const scrollLeftFn = () =>
-    scrollRef.current?.scrollBy({ left: -200, behavior: "smooth" });
-  const scrollRightFn = () =>
-    scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" });
-
   const getWeatherIcon = (condition: string) => {
     const c = condition.toLowerCase();
     if (c.includes("clear")) return "/weather/clear.svg";
@@ -80,72 +36,56 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
   };
 
   return (
-    <div className="w-full mt-4 mb-10 relative group p-4">
+    <div className="w-full mt-4 mb-10 p-4">
       <h3 className="text-white text-2xl font-bold mb-6 text-center">
-        Weather Forecast for your trip
+        Weather
       </h3>
 
-      {/* left arrow */}
-      <button
-        onClick={scrollLeftFn}
-        className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/50"
-      >
-        ←
-      </button>
+      <div className="flex flex-col gap-4 max-h-[820px] overflow-y-auto scroll-smooth snap-y snap-mandatory scrollbar-hide px-2">
+    {weatherData.map((day, index) => (
+    <div
+      key={index}
+      className="snap-start 
+        bg-gradient-to-br from-white/10 via-white/5 to-transparent
+        backdrop-blur-2xl
+        border border-white/20
+        rounded-xl p-5 text-white text-center
+        hover:bg-white/20
+        transition-all duration-300
+        w-100
+        h-48
+        mx-auto"
+    >
 
-      {/* right arrow */}
-      <button
-        onClick={scrollRightFn}
-        className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/50"
-      >
-        →
-      </button>
-
-      {/* scrollable container */}
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto hide-scrollbar cursor-grab active:cursor-grabbing mx-10"
-      >
-        <div className="flex justify-center space-x-4 pb-4 min-w-max mx-auto">
-          {weatherData.map((day, index) => (
-            <div
-              key={index}
-              className="flex-shrink-0 w-45
-              bg-gradient-to-br from-white/10 via-white/5 to-transparent
-              backdrop-blur-2xl
-              border border-white/20
-              rounded-xl p-5 text-white text-center
-              hover:bg-white/20
-              transition-all duration-300"
-            >
-              <div className="font-semibold text-sm mb-4">
-                {formatDate(day.date)}
-              </div>
-              <img
-                src={getWeatherIcon(day.condition)}
-                alt={day.condition}
-                className="w-13 h-10 mx-auto mb-2 font-family-opensans"
-              />
-              <div className="text-s text-gray-200 mb-2 capitalize">
-                {day.condition}
-              </div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-red-300">H: {day.maxTemp}°</span>
-                <span className="text-blue-300">L: {day.minTemp}°</span>
-              </div>
-              <div className="text-xs text-cyan-300">💧 {day.rainAmount}mm</div>
-            </div>
-          ))}
+        <div className="font-semibold text-sm mb-4">
+          {formatDate(day.date)}
         </div>
+        <img
+          src={getWeatherIcon(day.condition)}
+          alt={day.condition}
+          className="w-15 h-12 mx-auto mb-2"
+        />
+        <div className="text-sm text-gray-200 mb-2 -mt-2 capitalize font-family-opensans">
+          {day.condition}
+        </div>
+        <div className="flex justify-between text-sm mb-1 px-15">
+          <span className="text-red-300">H: {day.maxTemp}°C</span>
+          <span className="text-blue-300">L: {day.minTemp}°C</span>
+        </div>
+        <div className="text-xs text-cyan-300">💧 {day.rainAmount}mm</div>
       </div>
+    ))}
+  </div>
 
+
+      {/* Hide scrollbar */}
       <style>{`
-        .hide-scrollbar {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .hide-scrollbar::-webkit-scrollbar {
+        .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
@@ -153,6 +93,12 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
 };
 
 export default WeatherForecast;
+
+
+
+
+
+
 
 
 
