@@ -1,12 +1,16 @@
 import re
 import torch
+from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
+# Keep as Path (don't convert to str)
 MODEL_PATH = "src/agents/reddit/sentiment/model/fine_tuned_roberta"
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+# Explicitly load as local model
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH, local_files_only=True)
 model.eval()
+
 
 def predict_sentiment(texts):
     inputs = tokenizer(
@@ -18,7 +22,7 @@ def predict_sentiment(texts):
         return torch.argmax(probs, dim=-1).tolist()
 
 def run_pipeline(posts):
-    """Filter junk, predict sentiment, and return top 10 positive Reddit posts."""
+    #Filter junk, predict sentiment, and return top 10 positive Reddit posts
     blocked_patterns = [
         r"\b(lol|haha|thanks|okay|sure|haan|cfbr)\b",
         r"vo sab dekh lenge",
@@ -30,6 +34,8 @@ def run_pipeline(posts):
     for post in posts:
         title = post.get("title", "No title")
         comment = (post.get("comment") or post.get("snippet") or "").strip()
+        upvotes = post.get("upvotes", 0)
+        url = post.get("url", "")
 
         # Normalize text
         clean_comment = re.sub(r"[\s\"']+", " ", comment).strip().lower()
@@ -41,7 +47,7 @@ def run_pipeline(posts):
         if not re.search(r"[a-zA-Z]{4,}", clean_comment):
             continue
 
-        cleaned_posts.append({"title": title, "comment": comment})
+        cleaned_posts.append({"title": title, "comment": comment, "upvotes": upvotes, "url": url})
 
     if not cleaned_posts:
         return {"useful_posts": 0, "posts": []}
