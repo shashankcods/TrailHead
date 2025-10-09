@@ -3,6 +3,8 @@ import express from "express";
 // import cors from "cors";  // will be used if needed, keep commented for now
 import path from "path";
 import { fileURLToPath } from "url";
+import passport from "passport";
+import "./config/passport.js";
 
 // Import route handlers for each agent
 import authRoute from "./agents/auth/auth.route.js";
@@ -20,6 +22,8 @@ const app = express();
 
 // app.use(cors());
 app.use(express.json());  // Parse incoming JSON automatically
+
+app.use(passport.initialize());
 
 // Dfalt route to check if the backedn is running
 // app.get("/", (req, res) => {
