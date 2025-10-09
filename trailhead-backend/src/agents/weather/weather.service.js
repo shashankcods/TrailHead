@@ -5,9 +5,15 @@ import axios from "axios";
 export const getWeatherFromOpenMeteo = async (destination, start_date, end_date) => {
   try {
     // Step 1: Convert destination name into latitude & longitude (geocoding)
-    const geoUrl = "https://geocoding-api.open-meteo.com/v1/search";
-    const geoRes = await axios.get(geoUrl, { params: {name: destination } });
-    const location = geoRes.data.results?.[0];
+    const geoUrl = "https://api.openrouteservice.org/geocode/search";
+    const geoRes = await axios.get(geoUrl, {
+      params: {
+        api_key: process.env.ORS_API_KEY,
+        text: destination,
+      },
+    });
+
+    const location = geoRes.data.features?.[0];
 
     // If the API couldn’t find a location, stop and throw an error
     if (!location) {
@@ -15,9 +21,9 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
     }
 
     // Extract key details from the geocoding response
-    const latitude = location.latitude;
-    const longitude = location.longitude;
-    const country = location.country || "Unknown";
+    const [longitude, latitude] = location.geometry.coordinates;
+    const label = location.properties.label || destination;
+    const country = label.split(",").pop().trim();
 
     console.log(`Geocoded ${destination} → ${latitude}, ${longitude}`)
 
@@ -43,7 +49,7 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
 
     // If the response doesn’t contain valid forecast data, handle it gracefully
     if (!daily || !daily.time) {
-      throw new Error("Invalid response from Open-Meteo API");
+      throw new Error("Invalid response from API");
     }
 
     // Step 4: Format the API response into a cleaner, readable structure

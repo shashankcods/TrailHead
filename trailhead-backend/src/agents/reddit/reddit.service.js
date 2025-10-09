@@ -14,7 +14,7 @@ function startRedditBackend() {
   if (redditProcessStarted) return;
   redditProcessStarted = true;
 
-  console.log("🚀 Launching Reddit sentiment backend...");
+  console.log("Launching Reddit sentiment backend...");
 
   const process = spawn("python3", ["-m", "src.agents.reddit.core.app"], {
     stdio: "inherit",
@@ -25,7 +25,7 @@ function startRedditBackend() {
   });
 
   process.on("exit", (code) => {
-    console.log(`🧠 Reddit backend stopped (code ${code})`);
+    console.log(`Reddit backend stopped (code ${code})`);
     redditProcessStarted = false;
   });
 }
