@@ -25,12 +25,7 @@ export const orchestrateTripService = async (tripDetails) => {
       getHotelsFromBooking(destination, startDate, endDate),
       getRedditAdvice(destination)
     ]);
-
-    // Extract each result safely
-    const [mapsRes, weatherRes, foodRes, eventsRes, accommodationRes, redditRes] = results;
-      getHotelsFromBooking(destination, startDate, endDate)
-    ]);
-
+    
     // Extract each result safely
     const [mapsRes, weatherRes, foodRes, eventsRes, accommodationRes] = results;
 
