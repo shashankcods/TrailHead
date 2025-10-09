@@ -27,39 +27,31 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
 
     console.log(`Geocoded ${destination} → ${latitude}, ${longitude}`)
 
-    // Step 2: Set up parameters for the weather API request
-    const params = {
-      latitude,
-      longitude,
-      daily: "temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode",
-      timezone: "auto",
-    };
+    const today = new Date();
+    const cutoff = new Date();
+    cutoff.setDate(today.getDate() + 16);
+    const start = new Date(start_date);
+    const end = new Date(end_date);
 
-    // If a custom date range was provided, include it in the request
-    if (start_date && end_date) {
-      params.start_date = start_date;
-      params.end_date = end_date;
+    let forecast = [];
+
+    //Case 1: Entire range within 16 days
+    if (end <= cutoff) {
+      forecast = await getForecast(latitude, longitude, start_date, end_date);
     }
 
-    console.log("Fetching forecast with parameters:", params);
-
-    // Step 3: Request daily forecast data from Open-Meteo API
-    const response = await axios.get("https://api.open-meteo.com/v1/forecast", { params });
-    const daily = response.data.daily;
-
-    // If the response doesn’t contain valid forecast data, handle it gracefully
-    if (!daily || !daily.time) {
-      throw new Error("Invalid response from API");
+    //Case 2: Entire range beyond 16 days
+    else if (start > cutoff) {
+      forecast = await getClimateAverages(latitude, longitude, start_date, end_date);
     }
 
-    // Step 4: Format the API response into a cleaner, readable structure
-    const forecast = daily.time.map((date, i) => ({
-      date,
-      maxTemp: daily.temperature_2m_max[i],
-      minTemp: daily.temperature_2m_min[i],
-      rainChance: daily.precipitation_sum[i],
-      condition: weatherCodeToText(daily.weathercode[i]),
-    }));
+    //Case 3: Mixed
+    else {
+      const cutoffDate = cutoff.toISOString().split("T")[0];
+      const forecastPart = await getForecast(latitude, longitude, start_date, cutoffDate);
+      const climatePart = await getClimateAverages(latitude, longitude, cutoffDate, end_date);
+      forecast = [...forecastPart, ...climatePart];
+    }
 
     // Return the final structured forecast along with basic location info
     return { destination, country, forecast };
@@ -69,6 +61,66 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
     throw new Error("Failed to fetch weather data from Open-Meteo API");
   }
 };
+
+
+async function getForecast(latitude, longitude, start_date, end_date){
+  const params = {
+    latitude,
+    longitude,
+    start_date,
+    end_date,
+    daily: "temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode",
+    timezone: "auto",
+  };
+
+  const res = await axios.get("https://api.open-meteo.com/v1/forecast", { params });
+  const daily = res.data.daily;
+
+  return daily.time.map((date, i) => ({
+    date,
+    maxTemp: daily.temperature_2m_max[i],
+    minTemp: daily.temperature_2m_min[i],
+    rainAmount: daily.precipitation_sum[i],
+    condition: weatherCodeToText(daily.weathercode[i]),
+  }));
+}
+
+async function getClimateAverages(latitude, longitude, start_date, end_date) {
+  const params = {
+    latitude,
+    longitude,
+    start_date,
+    end_date,
+    models: "MRI_AGCM3_2_S",
+    daily: "temperature_2m_max,temperature_2m_min,precipitation_sum"
+  };
+
+  try {
+    const res = await axios.get("https://climate-api.open-meteo.com/v1/climate", { params });
+    const daily = res.data.daily;
+
+    if (!daily || !daily.time) throw new Error("Invalid climate response");
+
+
+    return daily.time.map((date, i) => {
+      const maxTemp = daily.temperature_2m_max[i];
+      const minTemp = daily.temperature_2m_min[i];
+      const rainAmount = daily.precipitation_sum[i];
+      const code = inferWeatherCode(maxTemp, minTemp, rainAmount);
+
+      return {
+        date,
+        maxTemp,
+        minTemp,
+        rainAmount,
+        condition: weatherCodeToText(code),
+      };
+    });
+  } catch (err) {
+    console.error("Climate API error:", err.response?.status, err.response?.data || err.message);
+    return [];
+  }
+}
 
 // Helper function: Converts numeric weather codes into human-readable descriptions
 function weatherCodeToText(code) {
@@ -94,4 +146,17 @@ function weatherCodeToText(code) {
     95: "Thunderstorm",
   };
   return codes[code] || "Unknown";
+}
+
+function inferWeatherCode(maxTemp, minTemp, rainAmount) {
+  if (rainAmount > 50) return 82;       // Violent rain showers
+  if (rainAmount > 20) return 81;       // Moderate rain showers
+  if (rainAmount > 10) return 65;       // Heavy rain
+  if (rainAmount > 5)  return 63;       // Moderate rain
+  if (rainAmount > 1)  return 61;       // Light rain
+  if (maxTemp < 5)     return 75;       // Heavy snow (cold regions)
+  if (maxTemp < 10)    return 73;       // Moderate snow
+  if (maxTemp < 15)    return 3;        // Cloudy
+  if (maxTemp < 25)    return 2;        // Partly cloudy
+  return 0; 
 }
