@@ -4,36 +4,55 @@ import GradientBackground from "@/components/GradientBackground"
 import { TripInputForm } from "@/components/TripInputForm"
 import CurrencySlider from "@/components/Slider"
 import WeatherForecast, { type WeatherData } from "@/components/Weather"
+import RedditInsights from "@/components/RedditInsights"
+
+// reddit insights component
+type RedditPost = {
+  title: string
+  comment: string
+  upvotes: number
+  subreddit: string
+  url: string
+}
 
 interface MainPageProps {
   selectedCurrency: Currency
   setSelectedCurrency: React.Dispatch<React.SetStateAction<Currency>>
 }
 
-const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurrency }) => {
+const MainPage: React.FC<MainPageProps> = ({
+  selectedCurrency,
+  setSelectedCurrency,
+}) => {
   const [budget, setBudget] = useState(1000)
   const [minBudget, setMinBudget] = useState(1000)
   const [maxBudget, setMaxBudget] = useState(500000)
   const [exchangeRate, setExchangeRate] = useState(1)
 
-  // **Default mock weather data to show on page load**
-    const [weatherData, setWeatherData] = useState<WeatherData[]>([
-        { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainChance: 10, condition: 'sunny' },
-        { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainChance: 60, condition: 'rain' },
-        { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainChance: 30, condition: 'cloudy' },
-        { date: new Date(Date.now() + 3 * 86400000).toISOString(), maxTemp: 30, minTemp: 20, rainChance: 5, condition: 'sunny' },
-        { date: new Date(Date.now() + 4 * 86400000).toISOString(), maxTemp: 27, minTemp: 18, rainChance: 20, condition: 'partly cloudy' },
-        { date: new Date(Date.now() + 5 * 86400000).toISOString(), maxTemp: 24, minTemp: 15, rainChance: 50, condition: 'drizzle' },
-        { date: new Date(Date.now() + 6 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainChance: 80, condition: 'storm' },
-        { date: new Date(Date.now() + 7 * 86400000).toISOString(), maxTemp: 26, minTemp: 17, rainChance: 10, condition: 'sunny' },
-        { date: new Date(Date.now() + 8 * 86400000).toISOString(), maxTemp: 23, minTemp: 16, rainChance: 40, condition: 'cloudy' },
-        { date: new Date(Date.now() + 9 * 86400000).toISOString(), maxTemp: 29, minTemp: 19, rainChance: 0, condition: 'sunny' },
-        { date: new Date(Date.now() + 10 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainChance: 30, condition: 'fog' },
-        { date: new Date(Date.now() + 11 * 86400000).toISOString(), maxTemp: 25, minTemp: 15, rainChance: 60, condition: 'rain' },
-        { date: new Date(Date.now() + 12 * 86400000).toISOString(), maxTemp: 20, minTemp: 12, rainChance: 70, condition: 'snow' },
-        { date: new Date(Date.now() + 13 * 86400000).toISOString(), maxTemp: 27, minTemp: 18, rainChance: 15, condition: 'partly cloudy' },
-        { date: new Date(Date.now() + 14 * 86400000).toISOString(), maxTemp: 28, minTemp: 19, rainChance: 5, condition: 'sunny' },
-    ])
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([
+    { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
+    { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 60, condition: 'rain' },
+    { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'cloudy' },
+  ])
+
+  const [redditPosts] = useState<RedditPost[]>([
+    {
+      title: "First-time traveler to Tokyo looking for tips",
+      comment:
+        "Note: Suica cards are more available now at major stations. Google Maps is great for train transfers.",
+      upvotes: 42,
+      subreddit: "JapanTravel",
+      url: "https://www.reddit.com/r/JapanTravel/comments/xxxxxx",
+    },
+    {
+      title: "Back from a 10-day trip in Tokyo!",
+      comment:
+        "Instead of carrying a pocket WiFi, a local eSIM worked perfectly. Cheap and easy.",
+      upvotes: 31,
+      subreddit: "travel",
+      url: "https://www.reddit.com/r/travel/comments/yyyyyy",
+    },
+  ])
 
 
   // fetching conversion rate whenever currency is changed
@@ -94,29 +113,11 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
       .then((res) => res.json())
       .then((response) => {
         console.log("Backend response:", response)
-        // Mock data
+        // Mock weather update
         setWeatherData([
-          {
-            date: new Date().toISOString(),
-            maxTemp: 28,
-            minTemp: 18,
-            rainChance: 10,
-            condition: 'sunny'
-          },
-          {
-            date: new Date(Date.now() + 86400000).toISOString(),
-            maxTemp: 25,
-            minTemp: 16,
-            rainChance: 60,
-            condition: 'rain'
-          },
-          {
-            date: new Date(Date.now() + 172800000).toISOString(),
-            maxTemp: 22,
-            minTemp: 14,
-            rainChance: 30,
-            condition: 'cloudy'
-          },
+          { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
+          { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 60, condition: 'rain' },
+          { date: new Date(Date.now() + 172800000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'cloudy' },
         ])
       })
       .catch((err) => console.error("Error sending trip data:", err))
@@ -124,8 +125,11 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
 
   return (
     <GradientBackground>
-      <div className="flex flex-col min-h-screen text-white hide-scrollbar">
-        <Navbar selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} />
+      <div className="flex flex-col min-h-screen text-white">
+        <Navbar
+          selectedCurrency={selectedCurrency}
+          setSelectedCurrency={setSelectedCurrency}
+        />
 
         <div className="flex-grow flex flex-col items-center justify-start px-4 pt-20 space-y-5">
           <TripInputForm onSubmit={handleFormSubmit} />
@@ -143,10 +147,14 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
           <p className="text-gray-400 text-sm">
             1 INR = {exchangeRate.toFixed(3)} {selectedCurrency.code}
           </p>
-          
-          {/* Render Weather Forecast */}
+
+          {/* weather forecast */}
           {weatherData.length > 0 && <WeatherForecast weatherData={weatherData} />}
 
+          {/* reddit insights */}
+          <div className="mb-10">
+            <RedditInsights posts={redditPosts} />
+          </div>
         </div>
       </div>
     </GradientBackground>
@@ -154,6 +162,7 @@ const MainPage: React.FC<MainPageProps> = ({ selectedCurrency, setSelectedCurren
 }
 
 export default MainPage
+
 
 
 
