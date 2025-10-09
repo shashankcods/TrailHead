@@ -3,7 +3,7 @@ import polyline from "@mapbox/polyline";
 
 export const getRouteFromORS = async (from, to) => {
   try {
-    const apiKey = process.env.ORS_API_KEY;  // ORS API Key stored in .env for security
+    const apiKey = process.env.ORS_API_KEY; // ORS API Key stored in .env for security
     const geocodeUrl = "https://api.openrouteservice.org/geocode/search"; // ORS endpoint for converting place names into coordinates
 
     // Make parallel requests to get coordinates for both 'from' and 'to' locations
@@ -17,7 +17,8 @@ export const getRouteFromORS = async (from, to) => {
     const toCoords = toRes.data.features[0].geometry.coordinates;
 
     // Make POST request with both coordinates to get route summary and geometry
-    const routeUrl = "https://api.openrouteservice.org/v2/directions/driving-car";
+    const routeUrl =
+      "https://api.openrouteservice.org/v2/directions/driving-car";
     const routeRes = await axios.post(
       routeUrl,
       { coordinates: [fromCoords, toCoords] },
@@ -38,13 +39,13 @@ export const getRouteFromORS = async (from, to) => {
 
     // const decodedCoords = polyline.decode(geometry);
 
-    // Return clean route summary object
+    // Returning the route summary object
     return {
       from,
       to,
       distance_km: (summary.distance / 1000).toFixed(1),
       duration_hr: (summary.duration / 3600).toFixed(1),
-      // geometry: decodedCoords, // this gives the full route path, every pt on the road from one place to another
+      // geometry: decodedCoords, // this gives the full route path, every pt on the road, used for visual map of the route
     };
   } catch (err) {
     console.error("Error:", err.message);
