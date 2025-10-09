@@ -24,3 +24,15 @@ pnpm-debug.log*
 # Coverage / Testing
 coverage/
 .nyc_output/
+
+# Python virtual environment
+trailhead-backend/venv/
+
+# Model outputs (large files)
+trailhead-backend/src/agents/reddit/sentiment/model/results/
+trailhead-backend/src/agents/reddit/sentiment/model/fine_tuned_roberta/
+trailhead-backend/src/agents/reddit/sentiment/dataset/
+*.pt
+*.pth
+*.bin
+*.safetensors

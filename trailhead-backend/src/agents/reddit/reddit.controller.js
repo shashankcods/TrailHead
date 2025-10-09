@@ -8,8 +8,8 @@ export const getTripAdvice = async (req, res) => {
             return res.status(400).json({ error: "Missing 'destination' query parameter" });
         }
 
-        const data = await getRedditAdvice(destination);
-        res.status(200).json(data);
+        const redditData = await getRedditAdvice(destination);
+        res.status(200).json(redditData);
     } catch (error) {
         console.error("Reddit Controller Error:", error.message);
         res.status(500).json({ error: error.message });
