@@ -25,7 +25,10 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 
-#AI model outputs and datasets
+# Python virtual environment
+trailhead-backend/venv/
+
+# Model outputs (large files)
 trailhead-backend/src/agents/reddit/sentiment/model/results/
 trailhead-backend/src/agents/reddit/sentiment/model/fine_tuned_roberta/
 trailhead-backend/src/agents/reddit/sentiment/dataset/
