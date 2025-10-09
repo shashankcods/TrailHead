@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // Import route handlers for each agent
+import authRoute from "./agents/auth/auth.route.js";
 import mapsRoute from "./agents/maps/maps.route.js";
 import orchestratorRoute from "./orchestrator/orchestrator.route.js";
 import weatherRoute from "./agents/weather/weather.route.js";
@@ -26,6 +27,7 @@ app.use(express.json());  // Parse incoming JSON automatically
 // });
 
 // Adding all the agent routes under their own base URL
+app.use("/api/auth", authRoute);
 app.use("/api/maps", mapsRoute);
 app.use("/api/weather", weatherRoute);
 app.use("/api/events", eventsRoute);
