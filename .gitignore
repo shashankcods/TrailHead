@@ -24,3 +24,12 @@ pnpm-debug.log*
 # Coverage / Testing
 coverage/
 .nyc_output/
+
+#AI model outputs and datasets
+trailhead-backend/src/agents/reddit/sentiment/model/results/
+trailhead-backend/src/agents/reddit/sentiment/model/fine_tuned_roberta/
+trailhead-backend/src/agents/reddit/sentiment/dataset/
+*.pt
+*.pth
+*.bin
+*.safetensors
