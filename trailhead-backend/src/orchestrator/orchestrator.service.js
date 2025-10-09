@@ -28,6 +28,11 @@ export const orchestrateTripService = async (tripDetails) => {
 
     // Extract each result safely
     const [mapsRes, weatherRes, foodRes, eventsRes, accommodationRes, redditRes] = results;
+      getHotelsFromBooking(destination, startDate, endDate)
+    ]);
+
+    // Extract each result safely
+    const [mapsRes, weatherRes, foodRes, eventsRes, accommodationRes] = results;
 
     const mapsData =
       mapsRes.status === "fulfilled"
