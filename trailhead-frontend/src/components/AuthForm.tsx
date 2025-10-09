@@ -8,7 +8,7 @@ interface AuthFormProps {
 const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
   const { login } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [name, setName] = useState("");
+  const [username, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,72 +23,45 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     { regex: /[^A-Za-z0-9]/, message: "Atleast 1 special character" },
   ];
 
-  /*const handleSubmit = async (e: React.FormEvent) => { // to be used when endpoints are available for post req
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async (e: React.FormEvent) => { // to be used when endpoints are available for post req
+      e.preventDefault();
+      setError("");
 
-    if (mode === "signup") {
-      for (const rule of passwordRules) {
-        if (!rule.regex.test(password)) {
-          setError(`Password must have ${rule.message.toLowerCase()}`);
+      if (mode === "signup") {
+        for (const rule of passwordRules) {
+          if (!rule.regex.test(password)) {
+            setError(`Password must have ${rule.message.toLowerCase()}`);
+            return;
+          }
+        }
+
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
           return;
         }
       }
 
-      if (password !== confirmPassword) {
-        setError("Passwords do not match");
-        return;
+      try {
+        const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/register";
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password }),
+        });
+
+        const data = await res.json();
+        console.log(data)
+
+        if (res.ok) {
+          login();
+          onSuccess?.();
+        } else {
+          setError(data.message || "Something went wrong");
+        }
+      } catch {
+        setError("Network error. Please try again.");
       }
-    }
-
-    try {
-      const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/register";
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        login();
-        onSuccess?.();
-      } else {
-        setError(data.message || "Something went wrong");
-      }
-    } catch {
-      setError("Network error. Please try again.");
-    }
-  };*/ 
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-  
-    if (mode === "signup" && password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-  
-    try {
-      // FAKE backend call
-      await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
-  
-      // simulating success response
-      const resOk = true; // pretend the server responded with 200 OK
-      const data = { message: "Success" };
-  
-      if (resOk) {
-        login();       // mark user as authenticated
-        onSuccess?.(); 
-      } else {
-        setError(data.message || "Something went wrong");
-      }
-    } catch {
-      setError("Network error. Please try again.");
-    }
-  };
+    };
 
   return (  // signup/signin form 
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -96,7 +69,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         <input
           type="text"
           placeholder="Full Name"
-          value={name}
+          value={username}
           onChange={(e) => setName(e.target.value)}
           required
           className="p-2 border border-gray-500 rounded-lg"
