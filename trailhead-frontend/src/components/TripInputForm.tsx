@@ -6,8 +6,8 @@ interface TripInputFormProps {
   onSubmit: (data: {
     source: string;
     destination: string;
-    startDate: Date | undefined;
-    endDate: Date | undefined;
+    startDate: string | undefined;
+    endDate: string | undefined;
   }) => void;
 }
 
@@ -24,21 +24,16 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
 
   // suggestion states
   const [sourceSuggestions, setSourceSuggestions] = useState<string[]>([]);
-  const [destinationSuggestions, setDestinationSuggestions] = useState<
-    string[]
-  >([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
 
   // for keyboard navigation through search results
   const [sourceHighlight, setSourceHighlight] = useState<number>(-1);
   const [destinationHighlight, setDestinationHighlight] = useState<number>(-1);
 
-  // to close calendar on clicking outside
+  // close calendar when clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        rangeRef.current &&
-        !rangeRef.current.contains(event.target as Node)
-      ) {
+      if (rangeRef.current && !rangeRef.current.contains(event.target as Node)) {
         setShowCalendar(false);
       }
     };
@@ -46,7 +41,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // fetching locations from OSM nomatim and filtering
+  // fetching location suggestions from OSM
   const fetchLocations = async (query: string) => {
     if (!query) return [];
 
@@ -65,18 +60,15 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     const resultsSet = new Set<string>();
 
     data.forEach((item: any) => {
-      const city =
-        item.address.city || item.address.town || item.address.village;
+      const city = item.address.city || item.address.town || item.address.village;
       const country = item.address.country;
-      if (city && country) {
-        resultsSet.add(`${city}, ${country}`);
-      }
+      if (city && country) resultsSet.add(`${city}, ${country}`);
     });
 
     return Array.from(resultsSet);
   };
 
-  // debounce
+  // debounce helper
   const debounce = (fn: Function, delay: number) => {
     let timer: number;
     return (...args: any[]) => {
@@ -85,7 +77,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     };
   };
 
-  // handling source suggestions
+  // handle source input
   const handleSourceChange = useCallback(
     debounce(async (value: string) => {
       const results = await fetchLocations(value);
@@ -94,7 +86,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     []
   );
 
-  // handling dest suggestions
+  // handle destination input
   const handleDestinationChange = useCallback(
     debounce(async (value: string) => {
       const results = await fetchLocations(value);
@@ -103,45 +95,29 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     []
   );
 
-// form submissions
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  const formatDate = (date: Date | undefined) =>
-  date ? date.toISOString().split("T")[0] : undefined;
+  // 🟢 handle form submit
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const tripData = {
-    source,
-    destination,
-    startDate: formatDate(dateRange?.from),
-    endDate: formatDate(dateRange?.to),
+    const formatDate = (date: Date | undefined) =>
+      date ? date.toISOString().split("T")[0] : undefined;
+
+    const tripData = {
+      source,
+      destination,
+      startDate: formatDate(dateRange?.from),
+      endDate: formatDate(dateRange?.to),
+    };
+
+    console.log("✅ Sending trip data to MainPage:", tripData);
+
+    // 🔥 call parent handler instead of fetching directly
+    _onSubmit(tripData);
+
+    // clear suggestions
+    setSourceSuggestions([]);
+    setDestinationSuggestions([]);
   };
-
-  console.log("Sending trip data:", tripData);
-
-  try {
-    const res = await fetch("/api/orchestrator", { 
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tripData),
-    });
-
-    const data = await res.json();
-    console.log("Response:", data);
-
-    if (res.ok) {
-      alert("Trip created successfully!");
-    } else {
-      alert(`Error: ${data.error || data.message}`);
-    }
-  } catch (err) {
-    console.error("Network error:", err);
-  }
-
-  // Clear suggestions if you still want to
-  setSourceSuggestions([]);
-  setDestinationSuggestions([]);
-};
 
   return (
     <form
@@ -160,12 +136,9 @@ const handleSubmit = async (e: React.FormEvent) => {
           }}
           onKeyDown={(e) => {
             if (sourceSuggestions.length === 0) return;
-
             if (e.key === "ArrowDown") {
               e.preventDefault();
-              setSourceHighlight(
-                (prev) => (prev + 1) % sourceSuggestions.length
-              );
+              setSourceHighlight((prev) => (prev + 1) % sourceSuggestions.length);
             } else if (e.key === "ArrowUp") {
               e.preventDefault();
               setSourceHighlight((prev) =>
@@ -218,13 +191,9 @@ const handleSubmit = async (e: React.FormEvent) => {
           }}
           onKeyDown={(e) => {
             if (destinationSuggestions.length === 0) return;
-
-            {/* for navigation through results displayed from OSM nomatim */}
             if (e.key === "ArrowDown") {
               e.preventDefault();
-              setDestinationHighlight(
-                (prev) => (prev + 1) % destinationSuggestions.length
-              );
+              setDestinationHighlight((prev) => (prev + 1) % destinationSuggestions.length);
             } else if (e.key === "ArrowUp") {
               e.preventDefault();
               setDestinationHighlight((prev) =>
@@ -302,7 +271,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                   const current = prev ?? { from: undefined, to: undefined };
                   let next: DateRange = { from: current.from, to: current.to };
 
-                  {/* logic of picking from and to date within the range calendar */}
                   if (picking === "from") {
                     if (current.to && day > current.to) {
                       next = { from: day, to: undefined };
@@ -339,8 +307,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               defaultMonth={dateRange?.from ?? dateRange?.to ?? new Date()}
               className="rounded-lg border bg-black"
               classNames={{
-                today:
-                  "border border-white text-white font-semibold rounded-lg",
+                today: "border border-white text-white font-semibold rounded-lg",
               }}
             />
           </div>

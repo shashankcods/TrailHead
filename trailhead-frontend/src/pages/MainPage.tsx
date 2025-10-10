@@ -31,6 +31,8 @@ const MainPage: React.FC<MainPageProps> = ({
   const [minBudget, setMinBudget] = useState(1000)
   const [maxBudget, setMaxBudget] = useState(500000)
   const [exchangeRate, setExchangeRate] = useState(1)
+  const [loading, setLoading] = useState(false)
+
 
   const [itinerary] = useState<ItineraryDay[]>([
     {
@@ -143,70 +145,78 @@ const MainPage: React.FC<MainPageProps> = ({
     },
   ]);
 
+  // Dynamic states (filled by orchestrator)
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+  const [redditPosts, setRedditPosts] = useState<RedditPost[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
+  // Remove this hardcoded shi ig
 
 
-  const [weatherData, _setWeatherData] = useState<WeatherData[]>([
-    { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
-    { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 5, condition: 'partly cloudy' },
-    { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'rain' },
-    { date: new Date(Date.now() + 3 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
-    { date: new Date(Date.now() + 4 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 20, condition: 'drizzle' },
-    { date: new Date(Date.now() + 5 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
-    { date: new Date(Date.now() + 6 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 0, condition: 'sunny' },
-    { date: new Date(Date.now() + 7 * 86400000).toISOString(), maxTemp: 24, minTemp: 16, rainAmount: 15, condition: 'rain' },
-    { date: new Date(Date.now() + 8 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
-    { date: new Date(Date.now() + 9 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 5, condition: 'partly cloudy' },
-    { date: new Date(Date.now() + 10 * 86400000).toISOString(), maxTemp: 25, minTemp: 17, rainAmount: 0, condition: 'sunny' },
-    { date: new Date(Date.now() + 11 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 10, condition: 'rain' },
-    { date: new Date(Date.now() + 12 * 86400000).toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 0, condition: 'sunny' },
-    { date: new Date(Date.now() + 13 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
-    { date: new Date(Date.now() + 14 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 5, condition: 'partly cloudy' },
-  ])
 
-  const [redditPosts] = useState<RedditPost[]>([
-    {
-      title: "First-time traveler to Tokyo looking for tips",
-      comment:
-        "Note: Suica cards are more available now at major stations. Google Maps is great for train transfers.",
-      upvotes: 42,
-      subreddit: "JapanTravel",
-      url: "https://www.reddit.com/r/JapanTravel/comments/xxxxxx",
-    },
-    {
-      title: "Back from a 10-day trip in Tokyo!",
-      comment:
-        "Instead of carrying a pocket WiFi, a local eSIM worked perfectly. Cheap and easy.",
-      upvotes: 31,
-      subreddit: "travel",
-      url: "https://www.reddit.com/r/travel/comments/yyyyyy",
-    },
-    {
-      title: "Hidden gems around Shibuya?",
-      comment:
-        "Check out Nonbei Yokocho and Miyashita Park — both have amazing food and atmosphere away from the crowds.",
-      upvotes: 55,
-      subreddit: "Tokyo",
-      url: "https://www.reddit.com/r/Tokyo/comments/zzzzzz",
-    },
-    {
-      title: "Tokyo metro pass worth it?",
-      comment:
-        "Only if you're using the subway multiple times a day. Otherwise, just stick to Suica or Pasmo for flexibility.",
-      upvotes: 27,
-      subreddit: "solotravel",
-      url: "https://www.reddit.com/r/solotravel/comments/aaaaaa",
-    },
-  ]);
+  
+  // const [weatherData, _setWeatherData] = useState<WeatherData[]>([
+  //   { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
+  //   { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 5, condition: 'partly cloudy' },
+  //   { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'rain' },
+  //   { date: new Date(Date.now() + 3 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
+  //   { date: new Date(Date.now() + 4 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 20, condition: 'drizzle' },
+  //   { date: new Date(Date.now() + 5 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
+  //   { date: new Date(Date.now() + 6 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 0, condition: 'sunny' },
+  //   { date: new Date(Date.now() + 7 * 86400000).toISOString(), maxTemp: 24, minTemp: 16, rainAmount: 15, condition: 'rain' },
+  //   { date: new Date(Date.now() + 8 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
+  //   { date: new Date(Date.now() + 9 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 5, condition: 'partly cloudy' },
+  //   { date: new Date(Date.now() + 10 * 86400000).toISOString(), maxTemp: 25, minTemp: 17, rainAmount: 0, condition: 'sunny' },
+  //   { date: new Date(Date.now() + 11 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 10, condition: 'rain' },
+  //   { date: new Date(Date.now() + 12 * 86400000).toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 0, condition: 'sunny' },
+  //   { date: new Date(Date.now() + 13 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
+  //   { date: new Date(Date.now() + 14 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 5, condition: 'partly cloudy' },
+  // ])
+
+  // const [redditPosts] = useState<RedditPost[]>([
+  //   {
+  //     title: "First-time traveler to Tokyo looking for tips",
+  //     comment:
+  //       "Note: Suica cards are more available now at major stations. Google Maps is great for train transfers.",
+  //     upvotes: 42,
+  //     subreddit: "JapanTravel",
+  //     url: "https://www.reddit.com/r/JapanTravel/comments/xxxxxx",
+  //   },
+  //   {
+  //     title: "Back from a 10-day trip in Tokyo!",
+  //     comment:
+  //       "Instead of carrying a pocket WiFi, a local eSIM worked perfectly. Cheap and easy.",
+  //     upvotes: 31,
+  //     subreddit: "travel",
+  //     url: "https://www.reddit.com/r/travel/comments/yyyyyy",
+  //   },
+  //   {
+  //     title: "Hidden gems around Shibuya?",
+  //     comment:
+  //       "Check out Nonbei Yokocho and Miyashita Park — both have amazing food and atmosphere away from the crowds.",
+  //     upvotes: 55,
+  //     subreddit: "Tokyo",
+  //     url: "https://www.reddit.com/r/Tokyo/comments/zzzzzz",
+  //   },
+  //   {
+  //     title: "Tokyo metro pass worth it?",
+  //     comment:
+  //       "Only if you're using the subway multiple times a day. Otherwise, just stick to Suica or Pasmo for flexibility.",
+  //     upvotes: 27,
+  //     subreddit: "solotravel",
+  //     url: "https://www.reddit.com/r/solotravel/comments/aaaaaa",
+  //   },
+  // ]);
 
 
-  // Dummy restaurants
-  const [restaurants] = useState<Restaurant[]>([
-    { name: "Sushi Dai", address: "Tsukiji Market, Tokyo", rating: 4.8, totalReviews: 340, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/abc123" },
-    { name: "Ichiran Ramen", address: "Shibuya, Tokyo", rating: 4.5, totalReviews: 1200, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/def456" },
-    { name: "Tempura Kondo", address: "Ginza, Tokyo", rating: 4.7, totalReviews: 450, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/ghi789" },
-    { name: "Kyubey", address: "Ginza, Tokyo", rating: 4.6, totalReviews: 890, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/jkl012" },
-    { name: "Afuri Ramen", address: "Ebisu, Tokyo", rating: 4.4, totalReviews: 620, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/mno345" },
-  ])
+  // // Dummy restaurants
+  // const [restaurants] = useState<Restaurant[]>([
+  //   { name: "Sushi Dai", address: "Tsukiji Market, Tokyo", rating: 4.8, totalReviews: 340, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/abc123" },
+  //   { name: "Ichiran Ramen", address: "Shibuya, Tokyo", rating: 4.5, totalReviews: 1200, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/def456" },
+  //   { name: "Tempura Kondo", address: "Ginza, Tokyo", rating: 4.7, totalReviews: 450, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/ghi789" },
+  //   { name: "Kyubey", address: "Ginza, Tokyo", rating: 4.6, totalReviews: 890, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/jkl012" },
+  //   { name: "Afuri Ramen", address: "Ebisu, Tokyo", rating: 4.4, totalReviews: 620, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/mno345" },
+  // ])
 
   // fetching conversion rate whenever currency is changed
   useEffect(() => {
@@ -244,7 +254,7 @@ const MainPage: React.FC<MainPageProps> = ({
     fetchRate()
   }, [selectedCurrency])
 
-  const handleFormSubmit = (data: {
+  const handleFormSubmit = async (data: {
     source: string
     destination: string
     startDate: Date | undefined
@@ -252,32 +262,57 @@ const MainPage: React.FC<MainPageProps> = ({
   }) => {
     const tripData = {
       ...data,
-      currency: selectedCurrency.code,
-      totalBudget: budget,
+      budget,
     }
 
-    console.log("Sending to backend:", tripData)
+    console.log("🚀 Sending to orchestrator:", tripData)
 
-    fetch("http://localhost:5000/api/trips", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tripData),
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        console.log("Backend response:", response)
+    try {
+      setLoading(true)
+
+      const res = await fetch("http://localhost:5000/api/orchestrator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tripData),
       })
-      .catch((err) => console.error("Error sending trip data:", err))
+
+      const result = await res.json()
+      console.log("✅ Orchestrator response:", result)
+
+      if (!res.ok) throw new Error(result.message)
+
+      // Update UI from backend
+      setWeatherData(result.weather || [])
+      setRestaurants(result.restaurants || [])
+      setRedditPosts(result.reddit || [])
+    } catch (err) {
+      console.error("❌ Failed to fetch trip data:", err)
+      alert("Error fetching trip details. Check backend logs.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <GradientBackground>
       <div className="flex flex-col min-h-screen text-white">
+        {/* Loading overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-50">
+            <div className="text-white text-2xl font-semibold">
+              Planning your trip...
+            </div>
+            <div className="mt-4 w-12 h-12 border-4 border-t-white border-gray-500 rounded-full animate-spin"></div>
+          </div>
+        )}
+
+        {/* Navbar */}
         <Navbar
           selectedCurrency={selectedCurrency}
           setSelectedCurrency={setSelectedCurrency}
         />
 
+        {/* Main content */}
         <div className="flex-grow flex flex-col items-center justify-start px-4 pt-20 space-y-5">
           <TripInputForm onSubmit={handleFormSubmit} />
 
@@ -295,27 +330,47 @@ const MainPage: React.FC<MainPageProps> = ({
             1 INR = {exchangeRate.toFixed(3)} {selectedCurrency.code}
           </p>
 
-          {/* Itinerary */}
+          {/* Hardcoded Itinerary (for now) */}
           <div className="w-full max-w-10xl px-4">
             <Itinerary itinerary={itinerary} />
           </div>
 
-
-          {/* Weather, Food & Reddit Insights side by side */}
+          {/* Dynamic Data Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8 w-full">
+            {/* Weather */}
             <div className="h-full">
-              {weatherData.length > 0 && <WeatherForecast weatherData={weatherData} />}
+              {weatherData.length > 0 ? (
+                <WeatherForecast weatherData={weatherData} />
+              ) : (
+                <div className="text-center text-gray-400">
+                  Weather data will appear here after planning.
+                </div>
+              )}
             </div>
 
+            {/* Restaurants */}
             <div className="h-full">
-              <FoodInsights
-                restaurants={restaurants}
-                selectedCurrency={selectedCurrency}
-              />
+              {restaurants.length > 0 ? (
+                <FoodInsights
+                  restaurants={restaurants}
+                  selectedCurrency={selectedCurrency}
+                />
+              ) : (
+                <div className="text-center text-gray-400">
+                  Restaurants will appear here after planning.
+                </div>
+              )}
             </div>
 
+            {/* Reddit Insights */}
             <div className="h-full flex items-center">
-              <RedditInsights posts={redditPosts} />
+              {redditPosts.length > 0 ? (
+                <RedditInsights posts={redditPosts} />
+              ) : (
+                <div className="text-center text-gray-400">
+                  Reddit insights will appear here after planning.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -325,17 +380,3 @@ const MainPage: React.FC<MainPageProps> = ({
 }
 
 export default MainPage
-
-
-
-
-
-
-
-
-
-
-
-
-
-
