@@ -1,47 +1,71 @@
 import axios from "axios";
 import { spawn } from "child_process";
 import dotenv from "dotenv";
+import path from "path";
 
 dotenv.config();
 
 const REDDIT_PORT = process.env.REDDIT_PORT || 8000;
 const REDDIT_BACKEND_URL = `http://localhost:${REDDIT_PORT}/api/analyze`;
 
-let redditProcessStarted = false;
+// 🔧 use absolute path to your venv python
+const pythonPath = path.resolve("./venv/Scripts/python.exe");
 
-// Start the Reddit FastAPI backend automatically (if not already running)
+let redditProcessStarted = false;
+let redditReady = false; // 🔧 to track readiness
+
 function startRedditBackend() {
   if (redditProcessStarted) return;
   redditProcessStarted = true;
 
   console.log("Launching Reddit sentiment backend...");
+  console.log("Using Python path:", pythonPath);
 
-  const process = spawn("python3", ["-m", "src.agents.reddit.core.app"], {
-    stdio: "inherit",
-  });
+  const env = { ...process.env };
 
-  process.on("error", (err) => {
+  // 🔧 spawn backend inside venv with cwd
+  const redditProc = spawn(
+    pythonPath,
+    ["-m", "src.agents.reddit.core.app"],
+    {
+      stdio: "inherit",
+      env: env,
+      cwd: path.resolve("./"),
+    }
+  );
+
+  // 🔧 wait a few seconds before sending first request
+  setTimeout(() => {
+    redditReady = true;
+    console.log("✅ Reddit backend ready on http://localhost:8000");
+  }, 4000); // wait 4s for FastAPI to boot
+
+  redditProc.on("error", (err) => {
     console.error("Failed to start Reddit backend:", err);
   });
 
-  process.on("exit", (code) => {
+  redditProc.on("exit", (code) => {
     console.log(`Reddit backend stopped (code ${code})`);
     redditProcessStarted = false;
+    redditReady = false;
   });
 }
 
 // Fetch Reddit travel tips and analyze using the Python backend
 export const getRedditAdvice = async (destination) => {
   try {
-    // Start backend if not already running
     startRedditBackend();
+
+    // 🔧 ensure backend is ready before making request
+    while (!redditReady) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
 
     console.log(`Fetching Reddit advice for: ${destination}`);
 
     const query = `${destination} travel tips`;
     const redditUrl = "https://www.reddit.com/search.json";
 
-    // Fetch Reddit search results
     const response = await axios.get(redditUrl, {
       params: { q: query, limit: 10, sort: "relevance" },
       headers: { "User-Agent": "TrailHead/1.0" },
@@ -51,7 +75,6 @@ export const getRedditAdvice = async (destination) => {
       .map((child) => child.data)
       .filter((post) => !post.over_18);
 
-    // Fetch top comment for each post
     const posts = await Promise.all(
       rawPosts.map(async (post) => {
         const topComment = await getTopComment(post.permalink);
@@ -64,14 +87,15 @@ export const getRedditAdvice = async (destination) => {
       })
     );
 
-    // Send posts to FastAPI backend for ML sentiment filtering
     const analysisResponse = await axios.post(
       REDDIT_BACKEND_URL,
       { posts },
       { headers: { "Content-Type": "application/json" } }
     );
 
-    // Return only ML-filtered posts (title, comment, upvotes, url)
+    const sortedPosts = analysisResponse.data.posts
+      .sort((a, b) => b.upvotes - a.upvotes);
+
     return {
       destination,
       query,
@@ -83,12 +107,16 @@ export const getRedditAdvice = async (destination) => {
       })),
     };
   } catch (error) {
+  if (error.response) {
+    console.error("Reddit Service Error:", error.response.status, error.response.data);
+  } else {
     console.error("Reddit Service Error:", error.message);
-    throw new Error("Failed to fetch Reddit data");
   }
+  throw new Error("Failed to fetch Reddit data");
+}
+
 };
 
-// Helper to get the top comment
 async function getTopComment(permalink) {
   try {
     const url = `https://www.reddit.com${permalink}.json`;
