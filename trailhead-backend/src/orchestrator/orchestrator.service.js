@@ -85,6 +85,12 @@ export const orchestrateTripService = async (tripDetails) => {
       }
     };
 
+    console.log({
+      restaurants: foodData?.restaurants?.length,
+      hotels: accommodationData?.hotels?.length,
+      events: eventsData?.events?.length,
+    });
+
     console.log("Orchestrator finished successfully!");
     return response;
   } catch (error) {
