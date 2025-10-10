@@ -54,7 +54,7 @@ export const loginUser = async (req, res) => {
 
 // Google Auth (start login)
 export const googleAuth = (req, res, next) => {
-  console.log("✅ Google OAuth route hit"); // Debug log
+  console.log("Google OAuth route hit"); // Debug log
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
 };
 
@@ -63,15 +63,15 @@ export const googleCallback = (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, data) => {
     if (err || !data) {
       console.error("Google OAuth Error:", err);
-      return res.redirect("/login?error=oauth_failed");
+      return res.redirect("http://localhost:5173/login?error=oauth_failed");
     }
 
     const { token, user } = data;
-    const redirectUrl = `http://localhost:5173/oauth-success?token=${token}&username=${encodeURIComponent(
+    const redirectUrl = `http://localhost:5173/login?token=${token}&username=${encodeURIComponent(
       user.username
     )}`;
 
-    console.log("✅ Google OAuth success for:", user.email);
+    console.log("Google OAuth success for:", user.email);
 
     return res.redirect(redirectUrl);
   })(req, res, next);

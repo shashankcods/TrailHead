@@ -15,8 +15,8 @@ import eventsRoute from "./agents/events/events.route.js";
 import foodRoute from "./agents/food/food.route.js";
 import redditRoute from "./agents/reddit/reddit.route.js";
 import accommodationRoute from "./agents/accommodation/accommodation.route.js";
+import llmRoute from "./llm/llm.route.js";
 import safetyRoute from "./agents/safety/safety.route.js";
-import llmRoute from "./llm/llm.route.js"
 
 // Initialize express app instance
 const app = express();
