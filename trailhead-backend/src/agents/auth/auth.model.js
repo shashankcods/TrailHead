@@ -21,6 +21,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true, // Password is mandatory
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    profilePic: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt & updatedAt fields

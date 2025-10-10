@@ -9,31 +9,28 @@ const REDDIT_BACKEND_URL = `http://localhost:${REDDIT_PORT}/api/analyze`;
 
 let redditProcessStarted = false;
 
-
-//Starts the Reddit FastAPI backend automatically (if not already running)
+// Start the Reddit FastAPI backend automatically (if not already running)
 function startRedditBackend() {
   if (redditProcessStarted) return;
   redditProcessStarted = true;
 
-  console.log("🚀 Launching Reddit sentiment backend...");
+  console.log("Launching Reddit sentiment backend...");
 
   const process = spawn("python3", ["-m", "src.agents.reddit.core.app"], {
     stdio: "inherit",
-   });
-
+  });
 
   process.on("error", (err) => {
     console.error("Failed to start Reddit backend:", err);
   });
 
   process.on("exit", (code) => {
-    console.log(`🧠 Reddit backend stopped (code ${code})`);
+    console.log(`Reddit backend stopped (code ${code})`);
     redditProcessStarted = false;
   });
 }
 
-
-//Fetch Reddit travel tips and analyze using the Python backend
+// Fetch Reddit travel tips and analyze using the Python backend
 export const getRedditAdvice = async (destination) => {
   try {
     // Start backend if not already running
@@ -44,6 +41,7 @@ export const getRedditAdvice = async (destination) => {
     const query = `${destination} travel tips`;
     const redditUrl = "https://www.reddit.com/search.json";
 
+    // Fetch Reddit search results
     const response = await axios.get(redditUrl, {
       params: { q: query, limit: 10, sort: "relevance" },
       headers: { "User-Agent": "TrailHead/1.0" },
@@ -59,23 +57,30 @@ export const getRedditAdvice = async (destination) => {
         const topComment = await getTopComment(post.permalink);
         return {
           title: post.title,
-          snippet: topComment || "No useful comments available.",
+          comment: topComment || "No useful comments available.",
+          upvotes: post.ups,
           url: `https://reddit.com${post.permalink}`,
         };
       })
     );
 
-    // Send posts to the FastAPI backend
+    // Send posts to FastAPI backend for ML sentiment filtering
     const analysisResponse = await axios.post(
       REDDIT_BACKEND_URL,
       { posts },
       { headers: { "Content-Type": "application/json" } }
     );
 
+    // Return only ML-filtered posts (title, comment, upvotes, url)
     return {
       destination,
       query,
-      analyzedPosts: analysisResponse.data.posts,
+      analyzedPosts: analysisResponse.data.posts.map((p) => ({
+        title: p.title,
+        comment: p.comment,
+        upvotes: p.upvotes,
+        url: p.url,
+      })),
     };
   } catch (error) {
     console.error("Reddit Service Error:", error.message);

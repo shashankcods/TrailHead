@@ -3,6 +3,8 @@ import express from "express";
 // import cors from "cors";  // will be used if needed, keep commented for now
 import path from "path";
 import { fileURLToPath } from "url";
+import passport from "passport";
+import "./config/passport.js";
 
 // Import route handlers for each agent
 import authRoute from "./agents/auth/auth.route.js";
@@ -13,6 +15,7 @@ import eventsRoute from "./agents/events/events.route.js";
 import foodRoute from "./agents/food/food.route.js";
 import redditRoute from "./agents/reddit/reddit.route.js";
 import accommodationRoute from "./agents/accommodation/accommodation.route.js";
+import safetyRoute from "./agents/safety/safety.route.js";
 
 // Initialize express app instance
 const app = express();
@@ -20,6 +23,8 @@ const app = express();
 
 // app.use(cors());
 app.use(express.json());  // Parse incoming JSON automatically
+
+app.use(passport.initialize());
 
 // Dfalt route to check if the backedn is running
 // app.get("/", (req, res) => {
@@ -34,6 +39,7 @@ app.use("/api/events", eventsRoute);
 app.use("/api/food", foodRoute);
 app.use("/api/reddit", redditRoute);
 app.use("/api/accommodation", accommodationRoute);
+app.use("/api/safety", safetyRoute)
 app.use("/api/orchestrator", orchestratorRoute);
 
 // Serve frontend

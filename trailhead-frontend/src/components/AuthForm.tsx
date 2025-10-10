@@ -23,9 +23,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     { regex: /[^A-Za-z0-9]/, message: "Atleast 1 special character" },
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => { // to be used when endpoints are available for post req
-      e.preventDefault();
-      setError("");
+  const handleSubmit = async (e: React.FormEvent) => { 
+    e.preventDefault();
+    setError("");
 
       if (mode === "signup") {
         for (const rule of passwordRules) {
@@ -41,27 +41,32 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         }
       }
 
-      try {
-        const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/register";
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, email, password }),
-        });
-
-        const data = await res.json();
-        console.log(data)
-
-        if (res.ok) {
-          login();
-          onSuccess?.();
-        } else {
-          setError(data.message || "Something went wrong");
-        }
-      } catch {
-        setError("Network error. Please try again.");
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
       }
-    };
+    }
+
+    try {
+      const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/register";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        login();
+        onSuccess?.();
+      } else {
+        setError(data.message || "Something went wrong");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    }
+  };
 
   return (  // signup/signin form 
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -136,6 +141,21 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           {mode === "signin" ? "Sign Up" : "Sign In"}
         </span>
       </p>
+      <div className="relative flex items-center justify-center my-2">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative bg-white px-3 text-gray-500 text-sm">or</div>
+      </div>
+
+      <button
+        type="button"
+        //onClick={() => window.location.href = "http://localhost:5000/api/auth/google"} to be implemented after google auth in backend is
+        className="w-full py-3 px-6 border border-gray-400 bg-white text-gray-800 font-semibold rounded-lg shadow-sm hover:bg-gray-100 hover:scale-105 transition duration-300 ease-in-out flex items-center justify-center gap-2"
+      >
+        <img src="../src/assets/google-black.svg" alt="Google" className="w-5 h-5" />
+        Sign In with Google
+      </button>
     </form>
   );
 };
