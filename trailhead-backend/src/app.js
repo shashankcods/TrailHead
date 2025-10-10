@@ -15,6 +15,7 @@ import eventsRoute from "./agents/events/events.route.js";
 import foodRoute from "./agents/food/food.route.js";
 import redditRoute from "./agents/reddit/reddit.route.js";
 import accommodationRoute from "./agents/accommodation/accommodation.route.js";
+import safetyRoute from "./agents/safety/safety.route.js";
 
 // Initialize express app instance
 const app = express();
@@ -38,6 +39,7 @@ app.use("/api/events", eventsRoute);
 app.use("/api/food", foodRoute);
 app.use("/api/reddit", redditRoute);
 app.use("/api/accommodation", accommodationRoute);
+app.use("/api/safety", safetyRoute)
 app.use("/api/orchestrator", orchestratorRoute);
 
 // Serve frontend
