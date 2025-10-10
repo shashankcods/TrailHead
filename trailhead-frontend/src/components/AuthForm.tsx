@@ -8,7 +8,7 @@ interface AuthFormProps {
 const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
   const { login } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [name, setName] = useState("");
+  const [username, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,10 +27,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     e.preventDefault();
     setError("");
 
-    if (mode === "signup") {
-      for (const rule of passwordRules) {
-        if (!rule.regex.test(password)) {
-          setError(`Password must have ${rule.message.toLowerCase()}`);
+      if (mode === "signup") {
+        for (const rule of passwordRules) {
+          if (!rule.regex.test(password)) {
+            setError(`Password must have ${rule.message.toLowerCase()}`);
+            return;
+          }
+        }
+
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
           return;
         }
       }
@@ -68,7 +74,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         <input
           type="text"
           placeholder="Full Name"
-          value={name}
+          value={username}
           onChange={(e) => setName(e.target.value)}
           required
           className="p-2 border border-gray-500 rounded-lg"

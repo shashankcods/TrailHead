@@ -57,7 +57,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
     const res = await fetch(url, {
       headers: {
         "Accept-Language": "en",
-        "User-Agent": "TripPlannerApp",
+        "User-Agent": "TrailHead",
       },
     });
 
@@ -103,18 +103,45 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
     []
   );
 
-  // form submissions
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      source,
-      destination,
-      startDate: dateRange?.from,
-      endDate: dateRange?.to,
-    });
-    setSourceSuggestions([]);
-    setDestinationSuggestions([]);
+// form submissions
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  const formatDate = (date: Date | undefined) =>
+  date ? date.toISOString().split("T")[0] : undefined;
+
+  const tripData = {
+    source,
+    destination,
+    startDate: formatDate(dateRange?.from),
+    endDate: formatDate(dateRange?.to),
   };
+
+  console.log("Sending trip data:", tripData);
+
+  try {
+    const res = await fetch("/api/orchestrator", { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tripData),
+    });
+
+    const data = await res.json();
+    console.log("Response:", data);
+
+    if (res.ok) {
+      alert("Trip created successfully!");
+    } else {
+      alert(`Error: ${data.error || data.message}`);
+    }
+  } catch (err) {
+    console.error("Network error:", err);
+  }
+
+  // Clear suggestions if you still want to
+  setSourceSuggestions([]);
+  setDestinationSuggestions([]);
+};
 
   return (
     <form
