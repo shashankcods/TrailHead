@@ -296,7 +296,10 @@ const MainPage: React.FC<MainPageProps> = ({
           </p>
 
           {/* Itinerary */}
-          <Itinerary itinerary={itinerary} />
+          <div className="w-full max-w-10xl px-4">
+            <Itinerary itinerary={itinerary} />
+          </div>
+
 
           {/* Weather, Food & Reddit Insights side by side */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8 w-full">

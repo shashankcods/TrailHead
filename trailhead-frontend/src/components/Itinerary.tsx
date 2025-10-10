@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 
 export interface ItineraryDay {
   day: number;
@@ -11,6 +11,8 @@ interface ItineraryProps {
 }
 
 const Itinerary: React.FC<ItineraryProps> = ({ itinerary }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -20,13 +22,62 @@ const Itinerary: React.FC<ItineraryProps> = ({ itinerary }) => {
     });
   };
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let isDown = false;
+    let startX: number;
+    let scrollLeft: number;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      container.classList.add("cursor-grabbing");
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      container.classList.remove("cursor-grabbing");
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      container.classList.remove("cursor-grabbing");
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.2;
+      container.scrollLeft = scrollLeft - walk;
+    };
+
+    container.addEventListener("mousedown", handleMouseDown);
+    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      container.removeEventListener("mousedown", handleMouseDown);
+      container.removeEventListener("mouseleave", handleMouseLeave);
+      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
   return (
-    <div className="w-full mt-4 mb-10 p-4">
+    <div className="w-full mt-4 mb-10 p-4 relative">
       <h3 className="text-white text-2xl font-bold mb-6 text-center">
         Trip Itinerary
       </h3>
 
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-2">
+      <div
+        ref={containerRef}
+        className="flex gap-4 overflow-x-auto scrollbar-hide cursor-grab select-none px-4"
+      >
         {itinerary.map((day, index) => (
           <div
             key={index}
@@ -53,7 +104,6 @@ const Itinerary: React.FC<ItineraryProps> = ({ itinerary }) => {
         ))}
       </div>
 
-      {/* Hide scrollbar */}
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -68,3 +118,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ itinerary }) => {
 };
 
 export default Itinerary;
+
+
+
+
