@@ -12,13 +12,22 @@ const OAuthSuccess = () => {
     if (token) {
       localStorage.setItem("jwt", token);
       localStorage.setItem("username", username || "");
-      navigate("/dashboard"); // redirect to main app after login
+
+      // Delay navigation slightly so React Router is ready
+      setTimeout(() => {
+        navigate("/main", { replace: true });
+      }, 100);
     } else {
-      navigate("/login"); // fallback if token missing
+      navigate("/", { replace: true });
     }
   }, [navigate]);
 
-  return <div>Signing you in...</div>;
+  return (
+    <div className="flex flex-col items-center justify-center h-screen text-white">
+      <h2 className="text-2xl font-semibold mb-4">Signing you in...</h2>
+      <p className="text-gray-400">Please wait, redirecting...</p>
+    </div>
+  );
 };
 
 export default OAuthSuccess;
