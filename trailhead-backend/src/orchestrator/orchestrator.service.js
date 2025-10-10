@@ -9,6 +9,7 @@ import { getRestaurants } from "../agents/food/food.service.js";
 import { getEvents } from "../agents/events/events.service.js";
 import { getHotelsFromBooking } from "../agents/accommodation/accommodation.service.js";
 import { getRedditAdvice } from "../agents/reddit/reddit.service.js";
+import { getSafetyData } from "../agents/safety/safety.service.js";
 
 export const orchestrateTripService = async (tripDetails) => {
   const { source, destination, startDate, endDate, budget } = tripDetails;
@@ -23,11 +24,12 @@ export const orchestrateTripService = async (tripDetails) => {
       getRestaurants(destination),
       getEvents(destination, startDate, endDate),
       getHotelsFromBooking(destination, startDate, endDate),
-      getRedditAdvice(destination)
+      getRedditAdvice(destination),
+      getSafetyData(destination)
     ]);
 
     // Extract each result safely
-    const [mapsRes, weatherRes, foodRes, eventsRes, accommodationRes, redditRes] = results;
+    const [mapsRes, weatherRes, foodRes, eventsRes, accommodationRes, redditRes, safetyRes] = results;
 
     const mapsData =
       mapsRes.status === "fulfilled"
@@ -59,6 +61,11 @@ export const orchestrateTripService = async (tripDetails) => {
         ? redditRes.value
         : { error: redditRes.reason?.message || "Reddit agent failed" };
 
+    const safetyData=
+      safetyRes.status === "fulfilled"
+        ? safetyRes.value
+        : { error: safetyRes.reason?.message || "Safety agent failed" };
+
     // Combine all agent data into one unified JSON response
     const response = {
       summary: "Trip plan generated successfully!",
@@ -68,6 +75,7 @@ export const orchestrateTripService = async (tripDetails) => {
       events: eventsData,
       accommodation: accommodationData,
       reddit: redditData,
+      safety: safetyData,
       meta: {
         source,
         destination,
