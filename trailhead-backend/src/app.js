@@ -15,7 +15,6 @@ import eventsRoute from "./agents/events/events.route.js";
 import foodRoute from "./agents/food/food.route.js";
 import redditRoute from "./agents/reddit/reddit.route.js";
 import accommodationRoute from "./agents/accommodation/accommodation.route.js";
-import safetyRoute from "./agents/safety/safety.route.js";
 
 // Initialize express app instance
 const app = express();
@@ -25,6 +24,12 @@ const app = express();
 app.use(express.json());  // Parse incoming JSON automatically
 
 app.use(passport.initialize());
+
+app.post("/testjson", (req, res) => {
+  console.log("Body received:", req.body);
+  res.json(req.body);
+});
+
 
 // Dfalt route to check if the backedn is running
 // app.get("/", (req, res) => {
@@ -41,6 +46,7 @@ app.use("/api/reddit", redditRoute);
 app.use("/api/accommodation", accommodationRoute);
 app.use("/api/safety", safetyRoute)
 app.use("/api/orchestrator", orchestratorRoute);
+app.use("/api/llm", llmRoute);
 
 // Serve frontend
 const __filename = fileURLToPath(import.meta.url);
