@@ -1,10 +1,9 @@
 import axios from "axios";
 
-// Main function: Fetches weather forecast for a given destination (and optional date range)
-// Uses Open-Meteo’s free APIs for both geocoding and weather forecast data
+// Main weather agent: Fetches forecast or climate averages for a destination
 export const getWeatherFromOpenMeteo = async (destination, start_date, end_date) => {
   try {
-    // Step 1: Convert destination name into latitude & longitude (geocoding)
+    // Geocode destination to lat/lon using OpenRouteService
     const geoUrl = "https://api.openrouteservice.org/geocode/search";
     const geoRes = await axios.get(geoUrl, {
       params: {
@@ -14,56 +13,65 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
     });
 
     const location = geoRes.data.features?.[0];
+    if (!location) throw new Error("Location not found");
 
-    // If the API couldn’t find a location, stop and throw an error
-    if (!location) {
-      throw new Error("Location not found");
-    }
-
-    // Extract key details from the geocoding response
     const [longitude, latitude] = location.geometry.coordinates;
     const label = location.properties.label || destination;
     const country = label.split(",").pop().trim();
 
-    console.log(`Geocoded ${destination} → ${latitude}, ${longitude}`)
+    console.log(`🌦️ Geocoded ${destination} → ${latitude}, ${longitude}`);
 
+    // Determine if within 16 days (forecast) or longer (climate)
     const today = new Date();
     const cutoff = new Date();
     cutoff.setDate(today.getDate() + 16);
+
     const start = new Date(start_date);
     const end = new Date(end_date);
 
     let forecast = [];
 
-    //Case 1: Entire range within 16 days
     if (end <= cutoff) {
+      // Entire range within 16-day window
       forecast = await getForecast(latitude, longitude, start_date, end_date);
-    }
-
-    //Case 2: Entire range beyond 16 days
-    else if (start > cutoff) {
+    } else if (start > cutoff) {
+      // Entire range beyond forecast period → climate model
       forecast = await getClimateAverages(latitude, longitude, start_date, end_date);
-    }
-
-    //Case 3: Mixed
-    else {
+    } else {
+      // Mixed range → combine both
       const cutoffDate = cutoff.toISOString().split("T")[0];
       const forecastPart = await getForecast(latitude, longitude, start_date, cutoffDate);
       const climatePart = await getClimateAverages(latitude, longitude, cutoffDate, end_date);
       forecast = [...forecastPart, ...climatePart];
     }
 
-    // Return the final structured forecast along with basic location info
-    return { destination, country, forecast };
+    // Return clean, frontend-friendly structure
+    return {
+      destination,
+      country,
+      forecast, // already formatted for Weather.tsx
+    };
 
   } catch (error) {
     console.error("Weather Service Error:", error.response?.status, error.response?.data || error.message);
-    throw new Error("Failed to fetch weather data from Open-Meteo API");
+    return {
+      destination,
+      country: "Unknown",
+      forecast: [
+        {
+          date: new Date().toISOString(),
+          maxTemp: 0,
+          minTemp: 0,
+          rainAmount: 0,
+          condition: "Unavailable",
+        },
+      ],
+    };
   }
 };
 
-
-async function getForecast(latitude, longitude, start_date, end_date){
+// 16-day Forecast
+async function getForecast(latitude, longitude, start_date, end_date) {
   const params = {
     latitude,
     longitude,
@@ -85,6 +93,7 @@ async function getForecast(latitude, longitude, start_date, end_date){
   }));
 }
 
+// Long-range Climate Averages
 async function getClimateAverages(latitude, longitude, start_date, end_date) {
   const params = {
     latitude,
@@ -92,7 +101,7 @@ async function getClimateAverages(latitude, longitude, start_date, end_date) {
     start_date,
     end_date,
     models: "MRI_AGCM3_2_S",
-    daily: "temperature_2m_max,temperature_2m_min,precipitation_sum"
+    daily: "temperature_2m_max,temperature_2m_min,precipitation_sum",
   };
 
   try {
@@ -100,7 +109,6 @@ async function getClimateAverages(latitude, longitude, start_date, end_date) {
     const daily = res.data.daily;
 
     if (!daily || !daily.time) throw new Error("Invalid climate response");
-
 
     return daily.time.map((date, i) => {
       const maxTemp = daily.temperature_2m_max[i];
@@ -122,7 +130,7 @@ async function getClimateAverages(latitude, longitude, start_date, end_date) {
   }
 }
 
-// Helper function: Converts numeric weather codes into human-readable descriptions
+// Maps numeric codes → readable descriptions
 function weatherCodeToText(code) {
   const codes = {
     0: "Clear sky",
@@ -148,15 +156,16 @@ function weatherCodeToText(code) {
   return codes[code] || "Unknown";
 }
 
+// Infers approximate code for climate model data (no weather codes returned)
 function inferWeatherCode(maxTemp, minTemp, rainAmount) {
-  if (rainAmount > 50) return 82;       // Violent rain showers
-  if (rainAmount > 20) return 81;       // Moderate rain showers
-  if (rainAmount > 10) return 65;       // Heavy rain
-  if (rainAmount > 5)  return 63;       // Moderate rain
-  if (rainAmount > 1)  return 61;       // Light rain
-  if (maxTemp < 5)     return 75;       // Heavy snow (cold regions)
-  if (maxTemp < 10)    return 73;       // Moderate snow
-  if (maxTemp < 15)    return 3;        // Cloudy
-  if (maxTemp < 25)    return 2;        // Partly cloudy
-  return 0; 
+  if (rainAmount > 50) return 82;
+  if (rainAmount > 20) return 81;
+  if (rainAmount > 10) return 65;
+  if (rainAmount > 5) return 63;
+  if (rainAmount > 1) return 61;
+  if (maxTemp < 5) return 75;
+  if (maxTemp < 10) return 73;
+  if (maxTemp < 15) return 3;
+  if (maxTemp < 25) return 2;
+  return 0;
 }

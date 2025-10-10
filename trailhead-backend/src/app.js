@@ -1,6 +1,6 @@
 // Import express framework for the server
 import express from "express";
-// import cors from "cors";  // will be used if needed, keep commented for now
+import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import passport from "passport";
@@ -22,7 +22,10 @@ import llmRoute from "./llm/llm.route.js"
 const app = express();
 
 
-// app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 app.use(express.json());  // Parse incoming JSON automatically
 
 app.use(passport.initialize());
