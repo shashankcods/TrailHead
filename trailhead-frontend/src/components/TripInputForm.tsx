@@ -11,7 +11,7 @@ interface TripInputFormProps {
   }) => void;
 }
 
-export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit }) => {
+export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmit }) => {
   // input states
   const [source, setSource] = useState("");
   const [destination, setDestination] = useState("");

@@ -145,7 +145,7 @@ const MainPage: React.FC<MainPageProps> = ({
 
 
 
-  const [weatherData, setWeatherData] = useState<WeatherData[]>([
+  const [weatherData, _setWeatherData] = useState<WeatherData[]>([
     { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
     { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 5, condition: 'partly cloudy' },
     { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'rain' },
