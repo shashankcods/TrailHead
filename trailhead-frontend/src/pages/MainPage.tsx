@@ -257,42 +257,39 @@ const MainPage: React.FC<MainPageProps> = ({
   const handleFormSubmit = async (data: {
     source: string
     destination: string
-    startDate: Date | undefined
-    endDate: Date | undefined
+    startDate: string | undefined
+    endDate: string | undefined
   }) => {
-    const tripData = {
-      ...data,
-      budget,
-    }
+    const tripData = { ...data, budget }
 
     console.log("🚀 Sending to orchestrator:", tripData)
 
     try {
       setLoading(true)
-
       const res = await fetch("http://localhost:5000/api/orchestrator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tripData),
       })
 
+      if (!res.ok) throw new Error(`Backend returned ${res.status}`)
+
       const result = await res.json()
-      console.log("✅ Orchestrator response:", result)
+      console.log("✅ Parsed orchestrator response:", result)
 
-      if (!res.ok) throw new Error(result.message)
+      // Make sure the frontend knows where to find each part:
+      setWeatherData(result.weather?.forecast || [])
+      setRestaurants(result.food?.restaurants || [])
+      setRedditPosts(result.reddit?.insights || [])
 
-      // Update UI from backend
-      setWeatherData(result.weather || [])
-      setRestaurants(result.restaurants || [])
-      setRedditPosts(result.reddit || [])
     } catch (err) {
       console.error("❌ Failed to fetch trip data:", err)
-      alert("Error fetching trip details. Check backend logs.")
+      alert("Error fetching trip details. Check backend logs or endpoint URL.")
     } finally {
       setLoading(false)
     }
   }
-
+  
   return (
     <GradientBackground>
       <div className="flex flex-col min-h-screen text-white">
