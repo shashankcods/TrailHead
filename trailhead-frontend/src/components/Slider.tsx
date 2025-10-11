@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import type { Currency } from "./Navbar";
 
@@ -12,7 +12,7 @@ interface CurrencySliderProps {
   step?: number;
   className?: string;
 }
-// implementing slider imported from shadcn
+
 const CurrencySlider: React.FC<CurrencySliderProps> = ({
   label,
   value,
@@ -23,6 +23,12 @@ const CurrencySlider: React.FC<CurrencySliderProps> = ({
   step = 10,
   className,
 }) => {
+
+  // Reset slider to min whenever currency changes
+  useEffect(() => {
+    onChange(min);
+  }, [selectedCurrency, min, onChange]);
+
   return (
     <div className={`w-full max-w-md p-4 bg-white/10 rounded-2xl shadow-md text-white z-0 ${className ?? ""}`}>
       <div className="flex justify-between mb-2">
@@ -33,7 +39,6 @@ const CurrencySlider: React.FC<CurrencySliderProps> = ({
         </span>
       </div>
 
-      {/* modifying slider settings accordingly */}
       <Slider
         min={min}
         max={max}
@@ -47,4 +52,5 @@ const CurrencySlider: React.FC<CurrencySliderProps> = ({
 };
 
 export default CurrencySlider;
+
 
