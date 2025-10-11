@@ -1,6 +1,6 @@
 import axios from "axios";
 // Set a global timeout for all axios calls (10 seconds)
-axios.defaults.timeout = 10000;
+axios.defaults.timeout = 30000;
 
 // Import all agent services
 import { getRouteFromORS } from "../agents/maps/maps.service.js";
