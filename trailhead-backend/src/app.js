@@ -16,8 +16,9 @@ import foodRoute from "./agents/food/food.route.js";
 import redditRoute from "./agents/reddit/reddit.route.js";
 import accommodationRoute from "./agents/accommodation/accommodation.route.js";
 import safetyRoute from "./agents/safety/safety.route.js";
-import llmRoute from "./llm/llm.route.js"
 import flightsRoute from "./agents/flights/flights.route.js";
+import calendarRoute from "./agents/calendar/calendar.route.js";
+import llmRoute from "./llm/llm.route.js";
 
 // Initialize express app instance
 const app = express();
@@ -53,7 +54,11 @@ app.use("/api/accommodation", accommodationRoute);
 app.use("/api/safety", safetyRoute)
 app.use("/api/flights", flightsRoute);
 app.use("/api/orchestrator", orchestratorRoute);
+app.use("/api/calendar", calendarRoute);
 app.use("/api/llm", llmRoute);
+
+//serve calendar_files for direct download
+app.use("/calendar_files", express.static("calendar_files"));
 
 // Serve frontend
 const __filename = fileURLToPath(import.meta.url);
