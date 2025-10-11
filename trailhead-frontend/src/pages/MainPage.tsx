@@ -108,6 +108,7 @@ const MainPage: React.FC<MainPageProps> = ({
   const [redditPosts, setRedditPosts] = useState<RedditPost[]>([])
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [safety, setSafety] = useState<any>(null)
+  const [calendarUrl, setCalendarUrl] = useState<string>("") // added for calendar
 
   useEffect(() => {
     const fetchRate = async () => {
@@ -169,6 +170,7 @@ const MainPage: React.FC<MainPageProps> = ({
       setRestaurants(result.food?.restaurants || [])
       setRedditPosts(result.reddit?.analyzedPosts || [])
       setSafety(safetyData)
+      setCalendarUrl(result.calendar?.downloadUrl || "") // set calendar url
     } catch (err) {
       console.error("❌ Failed to fetch trip data:", err)
       alert("Error fetching trip details. Check backend logs or endpoint URL.")
@@ -215,19 +217,9 @@ const MainPage: React.FC<MainPageProps> = ({
           </div>
         )}
 
-        {/* Full layout after submission with smooth transition */}
+        {/* Full layout after submission */}
         {submitted && !loading && (
-          <div
-            className="flex-grow flex flex-col items-center justify-start px-4 pt-20 space-y-5
-                       transition-all duration-700 ease-out opacity-0 translate-y-6"
-            ref={(el) => {
-              if (el) {
-                requestAnimationFrame(() => {
-                  el.classList.remove("opacity-0", "translate-y-6");
-                });
-              }
-            }}
-          >
+          <div className="flex-grow flex flex-col items-center justify-start px-4 pt-20 space-y-5">
             <TripInputForm onSubmit={handleFormSubmit} />
             <CurrencySlider
               label="Trip Budget"
@@ -258,6 +250,18 @@ const MainPage: React.FC<MainPageProps> = ({
             <div className="w-full px-4">
               <SafetyInfo safety={safety} />
             </div>
+
+            {/* Downloadable Calendar Button */}
+            {calendarUrl && (
+              <div className="mb-15">
+                <button
+                  className="px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-950 transition duration-300"
+                  onClick={() => window.open(calendarUrl, "_blank")}
+                >
+                  Downloadable Calendar
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -266,6 +270,7 @@ const MainPage: React.FC<MainPageProps> = ({
 }
 
 export default MainPage
+
 
 
 
