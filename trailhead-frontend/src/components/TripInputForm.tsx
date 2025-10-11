@@ -95,6 +95,12 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     []
   );
 
+  // 🧹 Clean function to trim before comma
+  const cleanLocation = (value: string) => {
+    if (!value) return "";
+    return value.split(",")[0].trim();
+  };
+
   // 🟢 handle form submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,14 +108,18 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     const formatDate = (date: Date | undefined) =>
       date ? date.toISOString().split("T")[0] : undefined;
 
+    // 🧹 Clean both source and destination before sending
+    const cleanedSource = cleanLocation(source);
+    const cleanedDestination = cleanLocation(destination);
+
     const tripData = {
-      source,
-      destination,
+      source: cleanedSource,
+      destination: cleanedDestination,
       startDate: formatDate(dateRange?.from),
       endDate: formatDate(dateRange?.to),
     };
 
-    console.log("✅ Sending trip data to MainPage:", tripData);
+    console.log("✅ Sending cleaned trip data:", tripData);
 
     // 🔥 call parent handler instead of fetching directly
     _onSubmit(tripData);
@@ -326,3 +336,4 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     </form>
   );
 };
+

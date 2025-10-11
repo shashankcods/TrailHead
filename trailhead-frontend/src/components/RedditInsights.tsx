@@ -36,7 +36,7 @@ const RedditInsights: React.FC<{ posts: RedditPost[] }> = ({ posts }) => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-gray-400 font-semibold">
-                  r/{post.subreddit}
+                  {post.subreddit}
                 </span>
                 <div className="flex items-center text-gray-400 text-sm">
                   <FaArrowUp className="text-orange-400 mr-1" />

@@ -280,7 +280,7 @@ const MainPage: React.FC<MainPageProps> = ({
       // Make sure the frontend knows where to find each part:
       setWeatherData(result.weather?.forecast || [])
       setRestaurants(result.food?.restaurants || [])
-      setRedditPosts(result.reddit?.insights || [])
+      setRedditPosts(result.reddit?.analyzedPosts || [])
 
     } catch (err) {
       console.error("❌ Failed to fetch trip data:", err)
