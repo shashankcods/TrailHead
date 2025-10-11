@@ -7,7 +7,7 @@ import WeatherForecast, { type WeatherData } from "@/components/Weather"
 import RedditInsights from "@/components/RedditInsights"
 import FoodInsights, { type Restaurant } from "@/components/Restaurants"
 import Itinerary, { type ItineraryDay } from "@/components/Itinerary";
-
+import SafetyInfo from "@/components/SafetyInfo"
 
 // reddit insights component
 type RedditPost = {
@@ -32,7 +32,6 @@ const MainPage: React.FC<MainPageProps> = ({
   const [maxBudget, setMaxBudget] = useState(500000)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [loading, setLoading] = useState(false)
-
 
   const [itinerary] = useState<ItineraryDay[]>([
     {
@@ -149,74 +148,7 @@ const MainPage: React.FC<MainPageProps> = ({
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [redditPosts, setRedditPosts] = useState<RedditPost[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-
-  // Remove this hardcoded shi ig
-
-
-
-  
-  // const [weatherData, _setWeatherData] = useState<WeatherData[]>([
-  //   { date: new Date().toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 10, condition: 'sunny' },
-  //   { date: new Date(Date.now() + 86400000).toISOString(), maxTemp: 25, minTemp: 16, rainAmount: 5, condition: 'partly cloudy' },
-  //   { date: new Date(Date.now() + 2 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 30, condition: 'rain' },
-  //   { date: new Date(Date.now() + 3 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
-  //   { date: new Date(Date.now() + 4 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 20, condition: 'drizzle' },
-  //   { date: new Date(Date.now() + 5 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
-  //   { date: new Date(Date.now() + 6 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 0, condition: 'sunny' },
-  //   { date: new Date(Date.now() + 7 * 86400000).toISOString(), maxTemp: 24, minTemp: 16, rainAmount: 15, condition: 'rain' },
-  //   { date: new Date(Date.now() + 8 * 86400000).toISOString(), maxTemp: 27, minTemp: 19, rainAmount: 0, condition: 'sunny' },
-  //   { date: new Date(Date.now() + 9 * 86400000).toISOString(), maxTemp: 22, minTemp: 14, rainAmount: 5, condition: 'partly cloudy' },
-  //   { date: new Date(Date.now() + 10 * 86400000).toISOString(), maxTemp: 25, minTemp: 17, rainAmount: 0, condition: 'sunny' },
-  //   { date: new Date(Date.now() + 11 * 86400000).toISOString(), maxTemp: 23, minTemp: 15, rainAmount: 10, condition: 'rain' },
-  //   { date: new Date(Date.now() + 12 * 86400000).toISOString(), maxTemp: 28, minTemp: 18, rainAmount: 0, condition: 'sunny' },
-  //   { date: new Date(Date.now() + 13 * 86400000).toISOString(), maxTemp: 21, minTemp: 13, rainAmount: 0, condition: 'cloudy' },
-  //   { date: new Date(Date.now() + 14 * 86400000).toISOString(), maxTemp: 26, minTemp: 18, rainAmount: 5, condition: 'partly cloudy' },
-  // ])
-
-  // const [redditPosts] = useState<RedditPost[]>([
-  //   {
-  //     title: "First-time traveler to Tokyo looking for tips",
-  //     comment:
-  //       "Note: Suica cards are more available now at major stations. Google Maps is great for train transfers.",
-  //     upvotes: 42,
-  //     subreddit: "JapanTravel",
-  //     url: "https://www.reddit.com/r/JapanTravel/comments/xxxxxx",
-  //   },
-  //   {
-  //     title: "Back from a 10-day trip in Tokyo!",
-  //     comment:
-  //       "Instead of carrying a pocket WiFi, a local eSIM worked perfectly. Cheap and easy.",
-  //     upvotes: 31,
-  //     subreddit: "travel",
-  //     url: "https://www.reddit.com/r/travel/comments/yyyyyy",
-  //   },
-  //   {
-  //     title: "Hidden gems around Shibuya?",
-  //     comment:
-  //       "Check out Nonbei Yokocho and Miyashita Park — both have amazing food and atmosphere away from the crowds.",
-  //     upvotes: 55,
-  //     subreddit: "Tokyo",
-  //     url: "https://www.reddit.com/r/Tokyo/comments/zzzzzz",
-  //   },
-  //   {
-  //     title: "Tokyo metro pass worth it?",
-  //     comment:
-  //       "Only if you're using the subway multiple times a day. Otherwise, just stick to Suica or Pasmo for flexibility.",
-  //     upvotes: 27,
-  //     subreddit: "solotravel",
-  //     url: "https://www.reddit.com/r/solotravel/comments/aaaaaa",
-  //   },
-  // ]);
-
-
-  // // Dummy restaurants
-  // const [restaurants] = useState<Restaurant[]>([
-  //   { name: "Sushi Dai", address: "Tsukiji Market, Tokyo", rating: 4.8, totalReviews: 340, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/abc123" },
-  //   { name: "Ichiran Ramen", address: "Shibuya, Tokyo", rating: 4.5, totalReviews: 1200, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/def456" },
-  //   { name: "Tempura Kondo", address: "Ginza, Tokyo", rating: 4.7, totalReviews: 450, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/ghi789" },
-  //   { name: "Kyubey", address: "Ginza, Tokyo", rating: 4.6, totalReviews: 890, priceLevel: 3, googleMapsUrl: "https://goo.gl/maps/jkl012" },
-  //   { name: "Afuri Ramen", address: "Ebisu, Tokyo", rating: 4.4, totalReviews: 620, priceLevel: 2, googleMapsUrl: "https://goo.gl/maps/mno345" },
-  // ])
+  const [safety, setSafety] = useState<any>(null)
 
   // fetching conversion rate whenever currency is changed
   useEffect(() => {
@@ -277,10 +209,16 @@ const MainPage: React.FC<MainPageProps> = ({
       const result = await res.json()
       console.log("✅ Parsed orchestrator response:", result)
 
-      // Make sure the frontend knows where to find each part:
+      // Extract safety data safely, even if nested
+      const safetyData =
+        result?.safety || result?.insights?.safety || result?.trip?.safety || null
+
       setWeatherData(result.weather?.forecast || [])
       setRestaurants(result.food?.restaurants || [])
       setRedditPosts(result.reddit?.analyzedPosts || [])
+      setSafety(safetyData)
+
+      console.log("⚠️ Safety data set:", safetyData)
 
     } catch (err) {
       console.error("❌ Failed to fetch trip data:", err)
@@ -289,7 +227,7 @@ const MainPage: React.FC<MainPageProps> = ({
       setLoading(false)
     }
   }
-  
+
   return (
     <GradientBackground>
       <div className="flex flex-col min-h-screen text-white">
@@ -327,7 +265,7 @@ const MainPage: React.FC<MainPageProps> = ({
             1 INR = {exchangeRate.toFixed(3)} {selectedCurrency.code}
           </p>
 
-          {/* Hardcoded Itinerary (for now) */}
+          {/* Hardcoded Itinerary */}
           <div className="w-full max-w-10xl px-4">
             <Itinerary itinerary={itinerary} />
           </div>
@@ -370,6 +308,21 @@ const MainPage: React.FC<MainPageProps> = ({
               )}
             </div>
           </div>
+
+          {/* Safety Component */}
+          <div className="w-full px-4">
+            <SafetyInfo
+              safety={
+                safety || {
+                  destination: "N/A",
+                  country: "N/A",
+                  summary: "Safety info not available.",
+                  citySafety: { crimeIndex: 0, safetyIndex: 0 },
+                  localSafety: { radiusKm: 0, hospitals: 0, policeStations: 0, fireStations: 0 },
+                }
+              }
+            />
+          </div>
         </div>
       </div>
     </GradientBackground>
@@ -377,3 +330,5 @@ const MainPage: React.FC<MainPageProps> = ({
 }
 
 export default MainPage
+
+
