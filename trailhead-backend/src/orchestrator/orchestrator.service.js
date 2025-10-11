@@ -92,7 +92,25 @@ export const orchestrateTripService = async (tripDetails) => {
     });
 
     console.log("Orchestrator finished successfully!");
-    return response;
+
+    try {
+      const llmResult = await summarizeTripLLM(response);
+      console.log("✅ LLM itinerary generated successfully!");
+      return {
+        ...response,
+        itinerary: llmResult.itinerary || [],
+        summaryText: llmResult.summary || "",
+        llmFallback: llmResult.fallback || false,
+      };
+    } catch (err) {
+      console.error("⚠️ LLM summarization failed:", err.message);
+      return {
+        ...response,
+        llmFallback: true,
+        itinerary: [],
+        summaryText: "LLM summarization failed — returning raw data.",
+      };
+    }
   } catch (error) {
     console.error("Orchestrator fatal error:", error.message);
     throw new Error("Orchestrator failed internally: " + error.message);

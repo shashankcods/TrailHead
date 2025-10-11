@@ -1,111 +1,63 @@
-// src/llm/llm.service.js
-import axios from "axios";
+// src/services/llm.service.js
 
-const OLLAMA_API = "http://localhost:11434/api/generate";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import 'dotenv/config'; // Loads variables from .env file
 
-export const summarizeTripLLM = async (rawData) => {
+// --- 1. Initialize the Gemini Client ---
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+/**
+ * Generates a travel itinerary summary using the Gemini API.
+ * @param {object} orchestratorJson The JSON data from the orchestrator service.
+ * @returns {Promise<object>} A promise that resolves to the structured itinerary JSON.
+ */
+export async function getLLMSummary(orchestratorJson) {
   try {
-    // ----------------------------------------------------------------------
-    // STEP 1: Prepare and sanitize the orchestrator data
-    // ----------------------------------------------------------------------
-    let jsonString = "";
+    // --- 2. Select Model and Configure for JSON Output ---
+    // gemini-1.5-flash-latest is fast and cost-effective, perfect for this task.
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json', // This enables JSON Mode!
+        temperature: 0.2,
+      },
+    });
 
-    try {
-      // Convert JSON to a compact string and remove extra whitespace
-      jsonString = JSON.stringify(rawData, null, 0)
-        .replace(/\s+/g, " ")
-        .slice(0, 15000); // limit ~15k chars to prevent model freeze
-    } catch (err) {
-      console.error("❌ Failed to stringify rawData:", err.message);
-      return null;
-    }
-
-    // ----------------------------------------------------------------------
-    // STEP 2: Build the improved summarization prompt
-    // ----------------------------------------------------------------------
+    // --- 3. Create a Refined Prompt for Gemini ---
     const prompt = `
-You are a highly capable travel data summarization model.
-
-You will be given a JSON object containing data about a user's trip
-(collected from multiple sources: maps, weather, food, events, accommodation, reddit, etc.).
-
-Your task:
-- Read and understand the data.
-- Summarize it clearly and concisely.
-- Output a STRICT JSON object only. No markdown, no natural language sentences outside the JSON.
-
-Rules:
-1. Do not include commentary, markdown, or explanations.
-2. Include only the most relevant and human-friendly data.
-3. Each array should have up to 3 items max.
-4. Preserve weather forecast as-is (do not drop dates).
-
-Here is the input data to summarize:
-${jsonString}
-
-Now analyze the JSON above and return ONLY a valid JSON object following this schema exactly:
-
+You are a travel planning assistant. Analyze the provided JSON data to create a concise, day-by-day travel plan.
+Your entire response MUST be a single, valid JSON object that strictly adheres to the following schema:
 {
-  "summary": "A 3–5 line overview of the trip, describing route and highlights.",
-  "route": { "distance_km": "string", "duration_hr": "string" },
-  "weather": "A short, human-readable summary of the forecast.",
-  "top_hotels": [
-    { "name": "string", "price": "string", "rating": "number" }
-  ],
-  "top_restaurants": [
-    { "name": "string", "rating": "number" }
-  ],
-  "top_events": [
-    { "name": "string", "date": "string", "venue": "string" }
+  "summary": "A 2-4 line overview of the trip.",
+  "itinerary": [
+    {
+      "day": number,
+      "date": "YYYY-MM-DD",
+      "title": "A short, thematic title for the day",
+      "activities": ["string", "string", "..."]
+    }
   ]
 }
 
-Respond only with that JSON — no additional text.
+Incorporate hotels and restaurants from the input data where it makes sense. The dates should correspond to the metadata provided.
+
+**Input Data:**
+${JSON.stringify(orchestratorJson, null, 2)}
 `;
 
-    console.log("🧠 Sending prompt to Ollama...");
-    console.log("Prompt size:", prompt.length, "characters");
+    console.log("🚀 Sending request to Gemini API...");
 
-    // ----------------------------------------------------------------------
-    // STEP 3: Send request to Ollama
-    // ----------------------------------------------------------------------
-    const response = await axios.post(
-      OLLAMA_API,
-      {
-        model: "mistral", // or "mistral:7b-instruct-q4_K_M" if quantized model installed
-        prompt,
-        stream: false
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        timeout: 60000 // 60s timeout
-      }
-    );
+    // --- 4. Call the API and Parse the Response ---
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const jsonText = response.text();
 
-    console.log("✅ Ollama responded with status:", response.status);
-
-    const textOutput = response.data?.response?.trim();
-
-    if (!textOutput) {
-      console.warn("⚠️ LLM returned empty response");
-      return null;
-    }
-
-    // ----------------------------------------------------------------------
-    // STEP 4: Try parsing JSON output safely
-    // ----------------------------------------------------------------------
-    try {
-      const jsonOutput = JSON.parse(textOutput);
-      console.log("✅ Successfully parsed LLM output");
-      return jsonOutput;
-    } catch (parseError) {
-      console.error("⚠️ LLM output was not valid JSON:", parseError.message);
-      console.log("Raw LLM output (first 500 chars):", textOutput.slice(0, 500));
-      return null;
-    }
+    console.log("✅ Received and parsed JSON response from Gemini.");
+    return JSON.parse(jsonText); // The SDK ensures this text is valid JSON
 
   } catch (error) {
-    console.error("💀 LLM summarization failed:", error.message);
-    return null;
+    console.error(`❌ Error calling Gemini API: ${error.message}`);
+    // Return your standard fallback response on any failure
+    return { fallback: true, itinerary: [], summary: "Summarization failed." };
   }
-};
+}

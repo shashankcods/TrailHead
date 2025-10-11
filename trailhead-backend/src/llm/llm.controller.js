@@ -1,5 +1,7 @@
 // src/llm/llm.controller.js
-import { summarizeTripLLM } from "./llm.service.js";
+
+// FIX: Change the imported function name to match what's in the service file.
+import { getLLMSummary } from "./llm.service.js";
 
 export const summarizeTrip = async (req, res) => {
   console.log("✅ /api/llm/summarize endpoint hit");
@@ -10,14 +12,16 @@ export const summarizeTrip = async (req, res) => {
   }
 
   try {
-    const summarized = await summarizeTripLLM(rawData);
-    if (summarized) {
+    // FIX: Call the correct function name here as well.
+    const summarized = await getLLMSummary(rawData);
+
+    if (summarized && !summarized.fallback) {
       return res.status(200).json(summarized);
     } else {
-      return res.status(200).json({
-        message: "LLM summarization failed. Returning raw data.",
+      // This case handles the fallback response from the service
+      return res.status(500).json({
+        message: "LLM summarization failed.",
         fallback: true,
-        data: rawData
       });
     }
   } catch (error) {

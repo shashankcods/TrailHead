@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@mapbox/polyline": "^1.2.1",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",

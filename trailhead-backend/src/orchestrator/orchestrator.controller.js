@@ -6,8 +6,16 @@ export const orchestrateTrip = async (req, res) => {
 
   try {
     const tripData = await orchestrateTripService(req.body);
-    
-    // Trim oversized sections before sending
+    if (tripData?.itinerary?.length > 0) {
+      console.log("🧭 Sending LLM itinerary to frontend.");
+      return res.status(200).json({
+        summary: tripData.summaryText,
+        itinerary: tripData.itinerary,
+        llmFallback: tripData.llmFallback,
+      });
+    }
+
+    // Otherwise fallback to your previous trimming logic
     if (tripData?.events?.events) {
       const before = tripData.events.events.length;
       tripData.events.events = tripData.events.events.slice(0, 4);
@@ -39,7 +47,7 @@ export const orchestrateTrip = async (req, res) => {
       };
     }
 
-    console.log("✅ Orchestrator service returned data");
+    console.log("✅ Orchestrator service returned data (fallback mode)");
     res.status(200).json(tripData);
   } catch (error) {
     console.error("❌ Orchestrator error:", error.message);
