@@ -22,7 +22,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
     if (c.includes("drizzle")) return "/weather/drizzle.svg";
     if (c.includes("rain") || c.includes("showers")) return "/weather/rain.svg";
     if (c.includes("snow")) return "/weather/snow.svg";
-    if (c.includes("thunder")) return "/weather/thunderstorm.svg";
+    if (c.includes("thunder")) return "/weather/thunder.svg";
     return "/weather/clear.svg"; 
   };
 
@@ -76,7 +76,6 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
       </div>
     ))}
   </div>
-
 
       {/* Hide scrollbar */}
       <style>{`
