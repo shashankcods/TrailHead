@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Calendar } from "./ui/calendar";
-import type { DateRange } from "react-day-picker";
 
 interface TripInputFormProps {
   onSubmit: (data: {
@@ -8,32 +7,46 @@ interface TripInputFormProps {
     destination: string;
     startDate: string | undefined;
     endDate: string | undefined;
+    travelers: number;
+    activities: string[];
   }) => void;
+  formId?: string;
 }
 
-export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmit }) => {
-  // input states
-  const [source, setSource] = useState("");
-  const [destination, setDestination] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+type ActivityType = {
+  id: string;
+  title: string;
+  description: string;
+};
 
-  // states req. for calendar
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [picking, setPicking] = useState<"from" | "to" | undefined>(undefined);
-  const rangeRef = useRef<HTMLDivElement>(null);
+const activities: ActivityType[] = [
+  { id: "beaches", title: "Beaches", description: "Coastal relaxation and water views" },
+  { id: "city-sightseeing", title: "City Sightseeing", description: "Landmarks and urban highlights" },
+  { id: "outdoor-adventures", title: "Outdoor Adventures", description: "Nature trails and adrenaline activities" },
+  { id: "festivals-events", title: "Festivals/Events", description: "Concerts, events, and local celebrations" },
+  { id: "food-exploration", title: "Food Exploration", description: "Local cuisine and dining experiences" },
+  { id: "nightlife", title: "Nightlife", description: "Bars, clubs, and evening experiences" },
+  { id: "shopping", title: "Shopping", description: "Markets, malls, and local finds" },
+  { id: "spa-wellness", title: "Spa Wellness", description: "Relaxation, wellness, and recovery" },
+];
 
-  // suggestion states
-  const [sourceSuggestions, setSourceSuggestions] = useState<string[]>([]);
+export const TripInputForm: React.FC<TripInputFormProps> = ({
+  onSubmit: _onSubmit,
+  formId = "trip-input-form",
+}) => {
+  const [departDate, setDepartDate] = useState<Date | undefined>(undefined);
+  const [tripDays, setTripDays] = useState<number>(3);
+  const [destinationChoice, setDestinationChoice] = useState("");
   const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
-
-  // for keyboard navigation through search results
-  const [sourceHighlight, setSourceHighlight] = useState<number>(-1);
   const [destinationHighlight, setDestinationHighlight] = useState<number>(-1);
+  const [travelersCount, setTravelersCount] = useState<number>(1);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const dateRef = useRef<HTMLDivElement>(null);
 
-  // close calendar when clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (rangeRef.current && !rangeRef.current.contains(event.target as Node)) {
+      if (dateRef.current && !dateRef.current.contains(event.target as Node)) {
         setShowCalendar(false);
       }
     };
@@ -41,34 +54,24 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // fetching location suggestions from OSM
   const fetchLocations = async (query: string) => {
     if (!query) return [];
-
     const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(
       query
     )}&format=json&addressdetails=1&limit=10`;
-
     const res = await fetch(url, {
-      headers: {
-        "Accept-Language": "en",
-        "User-Agent": "TrailHead",
-      },
+      headers: { "Accept-Language": "en", "User-Agent": "TrailHead" },
     });
-
     const data = await res.json();
     const resultsSet = new Set<string>();
-
     data.forEach((item: any) => {
       const city = item.address.city || item.address.town || item.address.village;
       const country = item.address.country;
       if (city && country) resultsSet.add(`${city}, ${country}`);
     });
-
     return Array.from(resultsSet);
   };
 
-  // debounce helper
   const debounce = (fn: Function, delay: number) => {
     let timer: number;
     return (...args: any[]) => {
@@ -77,263 +80,253 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({ onSubmit: _onSubmi
     };
   };
 
-  // handle source input
-  const handleSourceChange = useCallback(
-    debounce(async (value: string) => {
-      const results = await fetchLocations(value);
-      setSourceSuggestions(results);
-    }, 500),
-    []
-  );
-
-  // handle destination input
   const handleDestinationChange = useCallback(
     debounce(async (value: string) => {
       const results = await fetchLocations(value);
       setDestinationSuggestions(results);
-    }, 500),
+    }, 400),
     []
   );
 
-  // 🧹 Clean function to trim before comma
-  const cleanLocation = (value: string) => {
-    if (!value) return "";
-    return value.split(",")[0].trim();
+  const cleanLocation = (value: string) => (value ? value.split(",")[0].trim() : "");
+  const formatDisplayDate = (date: Date | undefined) =>
+    date
+      ? date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "";
+
+  const toggleActivity = (id: string) => {
+    setSelectedActivities((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
-  // 🟢 handle form submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const destination = cleanLocation(destinationChoice);
+    const startDate = departDate ? departDate.toISOString().split("T")[0] : undefined;
+    const endDate =
+      departDate
+        ? new Date(departDate.getTime() + (Math.max(1, tripDays) - 1) * 86400000)
+            .toISOString()
+            .split("T")[0]
+        : undefined;
 
-    const formatDate = (date: Date | undefined) =>
-      date ? date.toISOString().split("T")[0] : undefined;
-
-    // 🧹 Clean both source and destination before sending
-    const cleanedSource = cleanLocation(source);
-    const cleanedDestination = cleanLocation(destination);
-
-    const tripData = {
-      source: cleanedSource,
-      destination: cleanedDestination,
-      startDate: formatDate(dateRange?.from),
-      endDate: formatDate(dateRange?.to),
-    };
-
-    console.log("✅ Sending cleaned trip data:", tripData);
-
-    // 🔥 call parent handler instead of fetching directly
-    _onSubmit(tripData);
-
-    // clear suggestions
-    setSourceSuggestions([]);
+    _onSubmit({
+      source: "Not specified",
+      destination,
+      startDate,
+      endDate,
+      travelers: travelersCount,
+      activities: selectedActivities,
+    });
     setDestinationSuggestions([]);
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-wrap justify-center items-center gap-6 w-full max-w-6xl bg-black/20 backdrop-blur-md p-6 rounded-2xl shadow-lg relative z-1"
-    >
-      {/* source input */}
-      <div className="w-[200px] relative">
-        <input
-          type="text"
-          placeholder="From"
-          value={source}
-          onChange={(e) => {
-            setSource(e.target.value);
-            handleSourceChange(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (sourceSuggestions.length === 0) return;
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              setSourceHighlight((prev) => (prev + 1) % sourceSuggestions.length);
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setSourceHighlight((prev) =>
-                prev <= 0 ? sourceSuggestions.length - 1 : prev - 1
-              );
-            } else if (e.key === "Enter") {
-              e.preventDefault();
-              if (sourceHighlight >= 0) {
-                setSource(sourceSuggestions[sourceHighlight]);
-                setSourceSuggestions([]);
-                setSourceHighlight(-1);
-              }
-            } else if (e.key === "Escape") {
-              setSourceSuggestions([]);
-              setSourceHighlight(-1);
-            }
-          }}
-          className="flex-1 p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
-        />
-        {sourceSuggestions.length > 0 && (
-          <div className="absolute bg-black/80 w-full mt-1 rounded-md max-h-40 overflow-y-auto z-50">
-            {sourceSuggestions.map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  setSource(item);
-                  setSourceSuggestions([]);
-                  setSourceHighlight(-1);
+    <div className="w-full max-w-6xl flex flex-col gap-4">
+      <form
+        id={formId}
+        onSubmit={handleSubmit}
+        className="w-full th-soft-card backdrop-blur-md p-7"
+      >
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <h3 className="th-title">What is destination of choice?</h3>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search city..."
+                value={destinationChoice}
+                onChange={(e) => {
+                  setDestinationChoice(e.target.value);
+                  handleDestinationChange(e.target.value);
                 }}
-                className={`px-3 py-2 hover:bg-gray-700 cursor-pointer ${
-                  idx === sourceHighlight ? "bg-gray-900" : ""
-                }`}
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* destination input */}
-      <div className="w-[200px] relative">
-        <input
-          type="text"
-          placeholder="To"
-          value={destination}
-          onChange={(e) => {
-            setDestination(e.target.value);
-            handleDestinationChange(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (destinationSuggestions.length === 0) return;
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              setDestinationHighlight((prev) => (prev + 1) % destinationSuggestions.length);
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setDestinationHighlight((prev) =>
-                prev <= 0 ? destinationSuggestions.length - 1 : prev - 1
-              );
-            } else if (e.key === "Enter") {
-              e.preventDefault();
-              if (destinationHighlight >= 0) {
-                setDestination(destinationSuggestions[destinationHighlight]);
-                setDestinationSuggestions([]);
-                setDestinationHighlight(-1);
-              }
-            } else if (e.key === "Escape") {
-              setDestinationSuggestions([]);
-              setDestinationHighlight(-1);
-            }
-          }}
-          className="flex-1 p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
-        />
-        {destinationSuggestions.length > 0 && (
-          <div className="absolute bg-black/80 w-full mt-1 rounded-md max-h-40 overflow-y-auto z-50">
-            {destinationSuggestions.map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  setDestination(item);
-                  setDestinationSuggestions([]);
-                  setDestinationHighlight(-1);
+                onKeyDown={(e) => {
+                  if (destinationSuggestions.length === 0) return;
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setDestinationHighlight((prev) => (prev + 1) % destinationSuggestions.length);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setDestinationHighlight((prev) =>
+                      prev <= 0 ? destinationSuggestions.length - 1 : prev - 1
+                    );
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (destinationHighlight >= 0) {
+                      setDestinationChoice(destinationSuggestions[destinationHighlight]);
+                      setDestinationSuggestions([]);
+                      setDestinationHighlight(-1);
+                    }
+                  } else if (e.key === "Escape") {
+                    setDestinationSuggestions([]);
+                    setDestinationHighlight(-1);
+                  }
                 }}
-                className={`px-3 py-2 hover:bg-gray-700 cursor-pointer ${
-                  idx === destinationHighlight ? "bg-gray-700" : ""
-                }`}
-              >
-                {item}
-              </div>
-            ))}
+                className="th-input"
+              />
+              {destinationSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white dark:bg-black mt-1 rounded-md max-h-40 overflow-y-auto z-50 border border-black/20 dark:border-white/20">
+                  {destinationSuggestions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setDestinationChoice(item);
+                        setDestinationSuggestions([]);
+                        setDestinationHighlight(-1);
+                      }}
+                      className={`px-3 py-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer ${
+                        idx === destinationHighlight
+                          ? "bg-black text-white dark:bg-white dark:text-black"
+                          : ""
+                      }`}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* depart/return calendar */}
-      <div ref={rangeRef} className="w-[400px] relative">
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Depart"
-            value={dateRange?.from ? dateRange.from.toLocaleDateString() : ""}
-            readOnly
-            onClick={() => {
-              setPicking("from");
-              setShowCalendar(true);
-            }}
-            className="flex-1 p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
-          />
-          <input
-            type="text"
-            placeholder="Return"
-            value={dateRange?.to ? dateRange.to.toLocaleDateString() : ""}
-            readOnly
-            onClick={() => {
-              setPicking("to");
-              setShowCalendar(true);
-            }}
-            className="flex-1 p-3 rounded-md bg-transparent text-white placeholder-gray-300 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
-          />
-        </div>
-        {showCalendar && (
-          <div className="absolute top-full mt-4 z-50">
-            <Calendar
-              mode="range"
-              numberOfMonths={2}
-              selected={dateRange}
-              onDayClick={(day) => {
-                setDateRange((prev) => {
-                  const current = prev ?? { from: undefined, to: undefined };
-                  let next: DateRange = { from: current.from, to: current.to };
+          <div className="border-t border-black/10 dark:border-white/15" />
 
-                  if (picking === "from") {
-                    if (current.to && day > current.to) {
-                      next = { from: day, to: undefined };
-                    } else {
-                      next = { from: day, to: current.to };
-                    }
-                    if (!next.to) setPicking("to");
-                  } else if (picking === "to") {
-                    if (current.from && day < current.from) {
-                      next = { from: day, to: current.from };
-                    } else {
-                      next = { from: current.from ?? day, to: day };
-                    }
-                  } else {
-                    if (!current.from || (current.from && current.to)) {
-                      next = { from: day, to: undefined };
-                      setPicking("to");
-                    } else if (current.from && !current.to) {
-                      if (day < current.from) {
-                        next = { from: day, to: current.from };
-                      } else {
-                        next = { from: current.from, to: day };
-                      }
-                    }
-                  }
-
-                  if (next.from && next.to) {
-                    setShowCalendar(false);
-                    setPicking(undefined);
-                  }
-                  return next;
-                });
-              }}
-              defaultMonth={dateRange?.from ?? dateRange?.to ?? new Date()}
-              className="rounded-lg border bg-black"
-              classNames={{
-                today: "border border-white text-white font-semibold rounded-lg",
-              }}
+          <div className="space-y-3" ref={dateRef}>
+            <h3 className="th-title">When are you planning to travel?</h3>
+            <input
+              type="text"
+              placeholder="Select Date..."
+              value={formatDisplayDate(departDate)}
+              readOnly
+              onClick={() => setShowCalendar(true)}
+              className="th-input cursor-pointer"
             />
+            {showCalendar && (
+              <div className="relative mt-2 z-40">
+                <Calendar
+                  mode="single"
+                  numberOfMonths={2}
+                  selected={departDate}
+                  disabled={{ before: new Date() }}
+                  onSelect={(day) => {
+                    setDepartDate(day);
+                    setShowCalendar(false);
+                  }}
+                  defaultMonth={departDate ?? new Date()}
+                  className="rounded-lg border border-black/20 dark:border-white/25 bg-white dark:bg-black"
+                  classNames={{
+                    today:
+                      "border border-black dark:border-white text-black dark:text-white font-semibold rounded-lg",
+                  }}
+                />
+              </div>
+            )}
           </div>
-        )}
+
+          <div className="border-t border-black/10 dark:border-white/15" />
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="th-title">How many days are you planning to travel?</h3>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setTripDays((prev) => Math.max(1, prev - 1))}
+                  className="h-10 w-10 rounded-full border border-black/20 dark:border-white/25 bg-white dark:bg-black text-xl"
+                >
+                  -
+                </button>
+                <span className="text-2xl font-semibold min-w-8 text-center">{tripDays}</span>
+                <button
+                  type="button"
+                  onClick={() => setTripDays((prev) => prev + 1)}
+                  className="h-10 w-10 rounded-full border border-black/20 dark:border-white/25 bg-white dark:bg-black text-xl"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div className="w-full th-soft-card backdrop-blur-md p-6">
+        <div className="mb-4">
+          <h3 className="th-title text-black dark:text-white">
+            Number of Travelers
+          </h3>
+          <p className="th-subtitle">
+            How many people are traveling?
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setTravelersCount((prev) => Math.max(1, prev - 1))}
+            className="h-12 w-16 rounded-lg border border-black/20 dark:border-white/25 bg-white dark:bg-black text-black dark:text-white text-2xl"
+          >
+            -
+          </button>
+          <div className="h-12 flex-1 rounded-lg border border-black/20 dark:border-white/25 bg-white dark:bg-black text-black dark:text-white text-3xl font-bold flex items-center justify-center">
+            {travelersCount}
+          </div>
+          <button
+            type="button"
+            onClick={() => setTravelersCount((prev) => prev + 1)}
+            className="h-12 w-16 rounded-lg border border-black/20 dark:border-white/25 bg-white dark:bg-black text-black dark:text-white text-2xl"
+          >
+            +
+          </button>
+        </div>
+
+        <p className="mt-4 th-subtitle text-base">
+          {travelersCount === 1 ? "Solo traveler" : `${travelersCount} travelers`}
+        </p>
       </div>
 
-      {/* plan my trip button */}
-      <div className="w-[200px] flex justify-center">
-        <button
-          type="submit"
-          className="bg-white text-[#3A1C71] font-semibold ml-6 py-3 px-10 rounded-lg hover:scale-105 hover:bg-gray-100 transition duration-300 w-full"
-        >
-          Plan My Trip
-        </button>
+      <div className="w-full th-soft-card backdrop-blur-md p-6">
+        <div className="mb-4">
+          <h3 className="th-title text-black dark:text-white">
+            Which activities are you interested in?
+          </h3>
+          <p className="th-subtitle">
+            Select one or more options to personalize your plan.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {activities.map((activity) => {
+            const isSelected = selectedActivities.includes(activity.id);
+            return (
+              <button
+                key={activity.id}
+                type="button"
+                onClick={() => toggleActivity(activity.id)}
+                className={`text-left rounded-xl border p-4 transition-colors ${
+                  isSelected
+                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
+                    : "bg-white dark:bg-black text-black dark:text-white border-black/20 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <div className="font-semibold text-lg">{activity.title}</div>
+                <div
+                  className={`text-sm mt-1 ${
+                    isSelected ? "text-white/80 dark:text-black/80" : "text-black/70 dark:text-white/70"
+                  }`}
+                >
+                  {activity.description}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </form>
+    </div>
   );
 };
 

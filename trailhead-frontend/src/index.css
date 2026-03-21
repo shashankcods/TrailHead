@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&family=Open+Sans:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
 
@@ -7,8 +7,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-family-ubuntu: "Ubuntu", sans-serif;
-    --font-family-opensans: "Open Sans", sans-serif;
+    --font-family-ubuntu: "Manrope", sans-serif;
+    --font-family-opensans: "Manrope", sans-serif;
 }
 
 @theme inline {
@@ -123,7 +123,36 @@
     @apply border-border outline-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: "Manrope", sans-serif;
+    letter-spacing: -0.01em;
     }
+  h1, h2, h3, h4 {
+    font-family: "Manrope", sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    }
+}
+
+@layer components {
+  .th-card {
+    @apply rounded-2xl border border-black/15 dark:border-white/20 bg-white dark:bg-black shadow-sm;
+  }
+
+  .th-soft-card {
+    @apply rounded-2xl border border-black/15 dark:border-white/20 bg-black/[0.03] dark:bg-white/[0.04] shadow-sm;
+  }
+
+  .th-input {
+    @apply w-full p-3 rounded-lg bg-white dark:bg-black text-black dark:text-white placeholder-black/45 dark:placeholder-white/45 border border-black/25 dark:border-white/30 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white;
+  }
+
+  .th-title {
+    @apply text-[1.3rem] leading-tight font-bold;
+  }
+
+  .th-subtitle {
+    @apply text-[0.92rem] text-black/65 dark:text-white/65;
+  }
 }
 

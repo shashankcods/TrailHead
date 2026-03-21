@@ -42,7 +42,7 @@ const LoginPopup: React.FC<LoginPopupProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div ref={popupRef} className="bg-white p-5 rounded-lg shadow-lg w-96">
+      <div ref={popupRef} className="bg-white dark:bg-black border border-black/30 dark:border-white/30 p-5 rounded-lg shadow-lg w-96 text-black dark:text-white">
         <h2 className="text-xl font-bold mb-4 text-center font-family-ubuntu">TrailHead</h2>
 
         <AuthForm
