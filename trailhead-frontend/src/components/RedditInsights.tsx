@@ -13,7 +13,7 @@ const RedditInsights: React.FC<{ posts: RedditPost[] }> = ({ posts }) => {
   return (
     <div className="w-full mt-4 mb-10 p-4">
       {/* Title */}
-      <h3 className="text-white text-2xl font-bold mb-6 text-center">
+      <h3 className="text-black dark:text-white text-2xl font-bold mb-6 text-center">
         Community Insights
       </h3>
 
@@ -22,11 +22,11 @@ const RedditInsights: React.FC<{ posts: RedditPost[] }> = ({ posts }) => {
         {posts.slice(0, 4).map((post, index) => (
           <div
             key={index}
-            className="bg-gradient-to-br from-white/10 via-white/5 to-transparent
+            className="bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5
               backdrop-blur-2xl
-              border border-white/20
-              rounded-xl p-5 text-white text-left
-              hover:bg-white/20
+              border border-black/20 dark:border-white/20
+              rounded-xl p-5 text-black dark:text-white text-left
+              hover:bg-black/10 dark:hover:bg-white/20
               transition-all duration-300
               w-100
               h-48
@@ -35,11 +35,11 @@ const RedditInsights: React.FC<{ posts: RedditPost[] }> = ({ posts }) => {
           >
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-gray-400 font-semibold">
+                <span className="text-xs text-black/70 dark:text-white/70 font-semibold">
                   {post.subreddit}
                 </span>
-                <div className="flex items-center text-gray-400 text-sm">
-                  <FaArrowUp className="text-orange-400 mr-1" />
+                <div className="flex items-center text-black/70 dark:text-white/70 text-sm">
+                  <FaArrowUp className="text-black dark:text-white mr-1" />
                   {post.upvotes}
                 </div>
               </div>
@@ -48,12 +48,12 @@ const RedditInsights: React.FC<{ posts: RedditPost[] }> = ({ posts }) => {
                 href={post.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-base font-bold text-blue-300 hover:underline line-clamp-2"
+                className="text-base font-bold text-black dark:text-white hover:underline line-clamp-2"
               >
                 {post.title}
               </a>
 
-              <p className="text-sm text-gray-200 mt-2 line-clamp-3">
+              <p className="text-sm text-black/80 dark:text-white/80 mt-2 line-clamp-3">
                 {post.comment}
               </p>
             </div>
