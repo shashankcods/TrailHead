@@ -4,7 +4,7 @@ import axios from "axios";
 // Uses OpenRouteService for geocoding, then Google Places API for restaurant data
 export const getRestaurants = async (destination) => {
   try {
-    // Step 1 Convert destination name to coordinates using ORS
+    // Convert destination name to coordinates using ORS
     const geoUrl = "https://api.openrouteservice.org/geocode/search";
     const geoRes = await axios.get(geoUrl, {
       params: {
@@ -22,7 +22,7 @@ export const getRestaurants = async (destination) => {
 
     console.log(`Geocoded via ORS: ${destination} → ${latitude}, ${longitude}`);
 
-    // Step 2: Query Google Places API for restaurants nearby
+    // Query Google Places API for restaurants nearby
     const placesUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json";
     const params = {
       location: `${latitude},${longitude}`,
@@ -38,7 +38,7 @@ export const getRestaurants = async (destination) => {
       return { message: `No restaurants found near ${destination}.` };
     }
 
-    // Step 3: Sort restaurants by rating & total reviews
+    // Sort restaurants by rating & total reviews
     results = results
       .filter((r) => r.rating)
       .sort((a, b) => {
@@ -49,7 +49,7 @@ export const getRestaurants = async (destination) => {
       })
       .slice(0, 10);
 
-    // Step 4: Format restaurant data neatly
+    // Format restaurant data neatly
     const restaurants = results.map((r) => ({
       name: r.name,
       address: r.vicinity,
@@ -59,7 +59,7 @@ export const getRestaurants = async (destination) => {
       googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${r.place_id}`,
     }));
 
-    // Step 5: Return structured data for frontend
+    // Return structured data for frontend
     return {
       destination,
       country: country || "Unknown",
