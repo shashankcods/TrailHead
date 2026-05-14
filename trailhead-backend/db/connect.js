@@ -8,15 +8,16 @@ export async function connectDB() {
     const uri = process.env.MONGO_URI;
     console.log("Connecting to MongoDB with URI:", uri);
 
-    await mongoose.connect(uri, {
+    const connectionInstance = await mongoose.connect(uri, {
       dbName: "trailhead",
       ssl: true,
       serverSelectionTimeoutMS: 10000,
       connectTimeoutMS: 10000,
     });
 
-    console.log("MongoDB connected successfully to database:", mongoose.connection.name);
+    console.log(`MongoDB connected successfully to database!! DB HOST: ${connectionInstance.connection.host}`, );
   } catch (err) {
-    console.error("MongoDB connection failed:", err.message);
+    console.error("MongoDB connection error:", err);
+    process.exit(1)
   }
-}
+} 
