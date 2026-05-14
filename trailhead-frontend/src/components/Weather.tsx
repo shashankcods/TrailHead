@@ -37,7 +37,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
 
   return (
     <div className="w-full mt-4 mb-10 p-4">
-      <h3 className="text-white text-2xl font-bold mb-6 text-center">
+      <h3 className="text-black dark:text-white text-2xl font-bold mb-6 text-center">
         Weather
       </h3>
 
@@ -46,11 +46,11 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
     <div
       key={index}
       className="snap-start 
-        bg-gradient-to-br from-white/10 via-white/5 to-transparent
+        bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5
         backdrop-blur-2xl
-        border border-white/20
-        rounded-xl p-5 text-white text-center
-        hover:bg-white/20
+        border border-black/20 dark:border-white/20
+        rounded-xl p-5 text-black dark:text-white text-center
+        hover:bg-black/10 dark:hover:bg-white/20
         transition-all duration-300
         w-100
         h-48
@@ -65,14 +65,14 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
           alt={day.condition}
           className="w-15 h-12 mx-auto mb-2"
         />
-        <div className="text-sm text-gray-200 mb-2 -mt-2 capitalize font-family-opensans">
+        <div className="text-sm text-black/70 dark:text-white/70 mb-2 -mt-2 capitalize font-family-opensans">
           {day.condition}
         </div>
         <div className="flex justify-between text-sm mb-1 px-15">
-          <span className="text-red-300">H: {day.maxTemp}°C</span>
-          <span className="text-blue-300">L: {day.minTemp}°C</span>
+          <span className="text-black dark:text-white">H: {day.maxTemp}°C</span>
+          <span className="text-black/80 dark:text-white/80">L: {day.minTemp}°C</span>
         </div>
-        <div className="text-xs text-cyan-300">💧 {day.rainAmount}mm</div>
+        <div className="text-xs text-black/80 dark:text-white/80">💧 {day.rainAmount}mm</div>
       </div>
     ))}
   </div>

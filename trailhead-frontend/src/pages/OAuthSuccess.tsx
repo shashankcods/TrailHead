@@ -23,9 +23,9 @@ const OAuthSuccess = () => {
   }, [navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen text-white">
+    <div className="flex flex-col items-center justify-center h-screen text-black dark:text-white">
       <h2 className="text-2xl font-semibold mb-4">Signing you in...</h2>
-      <p className="text-gray-400">Please wait, redirecting...</p>
+      <p className="text-black/70 dark:text-white/70">Please wait, redirecting...</p>
     </div>
   );
 };

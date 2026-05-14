@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import googleLogo from "../assets/google-black.svg";
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -8,38 +8,24 @@ interface AuthFormProps {
 
 const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
   const { login } = useAuth();
-  const navigate = useNavigate();
-
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [username, setName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
 
+  /// defining rules to set password
   const passwordRules = [
-    { regex: /.{8,}/, message: "At least 8 characters" },
-    { regex: /[A-Z]/, message: "At least 1 uppercase letter" },
-    { regex: /[a-z]/, message: "At least 1 lowercase letter" },
-    { regex: /[0-9]/, message: "At least 1 number" },
-    { regex: /[^A-Za-z0-9]/, message: "At least 1 special character" },
+    { regex: /.{8,}/, message: "Atleast 8 characters" },
+    { regex: /[A-Z]/, message: "Atleast 1 uppercase letter" },
+    { regex: /[a-z]/, message: "Atleast 1 lowercase letter" },
+    { regex: /[0-9]/, message: "Atleast 1 number" },
+    { regex: /[^A-Za-z0-9]/, message: "Atleast 1 special character" },
   ];
 
-  // ✅ Handle Google OAuth redirect token
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const username = params.get("username");
-
-    if (token) {
-      localStorage.setItem("token", token);
-      if (username) localStorage.setItem("username", username);
-      login();
-      navigate("/main"); // redirect to your main/dashboard page
-    }
-  }, [login, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  /*const handleSubmit = async (e: React.FormEvent) => { // to be used when endpoints are available for post req
     e.preventDefault();
     setError("");
 
@@ -58,13 +44,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     }
 
     try {
-      const endpoint =
-        mode === "signin" ? "/api/auth/login" : "/api/auth/register";
-
+      const endpoint = mode === "signin" ? "/api/login" : "/api/signup";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
@@ -74,11 +58,49 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         onSuccess?.();
       } else {
         setError(data.message || "Something went wrong");
-        console.log(data);
       }
     } catch {
       setError("Network error. Please try again.");
     }
+  };*/ 
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+  
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+  
+    try {
+      // FAKE backend call
+      await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
+  
+      // Simulate success response
+      const resOk = true; // pretend the server responded with 200 OK
+      const data = { message: "Success" };
+  
+      if (resOk) {
+        login();       // mark user as authenticated
+        onSuccess?.(); 
+      } else {
+        setError(data.message || "Something went wrong");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    setError("");
+    setGoogleLoading(true);
+
+    const googleAuthUrl =
+      import.meta.env.VITE_GOOGLE_AUTH_URL || "http://localhost:5000/auth/google";
+
+    // Full-page redirect to backend OAuth start endpoint.
+    window.location.href = googleAuthUrl;
   };
 
   return (
@@ -87,31 +109,28 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         <input
           type="text"
           placeholder="Full Name"
-          value={username}
+          value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="p-2 border border-gray-500 rounded-lg"
+          className="p-2 border border-black/30 dark:border-white/30 rounded-lg bg-white dark:bg-black text-black dark:text-white"
         />
       )}
-
       <input
         type="email"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
-        className="p-2 border border-gray-500 rounded-lg"
+        className="p-2 border border-black/30 dark:border-white/30 rounded-lg bg-white dark:bg-black text-black dark:text-white"
       />
-
       <input
         type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
-        className="p-2 border border-gray-500 rounded-lg"
+        className="p-2 border border-black/30 dark:border-white/30 rounded-lg bg-white dark:bg-black text-black dark:text-white"
       />
-
       {mode === "signup" && (
         <input
           type="password"
@@ -119,20 +138,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="p-2 border border-gray-500 rounded-lg"
+          className="p-2 border border-black/30 dark:border-white/30 rounded-lg bg-white dark:bg-black text-black dark:text-white"
         />
       )}
 
+      {/* password rules checklist */}
       {mode === "signup" && (
-        <ul className="text-sm text-gray-400 mt-1">
+        <ul className="text-sm text-black/70 dark:text-white/70 mt-1">
           {passwordRules.map((rule, idx) => (
             <li
               key={idx}
-              className={
-                rule.regex.test(password)
-                  ? "text-green-500"
-                  : "text-gray-400"
-              }
+              className={rule.regex.test(password) ? "text-black dark:text-white font-semibold" : "text-black/70 dark:text-white/70"}
             >
               {rule.message}
             </li>
@@ -140,13 +156,23 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         </ul>
       )}
 
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-black dark:text-white font-semibold">{error}</p>}
 
       <button
         type="submit"
-        className="w-full py-3 px-6 bg-purple-950 text-white font-bold rounded-lg shadow-lg hover:bg-purple-800 hover:scale-105 transition duration-300 ease-in-out"
+        className="w-full py-3 px-6 bg-black dark:bg-white text-white dark:text-black font-bold rounded-lg shadow-lg hover:scale-105 transition duration-300 ease-in-out border border-black dark:border-white"
       >
         {mode === "signin" ? "Sign In" : "Sign Up"}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={googleLoading}
+        className="w-full py-3 px-6 bg-white dark:bg-black text-black dark:text-white font-semibold rounded-lg shadow border border-black dark:border-white hover:opacity-90 transition duration-300 flex items-center justify-center gap-2 disabled:opacity-60"
+      >
+        <img src={googleLogo} alt="Google" className="w-5 h-5" />
+        {googleLoading ? "Redirecting..." : "Sign in with Google"}
       </button>
 
       <p className="text-center text-sm -mt-2">
@@ -154,41 +180,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           ? "Don't have an account? "
           : "Already have an account? "}
         <span
-          className="text-blue-500 cursor-pointer"
-          onClick={() =>
-            setMode(mode === "signin" ? "signup" : "signin")
-          }
+          className="text-black dark:text-white cursor-pointer underline"
+          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
         >
           {mode === "signin" ? "Sign Up" : "Sign In"}
         </span>
       </p>
-
-      <div className="relative flex items-center justify-center my-2">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-300" />
-        </div>
-        <div className="relative bg-white px-3 text-gray-500 text-sm">or</div>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => (window.location.href = "/api/auth/google")}
-        className="w-full py-3 px-6 border border-gray-400 bg-white text-gray-800 font-semibold rounded-lg shadow-sm hover:bg-gray-100 hover:scale-105 transition duration-300 ease-in-out flex items-center justify-center gap-2"
-      >
-        <img
-          src="../src/assets/google-black.svg"
-          alt="Google"
-          className="w-5 h-5"
-        />
-        Sign in with Google
-      </button>
     </form>
   );
 };
 
 export default AuthForm;
-
-
 
 
 

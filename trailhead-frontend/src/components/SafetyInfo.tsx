@@ -19,7 +19,7 @@ interface SafetyProps {
 }
 
 const SafetyInfo: React.FC<SafetyProps> = ({ safety }) => {
-  if (!safety) return <div className="text-gray-400">Safety info not available.</div>;
+  if (!safety) return <div className="text-black/70 dark:text-white/70">Safety info not available.</div>;
 
   const {
     destination = "N/A",
@@ -38,20 +38,20 @@ const SafetyInfo: React.FC<SafetyProps> = ({ safety }) => {
 
       <div className="flex flex-col lg:flex-row justify-around gap-6 items-center w-full">
         {/* city safety */}
-        <div className="flex-1 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-xl shadow p-5 flex flex-col items-center text-center">
-          <h3 className="text-lg font-medium text-white mb-3">
+        <div className="flex-1 bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5 rounded-xl shadow p-5 flex flex-col items-center text-center border border-black/20 dark:border-white/20">
+          <h3 className="text-lg font-medium text-black dark:text-white mb-3">
             City Safety Index
           </h3>
           <div className="flex gap-10">
             <div>
-              <p className="text-sm text-white/60">Crime Index</p>
-              <p className="text-2xl font-semibold text-red-500">
+              <p className="text-sm text-black/60 dark:text-white/60">Crime Index</p>
+              <p className="text-2xl font-semibold">
                 {citySafety.crimeIndex}
               </p>
             </div>
             <div>
-              <p className="text-sm text-white/60">Safety Index</p>
-              <p className="text-2xl font-semibold text-green-600">
+              <p className="text-sm text-black/60 dark:text-white/60">Safety Index</p>
+              <p className="text-2xl font-semibold">
                 {citySafety.safetyIndex}
               </p>
             </div>
@@ -59,26 +59,26 @@ const SafetyInfo: React.FC<SafetyProps> = ({ safety }) => {
         </div>
 
         {/* local safety- */}
-        <div className="flex-1 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-xl shadow p-5 flex flex-col items-center text-center">
-          <h3 className="text-lg font-medium text-white mb-3">
+        <div className="flex-1 bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5 rounded-xl shadow p-5 flex flex-col items-center text-center border border-black/20 dark:border-white/20">
+          <h3 className="text-lg font-medium text-black dark:text-white mb-3">
             Local Safety (within {localSafety.radiusKm} km)
           </h3>
           <div className="flex gap-10">
             <div>
-              <p className="text-sm text-white/60">Hospitals</p>
-              <p className="text-2xl font-semibold text-blue-600">
+              <p className="text-sm text-black/60 dark:text-white/60">Hospitals</p>
+              <p className="text-2xl font-semibold">
                 {localSafety.hospitals}
               </p>
             </div>
             <div>
-              <p className="text-sm text-white/60">Police Stations</p>
-              <p className="text-2xl font-semibold text-yellow-600">
+              <p className="text-sm text-black/60 dark:text-white/60">Police Stations</p>
+              <p className="text-2xl font-semibold">
                 {localSafety.policeStations}
               </p>
             </div>
             <div>
-              <p className="text-sm text-white/60">Fire Stations</p>
-              <p className="text-2xl font-semibold text-orange-600">
+              <p className="text-sm text-black/60 dark:text-white/60">Fire Stations</p>
+              <p className="text-2xl font-semibold">
                 {localSafety.fireStations}
               </p>
             </div>

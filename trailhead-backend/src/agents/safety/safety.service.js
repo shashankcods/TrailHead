@@ -2,14 +2,14 @@ import axios from "axios";
 
 export const getSafetyData = async (destination) => {
   try {
-    // 🧹 STEP 1: Clean up destination
+    // Clean up destination
     let cleanDestination = destination;
     if (typeof destination === "string") {
       cleanDestination = destination.split(",")[0].trim();
     }
-    console.log(`🌐 Cleaned destination for Safety Agent: ${cleanDestination}`);
+    console.log(`Cleaned destination for Safety Agent: ${cleanDestination}`);
 
-    // 🗺️ STEP 2: Geocode via OpenRouteService
+    // Geocode via OpenRouteService
     const orsRes = await axios.get("https://api.openrouteservice.org/geocode/search", {
       params: { api_key: process.env.ORS_API_KEY, text: cleanDestination },
     });
@@ -21,9 +21,9 @@ export const getSafetyData = async (destination) => {
     const longitude = location.geometry.coordinates[0];
     const country = location.properties.country || "Unknown";
 
-    console.log(`📍 ORS Geocoded ${cleanDestination} → ${latitude}, ${longitude} (${country})`);
+    console.log(`ORS Geocoded ${cleanDestination} → ${latitude}, ${longitude} (${country})`);
 
-    // 🌍 STEP 3: Dynamic radius computation via Open-Meteo
+    // Dynamic radius computation via Open-Meteo
     let radiusKm = 5;
     try {
       const geoRes = await axios.get("https://geocoding-api.open-meteo.com/v1/search", {
@@ -47,17 +47,17 @@ export const getSafetyData = async (destination) => {
         else if (geoData.population > 200000) radiusKm = 5;
         else radiusKm = 3;
       } else {
-        console.warn("⚠️ Bounding box and population unavailable — using default 5 km radius");
+        console.warn("Bounding box and population unavailable — using default 5 km radius");
       }
 
       radiusKm = Math.min(Math.max(radiusKm, 2), 15);
     } catch (err) {
-      console.warn("⚠️ Open-Meteo geocoding failed — using default 5 km radius");
+      console.warn("Open-Meteo geocoding failed — using default 5 km radius");
     }
 
     const radius = radiusKm * 1000;
 
-    // 🧾 STEP 4: Numbeo scraping for safety data
+    // Numbeo scraping for safety data
     const pageUrl = `https://www.numbeo.com/crime/in/${encodeURIComponent(cleanDestination)}`;
     console.log(`🔎 Fetching Numbeo data from: ${pageUrl}`);
 
@@ -68,7 +68,7 @@ export const getSafetyData = async (destination) => {
     let crimeIndex = crimeMatch ? parseFloat(crimeMatch[1]) : null;
     let safetyIndex = safetyMatch ? parseFloat(safetyMatch[1]) : null;
 
-    // 🪄 STEP 5: Alternate URL attempt (for hyphenated city pages)
+    // Alternate URL attempt (for hyphenated city pages)
     if (crimeIndex === null || safetyIndex === null) {
       const altUrl = `https://www.numbeo.com/crime/in/${encodeURIComponent(
         cleanDestination.replace(/\s+/g, "-")
@@ -81,7 +81,7 @@ export const getSafetyData = async (destination) => {
         if (cAlt) crimeIndex = parseFloat(cAlt[1]);
         if (sAlt) safetyIndex = parseFloat(sAlt[1]);
         if (crimeIndex && safetyIndex)
-          console.log(`✅ Found Numbeo data via alternate URL: ${altUrl}`);
+          console.log(`Found Numbeo data via alternate URL: ${altUrl}`);
       } catch (err) {
         console.warn("Alternate Numbeo lookup failed:", err.message);
       }
@@ -98,11 +98,11 @@ export const getSafetyData = async (destination) => {
         if (cMatch) crimeIndex = parseFloat(cMatch[1]);
         if (sMatch) safetyIndex = parseFloat(sMatch[1]);
       } catch (err) {
-        console.warn(`⚠️ Failed to fetch country-level safety data for ${country}:`, err.message);
+        console.warn(`Failed to fetch country-level safety data for ${country}:`, err.message);
       }
     }
 
-    // 🧮 STEP 7: Hardcoded fallback safety dataset
+    // Hardcoded fallback safety dataset
     const fallbackSafety = {
       India: { crimeIndex: 44.11, safetyIndex: 55.89 },
       Japan: { crimeIndex: 24.59, safetyIndex: 75.41 },
@@ -121,13 +121,13 @@ export const getSafetyData = async (destination) => {
       if (fb) {
         crimeIndex = fb.crimeIndex;
         safetyIndex = fb.safetyIndex;
-        console.warn(`📊 Using hardcoded safety data for ${country}`);
+        console.warn(`Using hardcoded safety data for ${country}`);
       }
     }
 
     const citySafety = { crimeIndex, safetyIndex };
 
-    // 🚨 STEP 8: Overpass API — local infrastructure count
+    // Overpass API — local infrastructure count
     const overpassQuery = `
       [out:json][timeout:25];
       (
@@ -152,17 +152,17 @@ export const getSafetyData = async (destination) => {
       fireStations: elements.filter((e) => e.tags?.amenity === "fire_station").length,
     };
 
-    // 📝 STEP 9: Safety summary
+    // Safety summary
     let safetyWord = "moderately safe";
     if (citySafety.safetyIndex >= 70) safetyWord = "very safe";
     else if (citySafety.safetyIndex < 50) safetyWord = "less safe";
 
     const summary = `${cleanDestination} is ${safetyWord} with a safety index of ${citySafety.safetyIndex}. Within ${localSafety.radiusKm} km: ${localSafety.hospitals} hospitals, ${localSafety.policeStations} police stations, and ${localSafety.fireStations} fire stations.`;
 
-    // ✅ STEP 10: Return result
+    // Return result
     return { destination: cleanDestination, country, citySafety, localSafety, summary };
   } catch (error) {
-    console.error("❌ Safety Service Error:", error.message || error);
+    console.error("Safety Service Error:", error.message || error);
     throw error;
   }
 };
