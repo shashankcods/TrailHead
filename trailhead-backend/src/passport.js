@@ -2,7 +2,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import jwt from "jsonwebtoken";
-import { User } from "../agents/auth/auth.model.js";
+import { User } from "../models/auth.model.js";
 console.log("✅ Passport config loaded");
 console.log("GOOGLE_CLIENT_ID =", process.env.GOOGLE_CLIENT_ID);
 console.log("GOOGLE_CALLBACK_URL =", process.env.GOOGLE_CALLBACK_URL);

@@ -3,14 +3,14 @@ import axios from "axios";
 axios.defaults.timeout = 30000;
 
 // Import all agent services
-import { getRouteFromORS } from "../agents/maps/maps.service.js";
-import { getWeatherFromOpenMeteo } from "../agents/weather/weather.service.js";
-import { getRestaurants } from "../agents/food/food.service.js";
-import { getEvents } from "../agents/events/events.service.js";
-import { getHotelsFromBooking } from "../agents/accommodation/accommodation.service.js";
-import { getRedditAdvice } from "../agents/reddit/reddit.service.js";
-import { getSafetyData } from "../agents/safety/safety.service.js";
-import { generateCalendar } from "../agents/calendar/calendar.service.js";
+import { getRouteFromORS } from "../services/maps.service.js";
+import { getWeatherFromOpenMeteo } from "../services/weather.service.js";
+import { getRestaurants } from "../services/food.service.js";
+import { getEvents } from "../services/events.service.js";
+import { getHotelsFromBooking } from "../services/accommodation.service.js";
+import { getRedditAdvice } from "../services/reddit.service.js";
+import { getSafetyData } from "../services/safety.service.js";
+import { generateCalendar } from "../services/calendar.service.js";
 
 export const orchestrateTripService = async (tripDetails) => {
   const { source, destination, startDate, endDate, budget } = tripDetails;

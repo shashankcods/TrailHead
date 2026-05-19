@@ -1,5 +1,5 @@
 import express from "express";
-import { fetchEvents } from "./events.controller.js";
+import { fetchEvents } from "../controllers/events.controller.js";
 
 // New router for all /api/events endpoints
 const router = express.Router();

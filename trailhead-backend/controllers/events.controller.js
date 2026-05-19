@@ -2,7 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import APIError from "../utils/ApiError.js";
 import APIResponse from "../utils/ApiResponse.js";
 
-import { getEvents } from "./events.service.js";
+import { getEvents } from "../services/events.service.js";
 
 export const fetchEvents = asyncHandler(async (req, res) => {
 

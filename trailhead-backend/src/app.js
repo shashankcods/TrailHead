@@ -33,18 +33,16 @@ app.post("/testjson", (req, res) => {
 // });
 
 // Import route handlers for each agent
-import authRoute from "./agents/auth/auth.route.js";
-import mapsRoute from "./agents/maps/maps.route.js";
+import authRoute from "../routes/auth.route.js";
+import mapsRoute from "../routes/maps.route.js";
 import orchestratorRoute from "../routes/orchestrator.route.js";
-import weatherRoute from "./agents/weather/weather.route.js";
-import eventsRoute from "./agents/events/events.route.js";
-import foodRoute from "./agents/food/food.route.js";
-import redditRoute from "./agents/reddit/reddit.route.js";
-import accommodationRoute from "./agents/accommodation/accommodation.route.js";
-import safetyRoute from "./agents/safety/safety.route.js";
-import flightsRoute from "./agents/flights/flights.route.js";
-import calendarRoute from "./agents/calendar/calendar.route.js";
-import llmRoute from "./llm/llm.route.js";
+import weatherRoute from "../routes/weather.route.js";
+import eventsRoute from "../routes/events.route.js";
+import foodRoute from "../routes/food.route.js";
+import accommodationRoute from "../routes/accommodation.route.js";
+import safetyRoute from "../routes/safety.route.js";
+import flightsRoute from "../routes/flights.route.js";
+import calendarRoute from "../routes/calendar.route.js";
 
 // Adding all the agent routes under their own base URL
 app.use("/api/auth", authRoute);
@@ -52,13 +50,11 @@ app.use("/api/maps", mapsRoute);
 app.use("/api/weather", weatherRoute);
 app.use("/api/events", eventsRoute);
 app.use("/api/food", foodRoute);
-app.use("/api/reddit", redditRoute);
 app.use("/api/accommodation", accommodationRoute);
 app.use("/api/safety", safetyRoute)
 app.use("/api/flights", flightsRoute);
 app.use("/api/orchestrator", orchestratorRoute);
 app.use("/api/calendar", calendarRoute);
-app.use("/api/llm", llmRoute);
 
 //serve calendar_files for direct download
 app.use("/calendar_files", express.static("calendar_files"));

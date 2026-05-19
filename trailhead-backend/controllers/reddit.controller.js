@@ -1,4 +1,4 @@
-import { getRedditAdvice } from "./reddit.service.js";
+import { getRedditAdvice } from "../services/reddit.service.js";
  
 export const getTripAdvice = async (req, res) => {
     const { destination } = req.query;

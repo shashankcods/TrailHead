@@ -1,5 +1,5 @@
 import express from "express";
-import { getAccommodation } from "./accommodation.controller.js";
+import { getAccommodation } from "../controllers/accommodation.controller.js";
 
 const router = express.Router();
 

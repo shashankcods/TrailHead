@@ -1,6 +1,6 @@
 import { getRestaurants } from "../services/food.service.js";
-import APIError from "../utils/ApiError.js";
-import APIResponse from "../../utils/ApiResponse.js"
+import APIError from "../utils/APIError.js";
+import APIResponse from "../utils/APIResponse.js"
 import asyncHandler from "../utils/asyncHandler.js";
 
 export const getFoodOptions = asyncHandler(async (req, res) => {

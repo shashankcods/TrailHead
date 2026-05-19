@@ -1,4 +1,4 @@
-import { orchestrateTripService } from "../src/orchestrator/orchestrator.service.js";
+import { orchestrateTripService } from "../services/orchestrator.service.js";
 
 export const orchestrateTrip = async (req, res) => {
   console.log("✅ Received POST /api/orchestrator");

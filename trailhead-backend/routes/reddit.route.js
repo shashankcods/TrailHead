@@ -1,5 +1,5 @@
 import express from "express";
-import { getTripAdvice } from "./reddit.controller.js";
+import { getTripAdvice } from "../controllers/reddit.controller.js";
 
 const router = express.Router();
 

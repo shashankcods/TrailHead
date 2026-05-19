@@ -1,8 +1,8 @@
 import { getFlights } from "../services/flights.service.js";
 
-import APIError from "../../utils/APIError.js";
-import APIResponse from "../../utils/APIResponse.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import APIError from "../utils/APIError.js";
+import APIResponse from "../utils/APIResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 export const getFlightsData = asyncHandler(async (req, res) => {
 

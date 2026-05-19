@@ -1,5 +1,5 @@
-import "./src/config/fixDNS.js"
-import app from "./src/app.js";
+import "./fixDNS.js"
+import app from "./app.js"
 import dotenv from "dotenv"
 import connectDB from "../db/connect.js";
 

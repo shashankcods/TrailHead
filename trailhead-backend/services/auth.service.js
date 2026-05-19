@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dns from "dns";
-import { User } from "./auth.model.js";
+import { User } from "../models/auth.model.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "trailhead_secret_key";
 

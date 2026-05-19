@@ -1,5 +1,5 @@
 import axios from "axios";
-import APIError from "../../utils/APIError.js";
+import APIError from "../utils/APIError.js";
 
 // Fetches top-rated restaurants for a given destination
 // Uses OpenRouteService for geocoding, then Google Places API for restaurant data

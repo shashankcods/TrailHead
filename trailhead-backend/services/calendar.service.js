@@ -2,7 +2,7 @@
 import { createEvents } from "ics";
 import fs from "fs";
 import path from "path";
-import APIError from "../../utils/APIError.js";
+import APIError from "../utils/APIError.js";
 
 export const generateCalendar = async (destination, startDate, endDate) => {
   try {

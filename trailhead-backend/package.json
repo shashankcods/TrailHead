@@ -5,10 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node server.js",
-    "dev": "cross-env NODE_ENV=development nodemon server.js",
-    "build:frontend": "cd ../trailhead-frontend && npm run build",
-    "serve": "npm run build:frontend && npm run start"
+  "start": "cross-env NODE_ENV=production node src/server.js",
+  "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+  "build:frontend": "cd ../trailhead-frontend && npm run build",
+  "serve": "npm run build:frontend && npm run start"
   },
   "keywords": [],
   "author": "",
