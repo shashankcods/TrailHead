@@ -1,5 +1,9 @@
 import axios from "axios";
 import APIError from "../utils/APIError.js";
+import {
+  cleanDestination,
+  resolveDestinationGeo,
+} from "../utils/geocode.js";
 
 
 // =========================
@@ -40,73 +44,34 @@ const fetchNumbeoPage = async (url) => {
 // =========================
 
 export const getSafetyData = async (
-  destination
+  destination,
+  latitude = null,
+  longitude = null,
+  country = null
 ) => {
 
   try {
 
-    // =========================
-    // Clean destination
-    // =========================
-
-    let cleanDestination =
-      destination;
-
-    if (
-      typeof destination === "string"
-    ) {
-
-      cleanDestination =
-        destination
-          .split(",")[0]
-          .trim();
-    }
+    const cleanDest =
+      cleanDestination(destination);
 
     console.log(
-      `Cleaned destination for Safety Agent: ${cleanDestination}`
+      `Cleaned destination for Safety Agent: ${cleanDest}`
     );
 
-    // =========================
-    // ORS Geocoding
-    // =========================
-
-    const orsRes = await axios.get(
-      "https://api.openrouteservice.org/geocode/search",
-      {
-        params: {
-          api_key:
-            process.env.ORS_API_KEY,
-
-          text:
-            cleanDestination,
-        },
-      }
-    );
-
-    const location =
-      orsRes.data.features?.[0];
-
-    if (!location) {
-
-      throw new APIError(
-        404,
-        "Destination not found in ORS"
+    const geo =
+      await resolveDestinationGeo(
+        destination,
+        latitude,
+        longitude,
+        country
       );
-    }
 
-    const latitude =
-      location.geometry.coordinates[1];
-
-    const longitude =
-      location.geometry.coordinates[0];
-
-    const country =
-      location.properties.country
-      || "Unknown";
-
-    console.log(
-      `ORS Geocoded ${cleanDestination} → ${latitude}, ${longitude} (${country})`
-    );
+    const {
+      latitude: lat,
+      longitude: lng,
+      country: resolvedCountry,
+    } = geo;
 
     // =========================
     // Dynamic Radius
@@ -121,7 +86,7 @@ export const getSafetyData = async (
         {
           params: {
             name:
-              cleanDestination,
+              cleanDest,
           },
         }
       );
@@ -158,7 +123,7 @@ export const getSafetyData = async (
           EARTH_RADIUS
           *
           Math.cos(
-            (latitude * Math.PI)
+            (lat * Math.PI)
             / 180
           );
 
@@ -226,7 +191,7 @@ export const getSafetyData = async (
     // =========================
 
     const pageUrl =
-      `https://www.numbeo.com/crime/in/${encodeURIComponent(cleanDestination)}`;
+      `https://www.numbeo.com/crime/in/${encodeURIComponent(cleanDest)}`;
 
     console.log(
       `🔎 Fetching Numbeo data from: ${pageUrl}`
@@ -273,7 +238,7 @@ export const getSafetyData = async (
 
       const altUrl =
         `https://www.numbeo.com/crime/in/${encodeURIComponent(
-          cleanDestination.replace(
+          cleanDest.replace(
             /\s+/g,
             "-"
           )
@@ -282,7 +247,7 @@ export const getSafetyData = async (
       try {
 
         console.warn(
-          `${cleanDestination} not found in Numbeo — trying alternate URL.`
+          `${cleanDest} not found in Numbeo — trying alternate URL.`
         );
 
         const altHtml =
@@ -347,13 +312,13 @@ export const getSafetyData = async (
     ) {
 
       console.warn(
-        `${cleanDestination} not found — using ${country} averages instead.`
+        `${cleanDest} not found — using ${resolvedCountry} averages instead.`
       );
 
       try {
 
         const countryUrl =
-          `https://www.numbeo.com/crime/in/${encodeURIComponent(country)}`;
+          `https://www.numbeo.com/crime/in/${encodeURIComponent(resolvedCountry)}`;
 
         const countryHtml =
           await fetchNumbeoPage(
@@ -389,7 +354,7 @@ export const getSafetyData = async (
       } catch (err) {
 
         console.warn(
-          `Failed to fetch country-level safety data for ${country}:`,
+          `Failed to fetch country-level safety data for ${resolvedCountry}:`,
           err.message
         );
       }
@@ -459,7 +424,7 @@ export const getSafetyData = async (
     ) {
 
       const fb =
-        fallbackSafety[country];
+        fallbackSafety[resolvedCountry];
 
       if (fb) {
 
@@ -470,7 +435,7 @@ export const getSafetyData = async (
           fb.safetyIndex;
 
         console.warn(
-          `Using hardcoded safety data for ${country}`
+          `Using hardcoded safety data for ${resolvedCountry}`
         );
       }
     }
@@ -487,10 +452,10 @@ export const getSafetyData = async (
     const overpassQuery = `
       [out:json][timeout:25];
       (
-        nwr["amenity"="hospital"](around:${radius},${latitude},${longitude});
-        nwr["healthcare"="hospital"](around:${radius},${latitude},${longitude});
-        nwr["amenity"="police"](around:${radius},${latitude},${longitude});
-        nwr["amenity"="fire_station"](around:${radius},${latitude},${longitude});
+        nwr["amenity"="hospital"](around:${radius},${lat},${lng});
+        nwr["healthcare"="hospital"](around:${radius},${lat},${lng});
+        nwr["amenity"="police"](around:${radius},${lat},${lng});
+        nwr["amenity"="fire_station"](around:${radius},${lat},${lng});
       );
       out center;
     `;
@@ -576,18 +541,18 @@ export const getSafetyData = async (
     }
 
     const summary =
-      `${cleanDestination} is ${safetyWord} with a safety index of ${citySafety.safetyIndex}. Within ${localSafety.radiusKm} km: ${localSafety.hospitals} hospitals, ${localSafety.policeStations} police stations, and ${localSafety.fireStations} fire stations.`;
+      `${cleanDest} is ${safetyWord} with a safety index of ${citySafety.safetyIndex}. Within ${localSafety.radiusKm} km: ${localSafety.hospitals} hospitals, ${localSafety.policeStations} police stations, and ${localSafety.fireStations} fire stations.`;
 
     return {
 
       destination:
-        cleanDestination,
+        cleanDest,
 
-      country,
+      country: resolvedCountry,
 
       coordinates: {
-        latitude,
-        longitude,
+        latitude: lat,
+        longitude: lng,
       },
 
       citySafety,

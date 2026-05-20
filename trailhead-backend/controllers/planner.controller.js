@@ -1,5 +1,5 @@
-import { getFlights }
-from "../services/flights.service.js";
+import asyncHandler
+from "../utils/asyncHandler.js";
 
 import APIError
 from "../utils/APIError.js";
@@ -7,15 +7,17 @@ from "../utils/APIError.js";
 import APIResponse
 from "../utils/APIResponse.js";
 
-import asyncHandler
-from "../utils/asyncHandler.js";
+import {
+  generateTripPlan
+}
+from "../services/planner.service.js";
 
 
 // =========================
-// Flights Controller
+// Planner Controller
 // =========================
 
-export const getFlightsData =
+export const generatePlanner =
   asyncHandler(async (req, res) => {
 
     const {
@@ -26,17 +28,14 @@ export const getFlightsData =
 
       start_date,
 
-      end_date,
-
-      min_budget,
-
-      max_budget,
+      trip_days,
 
       adults,
 
-      limit,
+      interests,
 
-    } = req.query;
+      budget,
+    } = req.body;
 
     if (
       !source
@@ -45,17 +44,23 @@ export const getFlightsData =
       ||
       !start_date
       ||
-      !end_date
+      !trip_days
     ) {
 
       throw new APIError(
         400,
-        "Missing required query parameters"
+        "Missing required planner inputs"
       );
     }
 
+    const parsedInterests =
+      interests || [];
+
+    const parsedBudget =
+      budget || {};
+
     const data =
-      await getFlights(
+      await generateTripPlan(
 
         source,
 
@@ -63,15 +68,13 @@ export const getFlightsData =
 
         start_date,
 
-        end_date,
-
-        Number(min_budget),
-
-        Number(max_budget),
+        Number(trip_days),
 
         Number(adults),
 
-        Number(limit)
+        parsedInterests,
+
+        parsedBudget
       );
 
     res.status(200).json(
@@ -82,7 +85,7 @@ export const getFlightsData =
 
         data,
 
-        "Flights fetched successfully"
+        "Trip plan generated successfully"
       )
     );
 });

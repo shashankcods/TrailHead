@@ -1,51 +1,49 @@
 import axios from "axios";
 import APIError from "../utils/APIError.js";
+import { resolveDestinationGeo } from "../utils/geocode.js";
 
-export const getRestaurants = async (destination) => {
+
+// =========================
+// Restaurants Service
+// =========================
+
+export const getRestaurants = async (
+
+  destination,
+
+  limit = 10,
+
+  latitude = null,
+
+  longitude = null,
+
+  country = null
+) => {
 
   try {
 
-    const geoUrl =
-      "https://api.openrouteservice.org/geocode/search";
-
-    const geoRes = await axios.get(geoUrl, {
-      params: {
-        api_key: process.env.ORS_API_KEY,
-        text: destination,
-      },
-    });
-
-    const location =
-      geoRes.data.features?.[0];
-
-    if (!location) {
-
-      throw new APIError(
-        404,
-        "Location not found"
+    const geo =
+      await resolveDestinationGeo(
+        destination,
+        latitude,
+        longitude,
+        country
       );
-    }
 
-    const [longitude, latitude] =
-      location.geometry.coordinates;
-
-    const label =
-      location.properties.label
-      || destination;
-
-    const country =
-      label.split(",").pop().trim();
-
-    console.log(
-      `Geocoded via ORS: ${destination} → ${latitude}, ${longitude}`
-    );
+    const {
+      latitude: lat,
+      longitude: lng,
+      country: resolvedCountry,
+    } = geo;
 
     // =========================
     // Google Places Text Search
     // =========================
 
     const searchQueries = [
+
       `best restaurants in ${destination}`,
+
       `top rated restaurants in ${destination}`,
     ];
 
@@ -56,16 +54,18 @@ export const getRestaurants = async (destination) => {
       const textSearchUrl =
         "https://maps.googleapis.com/maps/api/place/textsearch/json";
 
-      const res = await axios.get(
-        textSearchUrl,
-        {
-          params: {
-            query,
-            key:
-              process.env.GOOGLE_PLACES_API_KEY,
-          },
-        }
-      );
+      const res =
+        await axios.get(
+          textSearchUrl,
+          {
+            params: {
+              query,
+
+              key:
+                process.env.GOOGLE_PLACES_API_KEY,
+            },
+          }
+        );
 
       allResults.push(
         ...(res.data.results || [])
@@ -73,7 +73,7 @@ export const getRestaurants = async (destination) => {
     }
 
     // =========================
-    // Remove duplicates
+    // Remove Duplicates
     // =========================
 
     const uniqueMap =
@@ -98,7 +98,7 @@ export const getRestaurants = async (destination) => {
       [...uniqueMap.values()];
 
     // =========================
-    // Filter restaurants only
+    // Filter Restaurants Only
     // =========================
 
     results = results.filter((r) => {
@@ -107,26 +107,30 @@ export const getRestaurants = async (destination) => {
         r.types || [];
 
       return (
+
         types.includes("restaurant")
         &&
+
         !types.includes("lodging")
       );
     });
 
-    if (results.length === 0) {
+    if (!results.length) {
 
       throw new APIError(
         404,
-        `No restaurants found near ${destination}.`
+        `No restaurants found near ${destination}`
       );
     }
 
     // =========================
-    // Better weighted ranking
+    // Weighted Ranking
     // =========================
 
     results = results
+
       .filter((r) => r.rating)
+
       .map((r) => ({
 
         ...r,
@@ -137,19 +141,34 @@ export const getRestaurants = async (destination) => {
             (r.user_ratings_total || 1)
           ),
       }))
+
       .sort(
         (a, b) =>
           b.score - a.score
       )
-      .slice(0, 10);
+
+      .slice(0, limit);
+
+    // =========================
+    // Price Mapping
+    // =========================
 
     const priceMap = {
+
       0: "$",
+
       1: "$",
+
       2: "$$",
+
       3: "$$$",
+
       4: "$$$$",
     };
+
+    // =========================
+    // Fetch Place Details
+    // =========================
 
     const restaurants =
       await Promise.all(
@@ -228,6 +247,7 @@ export const getRestaurants = async (destination) => {
                 ) || [],
 
               coordinates: {
+
                 latitude:
                   r.geometry?.location?.lat,
 
@@ -274,14 +294,19 @@ export const getRestaurants = async (destination) => {
       destination,
 
       country:
-        country || "Unknown",
+        resolvedCountry || "Unknown",
 
       coordinates: {
-        latitude,
-        longitude,
+
+        latitude: lat,
+
+        longitude: lng,
       },
 
-      topCount:
+      requestedResults:
+        limit,
+
+      totalResults:
         restaurants.filter(Boolean)
           .length,
 
@@ -297,9 +322,12 @@ export const getRestaurants = async (destination) => {
     );
 
     throw new APIError(
+
       error.statusCode || 500,
+
       error.message
-      || "Failed to fetch restaurant data"
+      ||
+      "Failed to fetch restaurant data"
     );
   }
 };

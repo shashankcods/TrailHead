@@ -2,18 +2,19 @@ import axios from "axios";
 import APIError from "../utils/APIError.js";
 
 const SERPAPI_BASE_URL =
-  "https://serpapi.com/search?engine=google_hotel";
+  "https://serpapi.com/search?engine=google_hotels";
 
 const SERPAPI_KEY =
   process.env.SERPAPI_KEY;
 
-
 // =========================
-// Hotel score formula
+// Hotel Score Formula
 // =========================
 
 const calculateHotelScore = (
+
   hotel,
+
   price
 ) => {
 
@@ -24,22 +25,27 @@ const calculateHotelScore = (
     hotel.reviews || 1;
 
   return (
+
     (
       rating * 2
       +
       Math.log10(reviews)
     )
+
     /
+
     Math.log10(price || 100)
   );
 };
 
 
 // =========================
-// Parse price safely
+// Parse Price Safely
 // =========================
 
-const parsePrice = (priceString) => {
+const parsePrice = (
+  priceString
+) => {
 
   if (!priceString)
     return null;
@@ -63,43 +69,52 @@ const parsePrice = (priceString) => {
 // =========================
 
 export const getHotelsFromBooking = async (
+
   destination,
+
   checkin_date,
+
   checkout_date,
+
   minBudget = 50,
+
   maxBudget = 500,
-  adults = 2
+
+  adults = 2,
+
+  limit = 10
 ) => {
 
   try {
 
-    const res = await axios.get(
-      SERPAPI_BASE_URL,
-      {
-        params: {
+    const res =
+      await axios.get(
+        SERPAPI_BASE_URL,
+        {
+          params: {
 
-          engine:
-            "google_hotels",
+            engine:
+              "google_hotels",
 
-          q:
-            `${destination} hotels`,
+            q:
+              `${destination} hotels`,
 
-          check_in_date:
-            checkin_date,
+            check_in_date:
+              checkin_date,
 
-          check_out_date:
-            checkout_date,
+            check_out_date:
+              checkout_date,
 
-          adults,
+            adults,
 
-          currency:
-            "USD",
+            currency:
+              "USD",
 
-          api_key:
-            SERPAPI_KEY,
-        },
-      }
-    );
+            api_key:
+              SERPAPI_KEY,
+          },
+        }
+      );
 
     let hotels =
       res.data.properties || [];
@@ -113,7 +128,7 @@ export const getHotelsFromBooking = async (
     }
 
     // =========================
-    // Budget filtering
+    // Budget Filtering
     // =========================
 
     hotels = hotels.filter((h) => {
@@ -127,8 +142,11 @@ export const getHotelsFromBooking = async (
         return false;
 
       return (
+
         price >= minBudget
+
         &&
+
         price <= maxBudget
       );
     });
@@ -138,6 +156,7 @@ export const getHotelsFromBooking = async (
     // =========================
 
     hotels = hotels
+
       .map((h) => {
 
         const price =
@@ -166,10 +185,10 @@ export const getHotelsFromBooking = async (
           - a.weighted_score
       )
 
-      .slice(0, 10);
+      .slice(0, limit);
 
     // =========================
-    // Clean response
+    // Clean Response
     // =========================
 
     const cleanedHotels =
@@ -245,9 +264,16 @@ export const getHotelsFromBooking = async (
 
       adults,
 
+      requestedResults:
+        limit,
+
       budgetRange: {
-        min: minBudget,
-        max: maxBudget,
+
+        min:
+          minBudget,
+
+        max:
+          maxBudget,
       },
 
       total_results:
@@ -266,7 +292,9 @@ export const getHotelsFromBooking = async (
     );
 
     throw new APIError(
+
       err.statusCode || 500,
+
       "Failed to fetch hotels"
     );
   }

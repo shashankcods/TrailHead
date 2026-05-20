@@ -1,19 +1,72 @@
-import asyncHandler from "../utils/asyncHandler.js";
-import APIError from "../utils/ApiError.js";
-import APIResponse from "../utils/ApiResponse.js";
+import asyncHandler
+from "../utils/asyncHandler.js";
 
-import { getEvents } from "../services/events.service.js";
+import APIError
+from "../utils/ApiError.js";
 
-export const fetchEvents = asyncHandler(async (req, res) => {
+import APIResponse
+from "../utils/ApiResponse.js";
 
-  const { location, startDate, endDate } = req.query;
+import {
+  getEvents
+}
+from "../services/events.service.js";
 
-  if (!location || !startDate || !endDate)
-    throw new APIError(400, "Missing required parameters");
 
-  const data = await getEvents(location, startDate, endDate);
+// =========================
+// Events Controller
+// =========================
 
-  res.status(200).json(
-    new APIResponse(200, data, "Events fetched successfully")
-  );
+export const fetchEvents =
+  asyncHandler(async (req, res) => {
+
+    const {
+
+      location,
+
+      startDate,
+
+      endDate,
+
+      limit,
+
+    } = req.query;
+
+    if (
+      !location
+      ||
+      !startDate
+      ||
+      !endDate
+    ) {
+
+      throw new APIError(
+        400,
+        "Missing required parameters"
+      );
+    }
+
+    const data =
+      await getEvents(
+
+        location,
+
+        startDate,
+
+        endDate,
+
+        Number(limit)
+      );
+
+    res.status(200).json(
+
+      new APIResponse(
+
+        200,
+
+        data,
+
+        "Events fetched successfully"
+      )
+    );
 });

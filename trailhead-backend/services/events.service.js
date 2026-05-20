@@ -1,43 +1,63 @@
 import axios from "axios";
 import APIError from "../utils/APIError.js";
 
+
+// =========================
+// Ticketmaster Events
+// =========================
+
 export const getEventsFromTicketmaster = async (
+
   location,
+
   startDate,
-  endDate
+
+  endDate,
+
+  limit = 10
 ) => {
 
   try {
 
-    const apiKey = process.env.TICKETMASTER_KEY;
+    const apiKey =
+      process.env.TICKETMASTER_KEY;
 
-    const res = await axios.get(
-      "https://app.ticketmaster.com/discovery/v2/events.json",
-      {
-        params: {
+    const res =
+      await axios.get(
+        "https://app.ticketmaster.com/discovery/v2/events.json",
+        {
+          params: {
 
-          apikey: apiKey,
+            apikey:
+              apiKey,
 
-          city: location,
+            city:
+              location,
 
-          startDateTime:
-            `${startDate}T00:00:00Z`,
+            startDateTime:
+              `${startDate}T00:00:00Z`,
 
-          endDateTime:
-            `${endDate}T23:59:59Z`,
+            endDateTime:
+              `${endDate}T23:59:59Z`,
 
-          size: 10,
-        },
-      }
-    );
+            size:
+              limit,
+          },
+        }
+      );
 
-    if (!res.data._embedded?.events)
+    if (
+      !res.data._embedded?.events
+    ) {
+
       return [];
+    }
 
     return res.data._embedded.events.map(
       (e) => ({
 
-        source: "Ticketmaster",
+        source:
+          "Ticketmaster",
 
         title:
           e.name,
@@ -56,6 +76,29 @@ export const getEventsFromTicketmaster = async (
         location:
           e._embedded?.venues?.[0]?.name
           || location,
+
+        venue:
+          e._embedded?.venues?.[0]?.name
+          || null,
+
+        city:
+          e._embedded?.venues?.[0]?.city
+            ?.name || null,
+
+        country:
+          e._embedded?.venues?.[0]?.country
+            ?.name || null,
+
+        image:
+          e.images?.[0]?.url
+          || null,
+
+        status:
+          e.dates?.status?.code
+          || "unknown",
+
+        ticketUrl:
+          e.url || null,
       })
     );
 
@@ -63,7 +106,8 @@ export const getEventsFromTicketmaster = async (
 
     console.error(
       "Ticketmaster Error:",
-      err.response?.data || err.message
+      err.response?.data
+      || err.message
     );
 
     throw new APIError(
@@ -73,25 +117,41 @@ export const getEventsFromTicketmaster = async (
   }
 };
 
+
+// =========================
+// Main Events Service
+// =========================
+
 export const getEvents = async (
+
   location,
+
   startDate,
-  endDate
+
+  endDate,
+
+  limit = 10
 ) => {
 
   try {
 
     const events =
       await getEventsFromTicketmaster(
+
         location,
+
         startDate,
-        endDate
+
+        endDate,
+
+        limit
       );
 
     events.sort(
       (a, b) =>
         new Date(a.start)
-        - new Date(b.start)
+        -
+        new Date(b.start)
     );
 
     return {
@@ -101,6 +161,12 @@ export const getEvents = async (
 
       provider:
         "Ticketmaster",
+
+      requestedResults:
+        limit,
+
+      totalResults:
+        events.length,
 
       events,
     };

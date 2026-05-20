@@ -10,15 +10,20 @@ import airportCodes from "../utils/airportCodes.js";
 export const getFlights = async (
 
   source,
+
   destination,
 
   start_date,
+
   end_date,
 
   min_budget = 100,
+
   max_budget = 2000,
 
-  adults = 1
+  adults = 1,
+
+  limit = 10
 ) => {
 
   try {
@@ -219,7 +224,7 @@ export const getFlights = async (
     // =========================
 
     flights = flights
-      .slice(0, 10);
+      .slice(0, limit);
 
     return {
 
@@ -242,7 +247,10 @@ export const getFlights = async (
 
       currency:
         "USD",
-    
+
+      requestedResults:
+        limit,
+
       bookingLink:
         `https://www.google.com/travel/flights?q=Flights%20from%20${departure_id}%20to%20${arrival_id}%20on%20${start_date}%20return%20${end_date}`,
 
@@ -270,7 +278,9 @@ export const getFlights = async (
     );
 
     throw new APIError(
+
       error.statusCode || 500,
+
       "Failed to fetch flight data"
     );
   }

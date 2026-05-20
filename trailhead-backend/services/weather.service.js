@@ -1,4 +1,6 @@
 import axios from "axios";
+import APIError from "../utils/APIError.js";
+import { resolveDestinationGeo } from "../utils/geocode.js";
 
 const getWeatherCondition = (code) => {
   const weatherCodes = {
@@ -50,24 +52,27 @@ const getForecast = async (latitude, longitude, start_date, end_date) => {
   }));
 };
 
-export const getWeatherFromOpenMeteo = async (destination, start_date, end_date) => {
+export const getWeatherFromOpenMeteo = async (
+  destination,
+  start_date,
+  end_date,
+  latitude = null,
+  longitude = null,
+  country = null
+) => {
   try {
-    const geoUrl = "https://api.openrouteservice.org/geocode/search";
-    const geoRes = await axios.get(geoUrl, {
-      params: {
-        api_key: process.env.ORS_API_KEY,
-        text: destination,
-      },
-    });
+    const geo = await resolveDestinationGeo(
+      destination,
+      latitude,
+      longitude,
+      country
+    );
 
-    const location = geoRes.data.features?.[0];
-    if (!location) throw new Error("Location not found");
-
-    const [longitude, latitude] = location.geometry.coordinates;
-    const label = location.properties.label || destination;
-    const country = label.split(",").pop().trim();
-
-    console.log(`Weather-Geocoded ${destination} → ${latitude}, ${longitude}`);
+    const {
+      latitude: lat,
+      longitude: lng,
+      country: resolvedCountry,
+    } = geo;
 
     // default to next 7 days if dates are not provided
     const today = new Date();
@@ -79,21 +84,48 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
       start_date || defaultStart.toISOString().split("T")[0];
     const finalEndDate =
       end_date || defaultEnd.toISOString().split("T")[0];
+    
+    const maxForecastDate =
+      new Date();
+
+    maxForecastDate.setDate(
+      maxForecastDate.getDate() + 15
+    );
+
+    const safeEndDate =
+      new Date(finalEndDate)
+      >
+      maxForecastDate
+
+      ? maxForecastDate
+          .toISOString()
+          .split("T")[0]
+
+      : finalEndDate;
 
     const forecast = await getForecast(
-      latitude,
-      longitude,
+      lat,
+      lng,
       finalStartDate,
-      finalEndDate
+      safeEndDate
     );
 
     return {
       destination,
-      country,
+      country: resolvedCountry,
       forecast,
     };
     
   } catch (error) {
-    throw new APIError(500, "Weather Service Failed");
-  }
+      console.error(
+        "Weather Error:",
+        error.response?.data
+        || error.message
+      );
+
+      throw new APIError(
+        500,
+        "Weather Service Failed"
+      );
+    }
 };

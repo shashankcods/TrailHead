@@ -42,6 +42,9 @@ import accommodationRoute from "../routes/accommodation.route.js";
 import safetyRoute from "../routes/safety.route.js";
 import flightsRoute from "../routes/flights.route.js";
 import calendarRoute from "../routes/calendar.route.js";
+import attractionsRoute from "../routes/attractions.route.js"
+
+import plannerRouter from "../routes/planner.route.js"
 
 // Adding all the agent routes under their own base URL
 // app.use("/api/auth", authRoute);
@@ -53,6 +56,9 @@ app.use("/api/accommodation", accommodationRoute);
 app.use("/api/safety", safetyRoute)
 app.use("/api/flights", flightsRoute);
 app.use("/api/calendar", calendarRoute);
+app.use("/api/attractions", attractionsRoute)
+
+app.use("/api/planner", plannerRouter);
 
 //serve calendar_files for direct download
 app.use("/calendar_files", express.static("calendar_files"));
