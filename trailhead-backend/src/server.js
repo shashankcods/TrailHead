@@ -1,9 +1,7 @@
+import "dotenv/config"
 import "./fixDNS.js"
 import app from "./app.js"
-import dotenv from "dotenv"
 import connectDB from "../db/connect.js";
-
-dotenv.config()
 
 const PORT = process.env.PORT || 5000;
 

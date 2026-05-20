@@ -4,8 +4,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser"
 import path from "path";
 import { fileURLToPath } from "url";
-import passport from "passport";
-import "./passport.js";
+// import passport from "passport";
+// import "./passport.js";
 
 // Initialize express app instance
 const app = express();
@@ -19,7 +19,7 @@ app.use(express.json({limit: '16kb'}));
 app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
-app.use(passport.initialize());
+// app.use(passport.initialize());
 
 app.post("/testjson", (req, res) => {
   console.log("Body received:", req.body);
@@ -33,9 +33,8 @@ app.post("/testjson", (req, res) => {
 // });
 
 // Import route handlers for each agent
-import authRoute from "../routes/auth.route.js";
+// import authRoute from "../routes/auth.route.js";
 import mapsRoute from "../routes/maps.route.js";
-import orchestratorRoute from "../routes/orchestrator.route.js";
 import weatherRoute from "../routes/weather.route.js";
 import eventsRoute from "../routes/events.route.js";
 import foodRoute from "../routes/food.route.js";
@@ -45,7 +44,7 @@ import flightsRoute from "../routes/flights.route.js";
 import calendarRoute from "../routes/calendar.route.js";
 
 // Adding all the agent routes under their own base URL
-app.use("/api/auth", authRoute);
+// app.use("/api/auth", authRoute);
 app.use("/api/maps", mapsRoute);
 app.use("/api/weather", weatherRoute);
 app.use("/api/events", eventsRoute);
@@ -53,7 +52,6 @@ app.use("/api/food", foodRoute);
 app.use("/api/accommodation", accommodationRoute);
 app.use("/api/safety", safetyRoute)
 app.use("/api/flights", flightsRoute);
-app.use("/api/orchestrator", orchestratorRoute);
 app.use("/api/calendar", calendarRoute);
 
 //serve calendar_files for direct download

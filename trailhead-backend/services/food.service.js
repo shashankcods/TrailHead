@@ -1,73 +1,305 @@
 import axios from "axios";
 import APIError from "../utils/APIError.js";
 
-// Fetches top-rated restaurants for a given destination
-// Uses OpenRouteService for geocoding, then Google Places API for restaurant data
 export const getRestaurants = async (destination) => {
+
   try {
-    // Convert destination name to coordinates using ORS
-    const geoUrl = "https://api.openrouteservice.org/geocode/search";
+
+    const geoUrl =
+      "https://api.openrouteservice.org/geocode/search";
+
     const geoRes = await axios.get(geoUrl, {
       params: {
-        api_key: process.env.ORS_API_KEY, // same key used in Weather Agent
+        api_key: process.env.ORS_API_KEY,
         text: destination,
       },
     });
 
-    const location = geoRes.data.features?.[0];
-    if (!location) throw new APIError(404, "Location not found");
+    const location =
+      geoRes.data.features?.[0];
 
-    const [longitude, latitude] = location.geometry.coordinates;
-    const label = location.properties.label || destination;
-    const country = label.split(",").pop().trim();
+    if (!location) {
 
-    console.log(`Geocoded via ORS: ${destination} → ${latitude}, ${longitude}`);
-
-    // Query Google Places API for restaurants nearby
-    const placesUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json";
-    const params = {
-      location: `${latitude},${longitude}`,
-      radius: 5000, // 5km radius
-      type: "restaurant",
-      key: process.env.GOOGLE_PLACES_API_KEY,
-    };
-
-    const res = await axios.get(placesUrl, { params });
-    let results = res.data.results || [];
-
-    if (results.length === 0) {
-      throw new APIError(404, `No restaurants found near ${destination}.`)
+      throw new APIError(
+        404,
+        "Location not found"
+      );
     }
 
-    // Sort restaurants by rating & total reviews
+    const [longitude, latitude] =
+      location.geometry.coordinates;
+
+    const label =
+      location.properties.label
+      || destination;
+
+    const country =
+      label.split(",").pop().trim();
+
+    console.log(
+      `Geocoded via ORS: ${destination} → ${latitude}, ${longitude}`
+    );
+
+    // =========================
+    // Google Places Text Search
+    // =========================
+
+    const searchQueries = [
+      `best restaurants in ${destination}`,
+      `top rated restaurants in ${destination}`,
+    ];
+
+    let allResults = [];
+
+    for (const query of searchQueries) {
+
+      const textSearchUrl =
+        "https://maps.googleapis.com/maps/api/place/textsearch/json";
+
+      const res = await axios.get(
+        textSearchUrl,
+        {
+          params: {
+            query,
+            key:
+              process.env.GOOGLE_PLACES_API_KEY,
+          },
+        }
+      );
+
+      allResults.push(
+        ...(res.data.results || [])
+      );
+    }
+
+    // =========================
+    // Remove duplicates
+    // =========================
+
+    const uniqueMap =
+      new Map();
+
+    allResults.forEach((r) => {
+
+      if (
+        r.place_id
+        &&
+        !uniqueMap.has(r.place_id)
+      ) {
+
+        uniqueMap.set(
+          r.place_id,
+          r
+        );
+      }
+    });
+
+    let results =
+      [...uniqueMap.values()];
+
+    // =========================
+    // Filter restaurants only
+    // =========================
+
+    results = results.filter((r) => {
+
+      const types =
+        r.types || [];
+
+      return (
+        types.includes("restaurant")
+        &&
+        !types.includes("lodging")
+      );
+    });
+
+    if (results.length === 0) {
+
+      throw new APIError(
+        404,
+        `No restaurants found near ${destination}.`
+      );
+    }
+
+    // =========================
+    // Better weighted ranking
+    // =========================
+
     results = results
       .filter((r) => r.rating)
-      .sort((a, b) => {
-        if (b.rating === a.rating) {
-          return (b.user_ratings_total || 0) - (a.user_ratings_total || 0);
-        }
-        return b.rating - a.rating;
-      })
+      .map((r) => ({
+
+        ...r,
+
+        score:
+          r.rating *
+          Math.log10(
+            (r.user_ratings_total || 1)
+          ),
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score
+      )
       .slice(0, 10);
 
-    // Format restaurant data neatly
-    const restaurants = results.map((r) => ({
-      name: r.name,
-      address: r.vicinity,
-      rating: r.rating ?? "N/A",
-      totalReviews: r.user_ratings_total ?? 0,
-      priceLevel: r.price_level ?? "N/A",
-      googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${r.place_id}`,
-    }));
-
-    // Return structured data for frontend
-    return {
-      destination,
-      country: country || "Unknown",
-      topCount: restaurants.length,
-      restaurants,
+    const priceMap = {
+      0: "$",
+      1: "$",
+      2: "$$",
+      3: "$$$",
+      4: "$$$$",
     };
+
+    const restaurants =
+      await Promise.all(
+
+        results.map(async (r) => {
+
+          try {
+
+            const detailsUrl =
+              "https://maps.googleapis.com/maps/api/place/details/json";
+
+            const detailsRes =
+              await axios.get(
+                detailsUrl,
+                {
+                  params: {
+
+                    place_id:
+                      r.place_id,
+
+                    fields: [
+                      "opening_hours",
+                      "formatted_phone_number",
+                      "website",
+                      "editorial_summary",
+                      "price_level",
+                    ].join(","),
+
+                    key:
+                      process.env.GOOGLE_PLACES_API_KEY,
+                  },
+                }
+              );
+
+            const details =
+              detailsRes.data.result || {};
+
+            return {
+
+              placeId:
+                r.place_id,
+
+              name:
+                r.name,
+
+              address:
+                r.formatted_address
+                || r.vicinity,
+
+              rating:
+                r.rating ?? "N/A",
+
+              totalReviews:
+                r.user_ratings_total
+                ?? 0,
+
+              score:
+                Number(
+                  r.score.toFixed(2)
+                ),
+
+              priceLevel:
+                priceMap[
+                  details.price_level
+                ] || "$$",
+
+              cuisine:
+                r.types?.filter(
+                  (t) =>
+                    ![
+                      "restaurant",
+                      "food",
+                      "point_of_interest",
+                      "establishment",
+                    ].includes(t)
+                ) || [],
+
+              coordinates: {
+                latitude:
+                  r.geometry?.location?.lat,
+
+                longitude:
+                  r.geometry?.location?.lng,
+              },
+
+              openingHours:
+                details.opening_hours
+                  ?.weekday_text || [],
+
+              phoneNumber:
+                details.formatted_phone_number
+                || null,
+
+              website:
+                details.website || null,
+
+              description:
+                details.editorial_summary
+                  ?.overview || null,
+
+              businessStatus:
+                r.business_status
+                || "Unknown",
+
+              photoReference:
+                r.photos?.[0]
+                  ?.photo_reference || null,
+
+              googleMapsUrl:
+                `https://www.google.com/maps/place/?q=place_id:${r.place_id}`,
+            };
+
+          } catch {
+
+            return null;
+          }
+        })
+      );
+
+    return {
+
+      destination,
+
+      country:
+        country || "Unknown",
+
+      coordinates: {
+        latitude,
+        longitude,
+      },
+
+      topCount:
+        restaurants.filter(Boolean)
+          .length,
+
+      restaurants:
+        restaurants.filter(Boolean),
+    };
+
   } catch (error) {
-    throw new APIError(500, "Failed to fetch restaurant data");
+
+    console.error(
+      "Restaurant Service Error:",
+      error.message
+    );
+
+    throw new APIError(
+      error.statusCode || 500,
+      error.message
+      || "Failed to fetch restaurant data"
+    );
   }
 };

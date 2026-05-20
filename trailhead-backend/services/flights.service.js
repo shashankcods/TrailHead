@@ -1,58 +1,277 @@
 import axios from "axios";
+import APIError from "../utils/APIError.js";
+import airportCodes from "../utils/airportCodes.js";
 
-export const getFlights = async (source, destination, start_date, end_date) => {
+
+// =========================
+// Main Flight Service
+// =========================
+
+export const getFlights = async (
+
+  source,
+  destination,
+
+  start_date,
+  end_date,
+
+  min_budget = 100,
+  max_budget = 2000,
+
+  adults = 1
+) => {
+
   try {
-    const query = `round trip flights from ${source} to ${destination} best deals site:makemytrip.com OR site:ixigo.com`;
 
-    const response = await axios.get("https://serpapi.com/search.json", {
-      params: {
-        engine: "google",
-        q: query,
-        api_key: process.env.SERPAPI_KEY,
-        gl: "in",
-        hl: "en",
-        num: 10,
-      },
-      timeout: 20000,
-    });
+    // =========================
+    // Airport Resolution
+    // =========================
 
-    const results = response.data.organic_results || [];
+    const departure_id =
+      airportCodes[
+        source.toLowerCase()
+      ];
 
-    if (!results.length) {
-      return APIError(404, "No flights found. Try a closer date or nearby city.");
+    const arrival_id =
+      airportCodes[
+        destination.toLowerCase()
+      ];
+
+    if (
+      !departure_id
+      ||
+      !arrival_id
+    ) {
+
+      throw new APIError(
+        400,
+        "Unsupported city"
+      );
     }
 
-    // Regex pattern to match Indian currency amounts (₹ or Rs.)
-    const priceRegex = /₹\s?([\d,]+)/g;
+    console.log(
+      `Resolved Airports: ${source} → ${departure_id}, ${destination} → ${arrival_id}`
+    );
 
-    const flights = results.map((r) => {
-      const snippet = r.snippet || "";
-      const prices = [...snippet.matchAll(priceRegex)].map((match) =>
-        parseInt(match[1].replace(/,/g, ""), 10)
+    // =========================
+    // Google Flights API
+    // =========================
+
+    const response =
+      await axios.get(
+        "https://serpapi.com/search.json",
+        {
+          params: {
+
+            engine:
+              "google_flights",
+
+            departure_id,
+
+            arrival_id,
+
+            outbound_date:
+              start_date,
+
+            return_date:
+              end_date,
+
+            adults,
+
+            currency:
+              "USD",
+
+            hl:
+              "en",
+
+            gl:
+              "us",
+
+            api_key:
+              process.env.SERPAPI_KEY,
+          },
+
+          timeout:
+            30000,
+        }
       );
 
-      const minPrice = prices.length ? Math.min(...prices) : null;
-      const maxPrice = prices.length ? Math.max(...prices) : null;
+    let flights = [
+
+      ...(response.data.best_flights || []),
+
+      ...(response.data.other_flights || []),
+    ];
+
+    if (!flights.length) {
+
+      throw new APIError(
+        404,
+        "No flights found"
+      );
+    }
+
+    // =========================
+    // Normalize Flights
+    // =========================
+
+    flights = flights.map((f) => {
+
+      const firstLeg =
+        f.flights?.[0];
+
+      const lastLeg =
+        f.flights?.[
+          f.flights.length - 1
+        ];
+
+      const totalPrice =
+        f.price || null;
 
       return {
-        title: r.title || "N/A",
-        snippet: snippet || "No description available.",
-        link: r.link || null,
-        displayed_link: r.displayed_link || null,
-        priceRange: prices.length
-          ? `₹${minPrice.toLocaleString()} - ₹${maxPrice.toLocaleString()}`
-          : "Not mentioned",
+
+        airline:
+          firstLeg?.airline
+          || "Unknown",
+
+        airlineLogo:
+          firstLeg?.airline_logo
+          || null,
+
+        departureAirport:
+          firstLeg?.departure_airport
+            ?.name || null,
+
+        departureAirportCode:
+          firstLeg?.departure_airport
+            ?.id || null,
+
+        departureTime:
+          firstLeg?.departure_airport
+            ?.time || null,
+
+        arrivalAirport:
+          lastLeg?.arrival_airport
+            ?.name || null,
+
+        arrivalAirportCode:
+          lastLeg?.arrival_airport
+            ?.id || null,
+
+        arrivalTime:
+          lastLeg?.arrival_airport
+            ?.time || null,
+
+        totalDuration:
+          f.total_duration || null,
+
+        layovers:
+          f.layovers || [],
+
+        stops:
+          f.layovers?.length || 0,
+
+        travelClass:
+          firstLeg?.travel_class
+          || null,
+
+        carbonEmissions:
+          f.carbon_emissions
+            ?.this_flight || null,
+
+        bookingToken:
+          f.booking_token || null,
+
+        price:
+          totalPrice,
+
+        totalEstimatedPrice:
+          totalPrice
+            ? totalPrice * adults
+            : null,
+
+        flights:
+          f.flights || [],
       };
     });
 
+    // =========================
+    // Budget Filtering
+    // =========================
+
+    flights = flights.filter((f) => {
+
+      if (!f.price)
+        return false;
+
+      return (
+
+        f.price >= min_budget
+
+        &&
+
+        f.price <= max_budget
+      );
+    });
+
+    // =========================
+    // Limit Results
+    // =========================
+
+    flights = flights
+      .slice(0, 10);
+
     return {
-      route: `${source} ↔ ${destination}`,
-      outboundDate: start_date,
-      returnDate: end_date,
-      totalResults: flights.length,
+
+      route:
+        `${source} ↔ ${destination}`,
+
+      departureAirport:
+        departure_id,
+
+      arrivalAirport:
+        arrival_id,
+
+      outboundDate:
+        start_date,
+
+      returnDate:
+        end_date,
+
+      adults,
+
+      currency:
+        "USD",
+    
+      bookingLink:
+        `https://www.google.com/travel/flights?q=Flights%20from%20${departure_id}%20to%20${arrival_id}%20on%20${start_date}%20return%20${end_date}`,
+
+      budgetRange: {
+
+        min:
+          min_budget,
+
+        max:
+          max_budget,
+      },
+
+      totalResults:
+        flights.length,
+
       flights,
     };
+
   } catch (error) {
-    throw new APIError(500, "Failed to fetch flights data from MakeMyTrip/Ixigo via SerpAPI");
+
+    console.error(
+      "Flights Service Error:",
+      error.response?.data
+      || error.message
+    );
+
+    throw new APIError(
+      error.statusCode || 500,
+      "Failed to fetch flight data"
+    );
   }
 };

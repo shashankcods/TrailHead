@@ -1,132 +1,273 @@
 import axios from "axios";
-import ApiError from "../utils/ApiError.js";
+import APIError from "../utils/APIError.js";
 
-const RAPID_API_HOST = "booking-com.p.rapidapi.com";
-const RAPID_API_KEY = process.env.RAPIDAPI_KEY;
+const SERPAPI_BASE_URL =
+  "https://serpapi.com/search?engine=google_hotel";
+
+const SERPAPI_KEY =
+  process.env.SERPAPI_KEY;
 
 
-// Get destination ID for city
-const getCityId = async (city) => {
+// =========================
+// Hotel score formula
+// =========================
+
+const calculateHotelScore = (
+  hotel,
+  price
+) => {
+
+  const rating =
+    hotel.overall_rating || 0;
+
+  const reviews =
+    hotel.reviews || 1;
+
+  return (
+    (
+      rating * 2
+      +
+      Math.log10(reviews)
+    )
+    /
+    Math.log10(price || 100)
+  );
+};
+
+
+// =========================
+// Parse price safely
+// =========================
+
+const parsePrice = (priceString) => {
+
+  if (!priceString)
+    return null;
+
+  const parsed =
+    Number(
+      priceString.replace(
+        /[^0-9.]/g,
+        ""
+      )
+    );
+
+  return isNaN(parsed)
+    ? null
+    : parsed;
+};
+
+
+// =========================
+// Main Hotel Service
+// =========================
+
+export const getHotelsFromBooking = async (
+  destination,
+  checkin_date,
+  checkout_date,
+  minBudget = 50,
+  maxBudget = 500,
+  adults = 2
+) => {
+
   try {
+
     const res = await axios.get(
-      `https://${RAPID_API_HOST}/v1/hotels/locations`,
+      SERPAPI_BASE_URL,
       {
         params: {
-          name: city,
-          locale: "en-gb",
-        },
 
-        headers: {
-          "x-rapidapi-key": RAPID_API_KEY,
-          "x-rapidapi-host": RAPID_API_HOST,
+          engine:
+            "google_hotels",
+
+          q:
+            `${destination} hotels`,
+
+          check_in_date:
+            checkin_date,
+
+          check_out_date:
+            checkout_date,
+
+          adults,
+
+          currency:
+            "USD",
+
+          api_key:
+            SERPAPI_KEY,
         },
       }
     );
 
-    if (res.data?.length > 0)
-      return res.data[0].dest_id;
+    let hotels =
+      res.data.properties || [];
 
-    throw new ApiError(404, "City not found");
+    if (!hotels.length) {
+
+      throw new APIError(
+        404,
+        `No hotels found for ${destination}`
+      );
+    }
+
+    // =========================
+    // Budget filtering
+    // =========================
+
+    hotels = hotels.filter((h) => {
+
+      const price =
+        parsePrice(
+          h.rate_per_night?.lowest
+        );
+
+      if (!price)
+        return false;
+
+      return (
+        price >= minBudget
+        &&
+        price <= maxBudget
+      );
+    });
+
+    // =========================
+    // Ranking
+    // =========================
+
+    hotels = hotels
+      .map((h) => {
+
+        const price =
+          parsePrice(
+            h.rate_per_night?.lowest
+          );
+
+        return {
+
+          ...h,
+
+          parsed_price:
+            price,
+
+          weighted_score:
+            calculateHotelScore(
+              h,
+              price
+            ),
+        };
+      })
+
+      .sort(
+        (a, b) =>
+          b.weighted_score
+          - a.weighted_score
+      )
+
+      .slice(0, 10);
+
+    // =========================
+    // Clean response
+    // =========================
+
+    const cleanedHotels =
+      hotels.map((h) => ({
+
+        name:
+          h.name,
+
+        description:
+          h.description || null,
+
+        overall_rating:
+          h.overall_rating || null,
+
+        reviews:
+          h.reviews || 0,
+
+        score:
+          Number(
+            h.weighted_score
+              .toFixed(2)
+          ),
+
+        price_per_night:
+          h.parsed_price,
+
+        currency:
+          "USD",
+
+        type:
+          h.type || null,
+
+        amenities:
+          h.amenities || [],
+
+        check_in_time:
+          h.check_in_time || null,
+
+        check_out_time:
+          h.check_out_time || null,
+
+        images:
+          h.images || [],
+
+        thumbnail:
+          h.images?.[0]
+          || null,
+
+        gps_coordinates:
+          h.gps_coordinates || null,
+
+        nearby_places:
+          h.nearby_places || [],
+
+        hotel_class:
+          h.hotel_class || null,
+
+        extracted_hotel_class:
+          h.extracted_hotel_class
+          || null,
+
+        link:
+          h.link || null,
+      }));
+
+    return {
+
+      destination,
+
+      checkin_date,
+
+      checkout_date,
+
+      adults,
+
+      budgetRange: {
+        min: minBudget,
+        max: maxBudget,
+      },
+
+      total_results:
+        cleanedHotels.length,
+
+      hotels:
+        cleanedHotels,
+    };
 
   } catch (err) {
 
     console.error(
-      "City lookup failed:",
-      err.response?.data || err.message
+      "Hotels Service Error:",
+      err.response?.data
+      || err.message
     );
 
-    throw new ApiError(
+    throw new APIError(
       err.statusCode || 500,
-      "City lookup failed"
+      "Failed to fetch hotels"
     );
-  }
-};
-
-
-// Clean hotel data
-const cleanHotelData = (
-  hotels,
-  checkin,
-  checkout
-) => {
-
-  if (!hotels || hotels.length === 0)
-    return [];
-
-  return hotels.slice(0, 5).map((h) => ({
-    hotel_name: h.hotel_name,
-    address: h.address,
-    city: h.city_trans,
-    country: h.country_trans,
-    rating: h.review_score,
-
-    price:
-      h.price_breakdown?.gross_price || null,
-
-    currency:
-      h.composite_price_breakdown
-        ?.gross_amount_per_night
-        ?.currency || "INR",
-
-    distance_from_center: h.distance,
-
-    image_url:
-      h.max_photo_url || h.main_photo_url,
-
-    checkin_date: checkin,
-    checkout_date: checkout,
-  }));
-};
-
-
-export const getHotelsFromBooking = async (city, checkin_date, checkout_date) => {
-  try {
-    const dest_id = await getCityId(city);
-    const res = await axios.get(
-      `https://${RAPID_API_HOST}/v1/hotels/search`,
-      {
-        params: {
-          dest_id,
-          dest_type: "city",
-          checkin_date,
-          checkout_date,
-
-          adults_number: "2",
-          room_number: "1",
-
-          order_by: "popularity",
-
-          locale: "en-gb",
-
-          filter_by_currency: "INR",
-
-          units: "metric",
-        },
-
-        headers: {
-          "x-rapidapi-key": RAPID_API_KEY,
-          "x-rapidapi-host": RAPID_API_HOST,
-        },
-      }
-    );
-
-    return {
-      city,
-      checkin_date,
-      checkout_date,
-
-      total_results:
-        res.data.result?.length || 0,
-
-      hotels: cleanHotelData(
-        res.data.result,
-        checkin_date,
-        checkout_date
-      ),
-    };
-
-  } catch (err) {
-    console.error("Accommodation Service Error:", err.response?.data || err.message);
-    throw new ApiError(err.statusCode || 500, "Failed to fetch hotels");
   }
 };

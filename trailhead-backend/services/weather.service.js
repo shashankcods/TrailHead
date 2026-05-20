@@ -43,8 +43,8 @@ const getForecast = async (latitude, longitude, start_date, end_date) => {
 
   return daily.time.map((date, i) => ({
     date,
-    maxTemp: daily.temperature_2m_max?.[i] ?? 0,
-    minTemp: daily.temperature_2m_min?.[i] ?? 0,
+    maxTemp: Math.round(daily.temperature_2m_max?.[i] ?? 0),
+    minTemp: Math.round(daily.temperature_2m_min?.[i] ?? 0),
     rainAmount: daily.precipitation_sum?.[i] ?? 0,
     condition: getWeatherCondition(daily.weathercode?.[i]),
   }));
@@ -67,7 +67,7 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
     const label = location.properties.label || destination;
     const country = label.split(",").pop().trim();
 
-    console.log(`🌦️ Geocoded ${destination} → ${latitude}, ${longitude}`);
+    console.log(`Weather-Geocoded ${destination} → ${latitude}, ${longitude}`);
 
     // default to next 7 days if dates are not provided
     const today = new Date();
@@ -92,21 +92,8 @@ export const getWeatherFromOpenMeteo = async (destination, start_date, end_date)
       country,
       forecast,
     };
+    
   } catch (error) {
-    console.error("Weather Service Error:", error.response?.status, error.response?.data || error.message);
-
-    return {
-      destination,
-      country: "Unknown",
-      forecast: [
-        {
-          date: new Date().toISOString(),
-          maxTemp: 0,
-          minTemp: 0,
-          rainAmount: 0,
-          condition: "Unavailable",
-        },
-      ],
-    };
+    throw new APIError(500, "Weather Service Failed");
   }
 };
