@@ -28,7 +28,11 @@ from "../utils/geocode.js";
 import { timedServiceCall }
 from "../utils/timedServiceCall.js";
 
-import { generateItinerary } from "./llm.service.js";
+import { normalizeActivities } from "../utils/normalizeActivities.js";
+
+import { generateStructuredItinerary } from "./llm.service.js";
+
+import { compactLLMActivities } from "../utils/compactLLMactivities.js";
 
 
 // CACHING NEEDS TO BE ADDED FOR SAFETY AS IT IS THE BOTTLENECK
@@ -586,12 +590,12 @@ export const generateTripPlan = async (
     const restaurants =
       restaurantsResult.status === "fulfilled"
         ? restaurantsResult.value
-        : null;
+        : [];
 
     const events =
       eventsResult.status === "fulfilled"
         ? eventsResult.value
-        : null;
+        : []
 
     const safety =
       safetyResult.status === "fulfilled"
@@ -676,6 +680,57 @@ export const generateTripPlan = async (
 
     console.timeEnd("TOTAL_PLANNER_TIME");
 
+    const activities =
+      normalizeActivities({
+
+        attractionsByInterest,
+
+        restaurants,
+
+        events
+      });
+
+    const compactActivitiesForLLM = compactLLMActivities(activities);
+      console.log(
+
+        JSON.stringify(
+
+          compactActivitiesForLLM[
+            0
+          ],
+
+          null,
+
+          2
+        )
+      );
+
+      const itinerary =
+    await generateStructuredItinerary({
+
+      trip: {
+
+        source,
+
+        destination,
+
+        start_date,
+
+        end_date,
+
+        adults,
+
+        trip_days
+      },
+
+      interests,
+
+      budget: allocations,
+
+      compactActivities:
+        compactActivitiesForLLM
+    });
+
     const plannerData = {
 
       trip: {
@@ -719,14 +774,25 @@ export const generateTripPlan = async (
 
       attractions:
         attractionsByInterest,
+
+      activities,
+
+      compactActivitiesForLLM,
+
+      itinerary
     };
 
-    const aiResponse =
-      await generateItinerary(
-        plannerData
-      );
+console.log(
 
-console.log(aiResponse);
+  JSON.stringify(
+
+    activities[0],
+
+    null,
+
+    2
+  )
+);
     
     return plannerData
 
