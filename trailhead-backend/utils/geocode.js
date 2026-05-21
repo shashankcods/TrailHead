@@ -28,7 +28,9 @@ export const geocodeLocation = async (location) => {
   const key = cacheKey(location);
 
   if (geocodeCache.has(key)) {
-    console.log(`📍 Geocode cache hit: ${location}`);
+    console.log(
+      `📍 Geocode cache HIT: "${key}" (size=${geocodeCache.size})`
+    );
     return geocodeCache.get(key);
   }
 
@@ -64,7 +66,9 @@ export const geocodeLocation = async (location) => {
 
     geocodeCache.set(key, result);
 
-    console.log(`📍 Geocoded ${location} → ${lat}, ${lon}`);
+    console.log(
+      `📍 Geocoded ${location} → ${lat}, ${lon} (cached as "${key}", size=${geocodeCache.size})`
+    );
 
     return result;
   } catch (error) {
@@ -85,7 +89,9 @@ export const geocodeDestination = async (destination) => {
   const key = cacheKey(destination);
 
   if (geocodeCache.has(key)) {
-    console.log(`📍 Geocode cache hit: ${destination}`);
+    console.log(
+      `📍 Geocode cache HIT: "${key}" (size=${geocodeCache.size})`
+    );
     const cached = geocodeCache.get(key);
     return {
       destination: cleanDestination(destination),

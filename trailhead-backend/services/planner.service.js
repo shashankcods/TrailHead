@@ -25,6 +25,14 @@ from "../utils/APIError.js";
 import { geocodeDestination }
 from "../utils/geocode.js";
 
+import { timedServiceCall }
+from "../utils/timedServiceCall.js";
+
+import { generateItinerary } from "./llm.service.js";
+
+
+// CACHING NEEDS TO BE ADDED FOR SAFETY AS IT IS THE BOTTLENECK
+
 
 // =========================
 // Constants
@@ -389,116 +397,158 @@ export const generateTripPlan = async (
     // Parallel Service Calls
     // =========================
 
+    console.time("TOTAL_PLANNER_TIME");
+
     const serviceResults =
       await Promise.allSettled([
 
-        withTimeout(
+        timedServiceCall(
 
-          getFlights(
+          "Flights",
 
-            source,
+          () =>
+            withTimeout(
 
-            destination,
+              getFlights(
 
-            start_date,
+                source,
 
-            end_date,
+                destination,
 
-            allocations.travel * 0.5,
+                start_date,
 
-            allocations.travel,
+                end_date,
 
-            adults,
+                allocations.travel * 0.5,
 
-            retrievalConfig.flights
-          )
+                allocations.travel,
+
+                adults,
+
+                retrievalConfig.flights
+              )
+            )
         ),
 
-        withTimeout(
+        timedServiceCall(
 
-          getHotelsFromBooking(
+          "Hotels",
 
-            destination,
+          () =>
+            withTimeout(
 
-            start_date,
+              getHotelsFromBooking(
 
-            end_date,
+                destination,
 
-            allocations.accommodation
-              / trip_days
-              / adults
-              * 0.5,
+                start_date,
 
-            allocations.accommodation
-              / trip_days
-              / adults,
+                end_date,
 
-            adults,
+                allocations.accommodation
+                  / trip_days
+                  / adults
+                  * 0.5,
 
-            retrievalConfig.hotels
-          )
+                allocations.accommodation
+                  / trip_days
+                  / adults,
+
+                adults,
+
+                retrievalConfig.hotels
+              )
+            )
         ),
 
-        withTimeout(
+        timedServiceCall(
 
-          getWeatherFromOpenMeteo(
+          "Weather",
 
-            destination,
+          () =>
+            withTimeout(
 
-            start_date,
+              getWeatherFromOpenMeteo(
 
-            weather_end_date,
+                destination,
 
-            latitude,
+                start_date,
 
-            longitude,
+                weather_end_date,
 
-            country
-          )
+                latitude,
+
+                longitude,
+
+                country
+              )
+            )
         ),
 
-        withTimeout(
+        timedServiceCall(
 
-          getRestaurants(
+          "Restaurants",
 
-            destination,
+          () =>
+            withTimeout(
 
-            retrievalConfig.restaurants,
+              getRestaurants(
 
-            latitude,
+                destination,
 
-            longitude,
+                retrievalConfig.restaurants,
 
-            country
-          )
+                latitude,
+
+                longitude,
+
+                country
+              )
+            )
         ),
 
-        withTimeout(
+        timedServiceCall(
 
-          getEvents(
+          "Events",
 
-            destination,
+          () =>
+            withTimeout(
 
-            start_date,
+              getEvents(
 
-            end_date,
+                destination,
 
-            retrievalConfig.events
-          )
+                start_date,
+
+                end_date,
+
+                retrievalConfig.events,
+
+                latitude,
+
+                longitude
+              )
+            )
         ),
 
-        withTimeout(
+        timedServiceCall(
 
-          getSafetyData(
+          "Safety",
 
-            destination,
+          () =>
+            withTimeout(
 
-            latitude,
+              getSafetyData(
 
-            longitude,
+                destination,
 
-            country
-          )
+                latitude,
+
+                longitude,
+
+                country
+              )
+            )
         ),
       ]);
 
@@ -604,8 +654,12 @@ export const generateTripPlan = async (
         }
       });
 
+    console.time("Attractions");
+
     const attractionResults =
       await Promise.all(attractionPromises);
+
+    console.timeEnd("Attractions");
 
     const attractionsByInterest = {};
 
@@ -620,7 +674,9 @@ export const generateTripPlan = async (
     // Final Unified Context
     // =========================
 
-    return {
+    console.timeEnd("TOTAL_PLANNER_TIME");
+
+    const plannerData = {
 
       trip: {
 
@@ -664,6 +720,15 @@ export const generateTripPlan = async (
       attractions:
         attractionsByInterest,
     };
+
+    const aiResponse =
+      await generateItinerary(
+        plannerData
+      );
+
+console.log(aiResponse);
+    
+    return plannerData
 
   } catch (error) {
 

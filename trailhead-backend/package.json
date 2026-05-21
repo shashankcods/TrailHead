@@ -5,15 +5,16 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-  "start": "cross-env NODE_ENV=production node src/server.js",
-  "dev": "cross-env NODE_ENV=development nodemon src/server.js",
-  "build:frontend": "cd ../trailhead-frontend && npm run build",
-  "serve": "npm run build:frontend && npm run start"
+    "start": "cross-env NODE_ENV=production node src/server.js",
+    "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+    "build:frontend": "cd ../trailhead-frontend && npm run build",
+    "serve": "npm run build:frontend && npm run start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^2.5.0",
     "@google/generative-ai": "^0.24.1",
     "@mapbox/polyline": "^1.2.1",
     "axios": "^1.12.2",
