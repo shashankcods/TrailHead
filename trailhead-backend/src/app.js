@@ -15,8 +15,8 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true,
 }));
-app.use(express.json({limit: '16kb'}));  
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
+app.use(express.json({limit: '50mb'}));  
+app.use(express.urlencoded({extended: true, limit: "50mb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
 // app.use(passport.initialize());
@@ -46,6 +46,8 @@ import attractionsRoute from "../routes/attractions.route.js"
 
 import plannerRouter from "../routes/planner.route.js"
 
+import modifyItineraryRouter from "../routes/modifyItinerary.route.js"
+
 // Adding all the agent routes under their own base URL
 // app.use("/api/auth", authRoute);
 app.use("/api/maps", mapsRoute);
@@ -59,6 +61,8 @@ app.use("/api/calendar", calendarRoute);
 app.use("/api/attractions", attractionsRoute)
 
 app.use("/api/planner", plannerRouter);
+
+app.use("/modify-itinerary", modifyItineraryRouter)
 
 //serve calendar_files for direct download
 app.use("/calendar_files", express.static("calendar_files"));

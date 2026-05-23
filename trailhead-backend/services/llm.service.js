@@ -71,10 +71,10 @@ RETURN JSON IN THIS EXACT FORMAT:
       "activities": [
         {
           "activityId": "attr_xxx",
-
-          "start": "09:00",
-
-          "end": "10:30"
+          "scheduledTime": {
+            "start": "09:00",
+            "end": "10:30"
+          }
         }
       ]
     }

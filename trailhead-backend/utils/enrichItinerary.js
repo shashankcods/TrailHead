@@ -3,6 +3,7 @@ export const enrichItinerary = ({
   itinerary,
 
   activities
+
 }) => {
 
   const activityMap =
@@ -32,10 +33,33 @@ export const enrichItinerary = ({
             day.activities.map(
               (scheduled) => {
 
+                // =========================
+                // ALREADY ENRICHED
+                // =========================
+
+                if (
+                  scheduled.title &&
+                  scheduled.category
+                ) {
+
+                  return scheduled;
+                }
+
+                // =========================
+                // RAW FORMAT
+                // =========================
+
                 const activity =
                   activityMap.get(
+
+                    scheduled.id ||
                     scheduled.activityId
                   );
+
+                if (!activity) {
+
+                  return scheduled;
+                }
 
                 return {
 
@@ -44,11 +68,21 @@ export const enrichItinerary = ({
                   scheduledTime: {
 
                     start:
+
+                      scheduled
+                        .scheduledTime
+                        ?.start ??
+
                       scheduled.start,
 
                     end:
-                      scheduled.end
-                  }
+
+                      scheduled
+                        .scheduledTime
+                        ?.end ??
+
+                      scheduled.end,
+                  },
                 };
               }
             )

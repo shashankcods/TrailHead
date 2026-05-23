@@ -1,12 +1,26 @@
+import { timeToMinutes, addMinutes } from "./time.js";
+
+import {
+
+  ensureScheduledTime,
+
+  getScheduledEnd,
+
+  getScheduledStart,
+
+  setScheduledTimes,
+
+} from "./scheduledTime.js";
+
 export const repairItinerary = ({
 
   itinerary,
 
   activities
+
 }) => {
 
-  const usedIds =
-    new Set();
+  const usedIds = new Set();
 
   const validIds =
     new Set(
@@ -15,79 +29,163 @@ export const repairItinerary = ({
       )
     );
 
-  itinerary.days.forEach(
-    (dayObj) => {
+  itinerary.days.forEach((dayObj) => {
 
-      dayObj.activities.forEach(
-        (activity, index) => {
+    dayObj.activities =
+      dayObj.activities.map(
+        (activity) => {
+
+          ensureScheduledTime(
+            activity
+          );
+
+          // =========================
+          // INVALID ACTIVITY FIX
+          // =========================
 
           if (
             !validIds.has(
-              activity.activityId
+              activity.id
             )
           ) {
 
             const replacement =
               activities.find(
+
                 (a) =>
-                  !usedIds.has(a.id)
+                  !usedIds.has(
+                    a.id
+                  )
               );
 
             if (replacement) {
 
-              activity.activityId =
-                replacement.id;
+              activity = {
+
+                ...replacement,
+
+                scheduledTime:
+                  activity.scheduledTime
+              };
             }
           }
 
+          // =========================
+          // DUPLICATE FIX
+          // =========================
+
           if (
             usedIds.has(
-              activity.activityId
+              activity.id
             )
           ) {
 
             const replacement =
               activities.find(
+
                 (a) =>
-                  !usedIds.has(a.id)
+                  !usedIds.has(
+                    a.id
+                  )
               );
 
             if (replacement) {
 
-              activity.activityId =
-                replacement.id;
+              activity = {
+
+                ...replacement,
+
+                scheduledTime:
+                  activity.scheduledTime
+              };
             }
           }
 
           usedIds.add(
-            activity.activityId
+            activity.id
           );
+
+          // =========================
+          // TIME REPAIR
+          // =========================
 
           const start =
             timeToMinutes(
-              activity.start
+
+              getScheduledStart(
+                activity
+              )
             );
 
           const end =
             timeToMinutes(
-              activity.end
+
+              getScheduledEnd(
+                activity
+              )
             );
 
           if (
             start !== null &&
-            end !== null &&
-            start >= end
+            end !== null
           ) {
 
-            activity.end =
-              addMinutes(
-                activity.start,
-                90
+            const isOvernight =
+
+              end < start &&
+
+              start - end >= 360;
+
+            const needsRepair =
+
+              start === end ||
+
+              (
+                start > end &&
+                !isOvernight
               );
+
+            if (needsRepair) {
+
+              const repairedEnd =
+                addMinutes(
+
+                  getScheduledStart(
+                    activity
+                  ),
+
+                  90
+                );
+
+              if (repairedEnd) {
+
+                setScheduledTimes(
+
+                  activity,
+
+                  getScheduledStart(
+                    activity
+                  ),
+
+                  repairedEnd
+                );
+              }
+            }
           }
-        }
-      );
-    }
+
+          return activity;
+      });
+  });
+
+  console.log(
+
+    "[repairItinerary] repaired itinerary:",
+
+    JSON.stringify(
+      itinerary,
+      null,
+      2
+    )
   );
 
   return itinerary;

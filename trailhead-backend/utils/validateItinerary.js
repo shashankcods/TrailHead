@@ -1,219 +1,150 @@
-const timeToMinutes = (time) => {
+import { timeToMinutes } from "./time.js";
+import {
+  ensureScheduledTime,
+  getScheduledEnd,
+  getScheduledStart,
+} from "./scheduledTime.js";
 
-  if (
-    !time ||
-    typeof time !== "string"
-  ) {
-    return null;
-  }
-
-  const [hours, minutes] =
-    time.split(":").map(Number);
-
-  if (
-    Number.isNaN(hours) ||
-    Number.isNaN(minutes)
-  ) {
-    return null;
-  }
-
-  return (
-    hours * 60 + minutes
-  );
-};
-
-export const validateItinerary = ({
-  itinerary,
-  activities
-}) => {
-
+export const validateItinerary = ({ itinerary, activities }) => {
   const errors = [];
   const warnings = [];
 
-  if (
-    !itinerary ||
-    !Array.isArray(itinerary.days)
-  ) {
-    errors.push(
-      "Invalid itinerary structure"
-    );
+  if (!itinerary || !Array.isArray(itinerary.days)) {
+    errors.push("Invalid itinerary structure");
+
+    console.log("[validateItinerary] errors:", errors);
 
     return {
       valid: false,
       errors,
-      warnings
+      warnings,
     };
   }
 
-  const validActivityIds =
-    new Set(
-      activities.map(
-        (activity) => activity.id
-      )
-    );
+  const validActivityIds = new Set(
+    activities.map((activity) => activity.id)
+  );
 
   const usedIds = new Set();
 
   itinerary.days.forEach((dayObj, dayIndex) => {
-
     if (typeof dayObj.day !== "number") {
-      errors.push(
-        `Missing day number at index ${dayIndex}`
-      );
+      errors.push(`Missing day number at index ${dayIndex}`);
     }
 
     if (!dayObj.theme) {
-      errors.push(
-        `Missing theme on day ${dayObj.day}`
-      );
+      errors.push(`Missing theme on day ${dayObj.day}`);
     }
 
-    if (
-      !Array.isArray(dayObj.activities)
-    ) {
-      errors.push(
-        `Missing activities on day ${dayObj.day}`
-      );
-
+    if (!Array.isArray(dayObj.activities)) {
+      errors.push(`Missing activities on day ${dayObj.day}`);
       return;
     }
 
-    const sortedActivities =
-      [...dayObj.activities].sort((a, b) => {
+    dayObj.activities.forEach((activity) => ensureScheduledTime(activity));
 
-        return (
-          timeToMinutes(a.start) -
-          timeToMinutes(b.start)
+    const sortedActivities = [...dayObj.activities].sort((a, b) => {
+      return (
+        timeToMinutes(getScheduledStart(a)) -
+        timeToMinutes(getScheduledStart(b))
+      );
+    });
+
+    sortedActivities.forEach((activity, activityIndex) => {
+      if (!activity.id) {
+        errors.push(
+          `Missing id in activity ${activityIndex + 1} on day ${dayObj.day}`
         );
-      });
-
-    sortedActivities.forEach(
-      (activity, activityIndex) => {
-
-        if (!activity.activityId) {
-          errors.push(
-            `Missing activityId in activity ${activityIndex + 1} on day ${dayObj.day}`
-          );
-        }
-
-        if (!activity.start) {
-          errors.push(
-            `Missing start time in activity ${activityIndex + 1} on day ${dayObj.day}`
-          );
-        }
-
-        if (!activity.end) {
-          errors.push(
-            `Missing end time in activity ${activityIndex + 1} on day ${dayObj.day}`
-          );
-        }
-
-        if (
-          !validActivityIds.has(
-            activity.activityId
-          )
-        ) {
-          errors.push(
-            `Invalid activityId "${activity.activityId}" on day ${dayObj.day}`
-          );
-        }
-
-        const start =
-          timeToMinutes(activity.start);
-
-        const end =
-          timeToMinutes(activity.end);
-
-        if (
-          start === null ||
-          end === null
-        ) {
-          errors.push(
-            `Invalid time format on day ${dayObj.day}`
-          );
-
-          return;
-        }
-
-        if (start >= end) {
-
-          let adjustedEnd = end;
-
-          if (end < start) {
-
-            adjustedEnd += 24 * 60;
-          }
-
-          if (start >= adjustedEnd) {
-
-            errors.push(
-              `Invalid timing for activity "${activity.activityId}" on day ${dayObj.day}`
-            );
-          }
-        }
-
-        if (
-          usedIds.has(activity.activityId)
-        ) {
-          warnings.push(
-            `Repeated activity "${activity.activityId}" across itinerary`
-          );
-        }
-
-        usedIds.add(activity.activityId);
       }
-    );
 
-    for (
-      let i = 1;
-      i < sortedActivities.length;
-      i++
-    ) {
+      const scheduledStart = getScheduledStart(activity);
+      const scheduledEnd = getScheduledEnd(activity);
 
-      const prev =
-        sortedActivities[i - 1];
+      if (!scheduledStart) {
+        errors.push(
+          `Missing scheduledTime.start in activity ${activityIndex + 1} on day ${dayObj.day}`
+        );
+      }
 
-      const curr =
-        sortedActivities[i];
+      if (!scheduledEnd) {
+        errors.push(
+          `Missing scheduledTime.end in activity ${activityIndex + 1} on day ${dayObj.day}`
+        );
+      }
 
-      let prevEnd =
-        timeToMinutes(prev.end);
+      if (!validActivityIds.has(activity.id)) {
+        errors.push(
+          `Invalid id "${activity.id}" on day ${dayObj.day}`
+        );
+      }
 
-      const prevStart =
-        timeToMinutes(prev.start);
+      const start = timeToMinutes(scheduledStart);
+      const end = timeToMinutes(scheduledEnd);
 
-      let currStart =
-        timeToMinutes(curr.start);
+      if (start === null || end === null) {
+        errors.push(`Invalid time format on day ${dayObj.day}`);
+        return;
+      }
+
+      const isOvernight =
+        end < start &&
+        start - end >= 360;
+
+      if (!isOvernight && start >= end) {
+        errors.push(
+          `Invalid timing for activity "${activity.id}" on day ${dayObj.day}`
+        );
+      }
+
+      if (usedIds.has(activity.id)) {
+        warnings.push(
+          `Repeated activity "${activity.id}" across itinerary`
+        );
+      }
+
+      usedIds.add(activity.id);
+    });
+
+    for (let i = 1; i < sortedActivities.length; i++) {
+      const prev = sortedActivities[i - 1];
+      const curr = sortedActivities[i];
+
+      let prevEnd = timeToMinutes(getScheduledEnd(prev));
+      const prevStart = timeToMinutes(getScheduledStart(prev));
+      let currStart = timeToMinutes(getScheduledStart(curr));
+
+      if (prevEnd === null || prevStart === null || currStart === null) {
+        continue;
+      }
 
       if (prevEnd < prevStart) {
-
         prevEnd += 24 * 60;
       }
 
       if (currStart < prevStart) {
-
         currStart += 24 * 60;
       }
 
       if (prevEnd > currStart) {
-
-        errors.push(
-          `Overlapping activities on day ${dayObj.day}`
-        );
+        errors.push(`Overlapping activities on day ${dayObj.day}`);
       }
     }
   });
 
-  return {
-
-    valid:
-      errors.length === 0,
-
+  const result = {
+    valid: errors.length === 0,
     errors,
-
     warnings,
-
-    normalizedItinerary:
-      itinerary
+    normalizedItinerary: itinerary,
   };
+
+  if (!result.valid) {
+    console.log("[validateItinerary] validation failed");
+    console.log("[validateItinerary] errors:", errors);
+    console.log("[validateItinerary] warnings:", warnings);
+  } else {
+    console.log("[validateItinerary] validation passed");
+  }
+
+  return result;
 };
