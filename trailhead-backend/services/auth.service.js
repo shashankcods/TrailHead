@@ -1,9 +1,40 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dns from "dns";
 import { User } from "../models/auth.model.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "trailhead_secret_key";
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
+
+const issueAuthTokens = (user) => {
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+  return { accessToken, refreshToken };
+};
+
+const issueAndPersistAuthTokens = async (user) => {
+  const tokens = issueAuthTokens(user);
+  user.refreshToken = tokens.refreshToken;
+  await user.save({ validateBeforeSave: false });
+  return tokens;
+};
+
+const validateUsername = (username) => {
+  const trimmed = username?.trim();
+  if (!trimmed || trimmed.length < 3) {
+    throw new Error("Username must be at least 3 characters");
+  }
+  if (/\s/.test(trimmed)) {
+    throw new Error("Username cannot contain spaces");
+  }
+  return trimmed;
+};
+
+const validateEmail = (email) => {
+  const trimmed = email?.trim().toLowerCase();
+  if (!trimmed || !/^\S+@\S+\.\S+$/.test(trimmed)) {
+    throw new Error("Invalid email address");
+  }
+  return trimmed;
+};
 
 // Password checklist validator
 const validatePassword = (password) => {
@@ -25,13 +56,11 @@ const validatePassword = (password) => {
     noSpaces: "No spaces allowed",
   };
 
-  // Build arrays of passed/failed
   const failed = Object.entries(checklist)
     .filter(([_, passed]) => !passed)
     .map(([rule]) => messages[rule]);
 
   if (failed.length > 0) {
-    // Return structured error for frontend checklist
     const details = Object.entries(checklist).map(([rule, passed]) => ({
       rule: messages[rule],
       passed,
@@ -45,67 +74,110 @@ const validatePassword = (password) => {
   return true;
 };
 
-// Register service
-// Register service
+const toPublicUser = (user) => ({
+  id: user._id,
+  username: user.username,
+  email: user.email,
+});
+
 export const registerUserService = async (username, email, password) => {
-  try {
-    // Check duplicate manually (email)
-    const existingUser = await User.findOne({ email });
-    if (existingUser) throw new Error("User already exists with this email");
+  const validUsername = validateUsername(username);
+  const validEmail = validateEmail(email);
 
-    // Validate email domain via MX record
-    const domain = email.split("@")[1];
-    if (!domain) throw new Error("Invalid email address format");
-
-    await new Promise((resolve, reject) => {
-      dns.resolveMx(domain, (err, addresses) => {
-        if (err || !addresses || addresses.length === 0)
-          reject("Invalid domain");
-        else resolve(addresses);
-      });
-    });
-
-    // Validate password strength
-    validatePassword(password);
-
-    // Hash and save
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    return {
-      id: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-    };
-  } catch (error) {
-    // Re-throw the original MongoDB error so controller can read error.code & error.keyPattern
-    throw error;
+  const existingUser = await User.findOne({
+    $or: [{ email: validEmail }, { username: validUsername.toLowerCase() }],
+  });
+  if (existingUser) {
+    if (existingUser.email === validEmail) {
+      throw new Error("User already exists with this email");
+    }
+    throw new Error("Username already in use");
   }
+
+  const domain = validEmail.split("@")[1];
+  await new Promise((resolve, reject) => {
+    dns.resolveMx(domain, (err, addresses) => {
+      if (err || !addresses?.length) {
+        reject(new Error("Invalid email domain"));
+      } else {
+        resolve(addresses);
+      }
+    });
+  });
+
+  validatePassword(password);
+
+  const newUser = await User.create({
+    username: validUsername,
+    email: validEmail,
+    password,
+  });
+
+  return toPublicUser(newUser);
 };
 
-// Login service
 export const loginUserService = async (email, password) => {
-  const user = await User.findOne({ email });
+  const validEmail = validateEmail(email);
+  const user = await User.findOne({ email: validEmail });
   if (!user) throw new Error("Invalid email or password");
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = await user.isPasswordCorrect(password);
   if (!isMatch) throw new Error("Invalid email or password");
 
-  const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, {
-    expiresIn: "7d",
-  });
+  const { accessToken, refreshToken } = await issueAndPersistAuthTokens(user);
 
   return {
     message: "Login successful",
-    token,
-    user: {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-    },
+    accessToken,
+    refreshToken,
+    token: accessToken,
+    user: toPublicUser(user),
   };
+};
+
+export const logoutUserService = async (userId) => {
+  const user = await User.findById(userId).select("+refreshToken");
+  if (!user) throw new Error("User not found");
+
+  user.refreshToken = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  return { message: "Logout successful" };
+};
+
+export const refreshAccessTokenService = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new Error("Refresh token is required");
+  }
+  if (!REFRESH_SECRET) {
+    throw new Error("REFRESH_SECRET is not configured");
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+  } catch {
+    throw new Error("Invalid or expired refresh token");
+  }
+
+  const userId = decoded.id || decoded._id;
+  const user = await User.findById(userId).select("+refreshToken");
+  if (!user) throw new Error("User not found");
+
+  if (!user.refreshToken || user.refreshToken !== refreshToken) {
+    throw new Error("Invalid or expired refresh token");
+  }
+
+  const tokens = await issueAndPersistAuthTokens(user);
+  return {
+    message: "Token refreshed successfully",
+    ...tokens,
+    token: tokens.accessToken,
+  };
+};
+
+export const getProfileService = async (userId) => {
+  const user = await User.findById(userId).select("-password");
+  if (!user) throw new Error("User not found");
+  return toPublicUser(user);
 };

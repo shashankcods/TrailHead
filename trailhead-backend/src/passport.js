@@ -1,3 +1,4 @@
+// TODO(OAuth): Load via app.js when Google OAuth env vars are configured.
 // src/config/passport.js
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";

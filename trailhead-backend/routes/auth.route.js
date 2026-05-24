@@ -1,23 +1,24 @@
 import { Router } from "express";
-import { registerUser, loginUser, googleAuth, googleCallback } from "../controllers/auth.controller.js";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  getProfile,
+} from "../controllers/auth.controller.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Public Routes (no login required)
-router.post("/register", registerUser); 
+router.post("/register", registerUser);
 router.post("/login", loginUser);
+router.post("/refresh", refreshAccessToken);
 
-// Google OAuth routes
-router.get("/google", googleAuth);
-router.get("/google/callback", googleCallback);
+// TODO(OAuth): Re-enable Google OAuth routes after env/config is set up
+// router.get("/google", googleAuth);
+// router.get("/google/callback", googleCallback);
 
-// Protected Route
-router.get("/profile", verifyToken, (req, res) => {
-  res.status(200).json({
-    message: "Protected route accessed successfully",
-    user: req.user,
-  });
-});
+router.get("/profile", verifyToken, getProfile);
+router.post("/logout", verifyToken, logoutUser);
 
 export default router;
