@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export async function connectDB() {
+async function connectDB() {
   try {
     const uri = process.env.MONGO_URI;
     console.log("Connecting to MongoDB with URI:", uri);
@@ -21,3 +21,5 @@ export async function connectDB() {
     process.exit(1)
   }
 } 
+
+export default connectDB;

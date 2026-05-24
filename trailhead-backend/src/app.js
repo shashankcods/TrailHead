@@ -1,36 +1,25 @@
 // Import express framework for the server
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser"
 import path from "path";
 import { fileURLToPath } from "url";
-import passport from "passport";
-import "./config/passport.js";
-
-// Import route handlers for each agent
-import authRoute from "./agents/auth/auth.route.js";
-import mapsRoute from "./agents/maps/maps.route.js";
-import orchestratorRoute from "./orchestrator/orchestrator.route.js";
-import weatherRoute from "./agents/weather/weather.route.js";
-import eventsRoute from "./agents/events/events.route.js";
-import foodRoute from "./agents/food/food.route.js";
-import redditRoute from "./agents/reddit/reddit.route.js";
-import accommodationRoute from "./agents/accommodation/accommodation.route.js";
-import safetyRoute from "./agents/safety/safety.route.js";
-import flightsRoute from "./agents/flights/flights.route.js";
-import calendarRoute from "./agents/calendar/calendar.route.js";
-import llmRoute from "./llm/llm.route.js";
+// import passport from "passport";
+// import "./passport.js";
 
 // Initialize express app instance
 const app = express();
 
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 }));
-app.use(express.json());  // Parse incoming JSON automatically
-
-app.use(passport.initialize());
+app.use(express.json({limit: '50mb'}));  
+app.use(express.urlencoded({extended: true, limit: "50mb"}))
+app.use(express.static("public"))
+app.use(cookieParser())
+// app.use(passport.initialize());
 
 app.post("/testjson", (req, res) => {
   console.log("Body received:", req.body);
@@ -43,19 +32,37 @@ app.post("/testjson", (req, res) => {
 //     res.send("TrailHead is live");
 // });
 
+// Import route handlers for each agent
+// import authRoute from "../routes/auth.route.js";
+import mapsRoute from "../routes/maps.route.js";
+import weatherRoute from "../routes/weather.route.js";
+import eventsRoute from "../routes/events.route.js";
+import foodRoute from "../routes/food.route.js";
+import accommodationRoute from "../routes/accommodation.route.js";
+import safetyRoute from "../routes/safety.route.js";
+import flightsRoute from "../routes/flights.route.js";
+import calendarRoute from "../routes/calendar.route.js";
+import attractionsRoute from "../routes/attractions.route.js"
+
+import plannerRouter from "../routes/planner.route.js"
+
+import modifyItineraryRouter from "../routes/modifyItinerary.route.js"
+
 // Adding all the agent routes under their own base URL
-app.use("/api/auth", authRoute);
+// app.use("/api/auth", authRoute);
 app.use("/api/maps", mapsRoute);
 app.use("/api/weather", weatherRoute);
 app.use("/api/events", eventsRoute);
 app.use("/api/food", foodRoute);
-app.use("/api/reddit", redditRoute);
 app.use("/api/accommodation", accommodationRoute);
 app.use("/api/safety", safetyRoute)
 app.use("/api/flights", flightsRoute);
-app.use("/api/orchestrator", orchestratorRoute);
 app.use("/api/calendar", calendarRoute);
-app.use("/api/llm", llmRoute);
+app.use("/api/attractions", attractionsRoute)
+
+app.use("/api/planner", plannerRouter);
+
+app.use("/modify-itinerary", modifyItineraryRouter)
 
 //serve calendar_files for direct download
 app.use("/calendar_files", express.static("calendar_files"));
