@@ -33,7 +33,7 @@ app.post("/testjson", (req, res) => {
 // });
 
 // Import route handlers for each agent
-// import authRoute from "../routes/auth.route.js";
+import authRoute from "../routes/auth.route.js";
 import mapsRoute from "../routes/maps.route.js";
 import weatherRoute from "../routes/weather.route.js";
 import eventsRoute from "../routes/events.route.js";
@@ -49,7 +49,7 @@ import plannerRouter from "../routes/planner.route.js"
 import modifyItineraryRouter from "../routes/modifyItinerary.route.js"
 
 // Adding all the agent routes under their own base URL
-// app.use("/api/auth", authRoute);
+app.use("/api/auth", authRoute);
 app.use("/api/maps", mapsRoute);
 app.use("/api/weather", weatherRoute);
 app.use("/api/events", eventsRoute);
