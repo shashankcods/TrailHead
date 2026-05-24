@@ -2,22 +2,9 @@ export const enrichItinerary = ({
 
   itinerary,
 
-  activities
+  activityMap
 
 }) => {
-
-  const activityMap =
-    new Map();
-
-  activities.forEach(
-    (activity) => {
-
-      activityMap.set(
-        activity.id,
-        activity
-      );
-    }
-  );
 
   return {
 

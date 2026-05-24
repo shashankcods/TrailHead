@@ -1,4 +1,10 @@
-import { timeToMinutes, addMinutes } from "./time.js";
+import {
+
+  timeToMinutes,
+
+  addMinutes
+
+} from "./time.js";
 
 import {
 
@@ -16,165 +22,198 @@ export const repairItinerary = ({
 
   itinerary,
 
-  activities
+  activities,
+
+  activityMap
 
 }) => {
 
-  const usedIds = new Set();
+  const usedIds =
+    new Set();
 
-  const validIds =
-    new Set(
-      activities.map(
-        (a) => a.id
-      )
-    );
+  // =========================
+  // PICK UNUSED ACTIVITY
+  // =========================
 
-  itinerary.days.forEach((dayObj) => {
+  const getUnusedActivity =
+    () => {
 
-    dayObj.activities =
-      dayObj.activities.map(
-        (activity) => {
+      return activities.find(
 
-          ensureScheduledTime(
-            activity
-          );
+        (a) =>
 
-          // =========================
-          // INVALID ACTIVITY FIX
-          // =========================
+          !usedIds.has(
+            a.id
+          )
+      );
+  };
 
-          if (
-            !validIds.has(
-              activity.id
-            )
-          ) {
+  itinerary.days.forEach(
 
-            const replacement =
-              activities.find(
+    (dayObj) => {
 
-                (a) =>
-                  !usedIds.has(
-                    a.id
-                  )
-              );
+      dayObj.activities =
+        dayObj.activities.map(
 
-            if (replacement) {
+          (activity) => {
 
-              activity = {
-
-                ...replacement,
-
-                scheduledTime:
-                  activity.scheduledTime
-              };
-            }
-          }
-
-          // =========================
-          // DUPLICATE FIX
-          // =========================
-
-          if (
-            usedIds.has(
-              activity.id
-            )
-          ) {
-
-            const replacement =
-              activities.find(
-
-                (a) =>
-                  !usedIds.has(
-                    a.id
-                  )
-              );
-
-            if (replacement) {
-
-              activity = {
-
-                ...replacement,
-
-                scheduledTime:
-                  activity.scheduledTime
-              };
-            }
-          }
-
-          usedIds.add(
-            activity.id
-          );
-
-          // =========================
-          // TIME REPAIR
-          // =========================
-
-          const start =
-            timeToMinutes(
-
-              getScheduledStart(
-                activity
-              )
+            ensureScheduledTime(
+              activity
             );
 
-          const end =
-            timeToMinutes(
+            const activityId =
 
-              getScheduledEnd(
-                activity
+              activity.id ||
+
+              activity.activityId;
+
+            // =========================
+            // INVALID ACTIVITY FIX
+            // =========================
+
+            if (
+
+              !activityId ||
+
+              !activityMap.has(
+                activityId
               )
-            );
+            ) {
 
-          if (
-            start !== null &&
-            end !== null
-          ) {
+              const replacement =
+                getUnusedActivity();
 
-            const isOvernight =
+              if (replacement) {
 
-              end < start &&
+                activity = {
 
-              start - end >= 360;
+                  ...replacement,
 
-            const needsRepair =
-
-              start === end ||
-
-              (
-                start > end &&
-                !isOvernight
-              );
-
-            if (needsRepair) {
-
-              const repairedEnd =
-                addMinutes(
-
-                  getScheduledStart(
-                    activity
-                  ),
-
-                  90
-                );
-
-              if (repairedEnd) {
-
-                setScheduledTimes(
-
-                  activity,
-
-                  getScheduledStart(
-                    activity
-                  ),
-
-                  repairedEnd
-                );
+                  scheduledTime:
+                    activity.scheduledTime
+                };
               }
             }
-          }
 
-          return activity;
-      });
+            const updatedActivityId =
+
+              activity.id ||
+
+              activity.activityId;
+
+            // =========================
+            // DUPLICATE FIX
+            // =========================
+
+            if (
+
+              updatedActivityId &&
+
+              usedIds.has(
+                updatedActivityId
+              )
+            ) {
+
+              const replacement =
+                getUnusedActivity();
+
+              if (replacement) {
+
+                activity = {
+
+                  ...replacement,
+
+                  scheduledTime:
+                    activity.scheduledTime
+                };
+              }
+            }
+
+            const finalActivityId =
+
+              activity.id ||
+
+              activity.activityId;
+
+            if (finalActivityId) {
+
+              usedIds.add(
+                finalActivityId
+              );
+            }
+
+            // =========================
+            // TIME REPAIR
+            // =========================
+
+            const start =
+              timeToMinutes(
+
+                getScheduledStart(
+                  activity
+                )
+              );
+
+            const end =
+              timeToMinutes(
+
+                getScheduledEnd(
+                  activity
+                )
+              );
+
+            if (
+
+              start !== null &&
+
+              end !== null
+            ) {
+
+              const isOvernight =
+
+                end < start &&
+
+                start - end >= 360;
+
+              const needsRepair =
+
+                start === end ||
+
+                (
+                  start > end &&
+                  !isOvernight
+                );
+
+              if (needsRepair) {
+
+                const repairedEnd =
+                  addMinutes(
+
+                    getScheduledStart(
+                      activity
+                    ),
+
+                    90
+                  );
+
+                if (repairedEnd) {
+
+                  setScheduledTimes(
+
+                    activity,
+
+                    getScheduledStart(
+                      activity
+                    ),
+
+                    repairedEnd
+                  );
+                }
+              }
+            }
+
+            return activity;
+        });
   });
 
   console.log(

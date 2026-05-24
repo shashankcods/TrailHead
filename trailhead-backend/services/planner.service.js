@@ -38,6 +38,8 @@ import { compactLLMActivities } from "../utils/compactLLMactivities.js";
 
 import { enrichItinerary } from "../utils/enrichItinerary.js";
 
+import { repairItinerary } from "../utils/repairItinerary.js";
+
 
 // CACHING NEEDS TO BE ADDED FOR SAFETY AS IT IS THE BOTTLENECK
 
@@ -694,6 +696,18 @@ export const generateTripPlan = async (
         events
       });
 
+    const activityMap =
+        new Map();
+
+      activities.forEach(
+        (activity) => {
+
+          activityMap.set(
+            activity.id,
+            activity
+          );
+      });
+
     const compactActivitiesForLLM = compactLLMActivities(activities);
       console.log(
 
@@ -739,7 +753,7 @@ export const generateTripPlan = async (
       validateItinerary({
 
         itinerary,
-        activities
+        activityMap
     });
 
     if (!validationResult.valid) {
@@ -748,14 +762,15 @@ export const generateTripPlan = async (
         repairItinerary({
 
           itinerary,
-          activities
+          activities,
+          activityMap
         });
 
       validationResult =
         validateItinerary({
 
           itinerary,
-          activities
+          activityMap
       });
     }
 
@@ -772,8 +787,7 @@ export const generateTripPlan = async (
 
         itinerary:
           validationResult.normalizedItinerary,
-
-        activities
+        activityMap
     });
 
     const plannerData = {
