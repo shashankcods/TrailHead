@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import type { Currency } from "@/components/Navbar";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
@@ -7,9 +7,7 @@ interface ResultsPageProps {
   selectedCurrency: Currency;
 }
 
-const ResultsPage: React.FC<ResultsPageProps> = ({
-  selectedCurrency,
-}) => {
+const ResultsPage: React.FC<ResultsPageProps> = () => {
   return (
     <GradientBackground>
       <div className="flex flex-col min-h-screen text-black dark:text-white">

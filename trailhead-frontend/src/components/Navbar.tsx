@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export type Currency = {
   code: string;
   symbol: string;
 };
 
-// using chosen currencies for now to implement currency conversion feature
 export const currencies: Currency[] = [
   { code: "INR", symbol: "₹" },
   { code: "USD", symbol: "$" },
@@ -17,10 +17,15 @@ export const currencies: Currency[] = [
 
 interface NavbarProps {
   showCurrencyToggle?: boolean;
+  selectedCurrency?: Currency;
+  setSelectedCurrency?: React.Dispatch<React.SetStateAction<Currency>>;
 }
 
 const Navbar: React.FC<NavbarProps> = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme");
@@ -40,6 +45,16 @@ const Navbar: React.FC<NavbarProps> = () => {
       localStorage.setItem("theme", next ? "dark" : "light");
       return next;
     });
+  };
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      navigate("/");
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -78,6 +93,21 @@ const Navbar: React.FC<NavbarProps> = () => {
           </NavLink>
         </div>
 
+        {isAuthenticated && (
+          <>
+            <span className="hidden sm:inline text-sm font-semibold text-black dark:text-white">
+              {user?.username || "Account"}
+            </span>
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="px-3 py-2 rounded-lg border border-black/25 dark:border-white/30 bg-white dark:bg-black text-[0.92rem] font-semibold tracking-tight text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-200 disabled:opacity-60"
+            >
+              {loggingOut ? "Logging out..." : "Logout"}
+            </button>
+          </>
+        )}
+
         <button
           onClick={toggleTheme}
           className="px-3 py-2 rounded-lg border border-black/25 dark:border-white/30 bg-white dark:bg-black text-[0.92rem] font-semibold tracking-tight text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-200"
@@ -90,6 +120,3 @@ const Navbar: React.FC<NavbarProps> = () => {
 };
 
 export default Navbar;
-
-
-

@@ -36,7 +36,6 @@ const validateEmail = (email) => {
   return trimmed;
 };
 
-// Password checklist validator
 const validatePassword = (password) => {
   const checklist = {
     minLength: password.length >= 8,
