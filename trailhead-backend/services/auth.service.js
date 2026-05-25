@@ -138,7 +138,7 @@ export const logoutUserService = async (userId) => {
   const user = await User.findById(userId).select("+refreshToken");
   if (!user) throw new Error("User not found");
 
-  user.refreshToken = undefined;
+  user.refreshToken = null;
   await user.save({ validateBeforeSave: false });
 
   return { message: "Logout successful" };
