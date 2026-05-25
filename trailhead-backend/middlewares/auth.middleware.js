@@ -19,8 +19,10 @@ export const verifyToken = (req, res, next) => {
     // Verify the token using our secret
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Attach the decoded user data to the request
-    req.user = decoded;
+    req.user = {
+      id: decoded.id || decoded._id,
+      email: decoded.email,
+    };
 
     // Move to the next middleware / controller
     next();

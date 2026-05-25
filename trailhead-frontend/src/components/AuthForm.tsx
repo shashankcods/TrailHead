@@ -7,16 +7,16 @@ interface AuthFormProps {
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  /// defining rules to set password
   const passwordRules = [
     { regex: /.{8,}/, message: "Atleast 8 characters" },
     { regex: /[A-Z]/, message: "Atleast 1 uppercase letter" },
@@ -25,7 +25,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     { regex: /[^A-Za-z0-9]/, message: "Atleast 1 special character" },
   ];
 
-  /*const handleSubmit = async (e: React.FormEvent) => { // to be used when endpoints are available for post req
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -43,52 +43,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       }
     }
 
+    setLoading(true);
     try {
-      const endpoint = mode === "signin" ? "/api/login" : "/api/signup";
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        login();
-        onSuccess?.();
+      if (mode === "signin") {
+        await login(email, password);
       } else {
-        setError(data.message || "Something went wrong");
+        await register(name, email, password);
       }
-    } catch {
-      setError("Network error. Please try again.");
-    }
-  };*/ 
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-  
-    if (mode === "signup" && password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-  
-    try {
-      // FAKE backend call
-      await new Promise((resolve) => setTimeout(resolve, 500)); // simulate network delay
-  
-      // Simulate success response
-      const resOk = true; // pretend the server responded with 200 OK
-      const data = { message: "Success" };
-  
-      if (resOk) {
-        login();       // mark user as authenticated
-        onSuccess?.(); 
-      } else {
-        setError(data.message || "Something went wrong");
-      }
-    } catch {
-      setError("Network error. Please try again.");
+      onSuccess?.();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,10 +64,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     setError("");
     setGoogleLoading(true);
 
+    const apiBase =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
     const googleAuthUrl =
-      import.meta.env.VITE_GOOGLE_AUTH_URL || "http://localhost:5000/auth/google";
+      import.meta.env.VITE_GOOGLE_AUTH_URL || `${apiBase}/api/auth/google`;
 
-    // Full-page redirect to backend OAuth start endpoint.
     window.location.href = googleAuthUrl;
   };
 
@@ -142,13 +111,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         />
       )}
 
-      {/* password rules checklist */}
       {mode === "signup" && (
         <ul className="text-sm text-black/70 dark:text-white/70 mt-1">
           {passwordRules.map((rule, idx) => (
             <li
               key={idx}
-              className={rule.regex.test(password) ? "text-black dark:text-white font-semibold" : "text-black/70 dark:text-white/70"}
+              className={
+                rule.regex.test(password)
+                  ? "text-black dark:text-white font-semibold"
+                  : "text-black/70 dark:text-white/70"
+              }
             >
               {rule.message}
             </li>
@@ -156,13 +128,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         </ul>
       )}
 
-      {error && <p className="text-black dark:text-white font-semibold">{error}</p>}
+      {error && (
+        <p className="text-black dark:text-white font-semibold">{error}</p>
+      )}
 
       <button
         type="submit"
-        className="w-full py-3 px-6 bg-black dark:bg-white text-white dark:text-black font-bold rounded-lg shadow-lg hover:scale-105 transition duration-300 ease-in-out border border-black dark:border-white"
+        disabled={loading}
+        className="w-full py-3 px-6 bg-black dark:bg-white text-white dark:text-black font-bold rounded-lg shadow-lg hover:scale-105 transition duration-300 ease-in-out border border-black dark:border-white disabled:opacity-60 disabled:hover:scale-100"
       >
-        {mode === "signin" ? "Sign In" : "Sign Up"}
+        {loading
+          ? "Please wait..."
+          : mode === "signin"
+            ? "Sign In"
+            : "Sign Up"}
       </button>
 
       <button
@@ -181,7 +160,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           : "Already have an account? "}
         <span
           className="text-black dark:text-white cursor-pointer underline"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          onClick={() => {
+            setMode(mode === "signin" ? "signup" : "signin");
+            setError("");
+          }}
         >
           {mode === "signin" ? "Sign Up" : "Sign In"}
         </span>
@@ -191,6 +173,3 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
 };
 
 export default AuthForm;
-
-
-
