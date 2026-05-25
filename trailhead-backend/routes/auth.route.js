@@ -16,10 +16,9 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/refresh", refreshAccessToken);
 router.post("/logout", verifyToken, logoutUser);
+router.get("/profile", verifyToken, getProfile);
 
 router.get("/google", googleAuth);
 router.get("/google/callback", googleCallback);
-
-router.get("/profile", verifyToken, getProfile);
 
 export default router;

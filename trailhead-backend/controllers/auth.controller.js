@@ -92,13 +92,11 @@ export const getProfile = async (req, res) => {
   }
 };
 
-// Google Auth (start login)
 export const googleAuth = (req, res, next) => {
   console.log("✅ Google OAuth route hit");
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
 };
 
-// Google callback (handle redirect)
 export const googleCallback = (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, data) => {
     if (err || !data) {
