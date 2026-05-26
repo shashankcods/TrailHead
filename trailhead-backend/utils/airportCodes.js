@@ -6,10 +6,13 @@ const airportCodes = {
   chennai: "MAA",
   hyderabad: "HYD",
   kolkata: "CCU",
+  "new delhi": "DEL",
 
   dubai: "DXB",
   "abu dhabi": "AUH",
   sharjah: "SHJ",
+  kuwait: "KWI",
+  "kuwait city": "KWI",
 
   london: "LHR",
   paris: "CDG",

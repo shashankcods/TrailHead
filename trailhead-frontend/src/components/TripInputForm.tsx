@@ -36,6 +36,9 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
 }) => {
   const [departDate, setDepartDate] = useState<Date | undefined>(undefined);
   const [tripDays, setTripDays] = useState<number>(3);
+  const [sourceChoice, setSourceChoice] = useState("");
+  const [sourceSuggestions, setSourceSuggestions] = useState<string[]>([]);
+  const [sourceHighlight, setSourceHighlight] = useState<number>(-1);
   const [destinationChoice, setDestinationChoice] = useState("");
   const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [destinationHighlight, setDestinationHighlight] = useState<number>(-1);
@@ -80,6 +83,14 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
     };
   };
 
+  const handleSourceChange = useCallback(
+    debounce(async (value: string) => {
+      const results = await fetchLocations(value);
+      setSourceSuggestions(results);
+    }, 400),
+    []
+  );
+
   const handleDestinationChange = useCallback(
     debounce(async (value: string) => {
       const results = await fetchLocations(value);
@@ -106,6 +117,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const source = cleanLocation(sourceChoice);
     const destination = cleanLocation(destinationChoice);
     const startDate = departDate ? departDate.toISOString().split("T")[0] : undefined;
     const endDate =
@@ -116,13 +128,14 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
         : undefined;
 
     _onSubmit({
-      source: "Not specified",
+      source,
       destination,
       startDate,
       endDate,
       travelers: travelersCount,
       activities: selectedActivities,
     });
+    setSourceSuggestions([]);
     setDestinationSuggestions([]);
   };
 
@@ -134,6 +147,67 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
         className="w-full th-soft-card backdrop-blur-md p-7"
       >
         <div className="space-y-6">
+          <div className="space-y-3">
+            <h3 className="th-title">Where are you traveling from?</h3>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search departure city..."
+                value={sourceChoice}
+                onChange={(e) => {
+                  setSourceChoice(e.target.value);
+                  handleSourceChange(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (sourceSuggestions.length === 0) return;
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setSourceHighlight((prev) => (prev + 1) % sourceSuggestions.length);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setSourceHighlight((prev) =>
+                      prev <= 0 ? sourceSuggestions.length - 1 : prev - 1
+                    );
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (sourceHighlight >= 0) {
+                      setSourceChoice(sourceSuggestions[sourceHighlight]);
+                      setSourceSuggestions([]);
+                      setSourceHighlight(-1);
+                    }
+                  } else if (e.key === "Escape") {
+                    setSourceSuggestions([]);
+                    setSourceHighlight(-1);
+                  }
+                }}
+                className="th-input"
+              />
+              {sourceSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white dark:bg-black mt-1 rounded-md max-h-40 overflow-y-auto z-50 border border-black/20 dark:border-white/20">
+                  {sourceSuggestions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setSourceChoice(item);
+                        setSourceSuggestions([]);
+                        setSourceHighlight(-1);
+                      }}
+                      className={`px-3 py-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer ${
+                        idx === sourceHighlight
+                          ? "bg-black text-white dark:bg-white dark:text-black"
+                          : ""
+                      }`}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-black/10 dark:border-white/15" />
+
           <div className="space-y-3">
             <h3 className="th-title">What is destination of choice?</h3>
             <div className="relative">

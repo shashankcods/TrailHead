@@ -4,7 +4,37 @@ import Navbar, { type Currency } from "../components/Navbar"
 import GradientBackground from "@/components/GradientBackground"
 import { TripInputForm } from "@/components/TripInputForm"
 import BudgetPlanner from "@/components/BudgetPlanner"
-import { type ItineraryDay } from "@/components/Itinerary";
+
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+
+const ACTIVITY_ID_TO_INTEREST: Record<string, string> = {
+  beaches: "Beaches",
+  "city-sightseeing": "City Sightseeing",
+  "outdoor-adventures": "Outdoor Adventures",
+  "festivals-events": "Festivals/Events",
+  "food-exploration": "Food Exploration",
+  nightlife: "Nightlife",
+  shopping: "Shopping",
+  "spa-wellness": "Spa & Wellness",
+}
+
+const mapActivitiesToInterests = (activities: string[]) =>
+  activities.map((id) => ACTIVITY_ID_TO_INTEREST[id] ?? id)
+
+const calculateTripDays = (
+  startDate: string | undefined,
+  endDate: string | undefined
+): number => {
+  if (!startDate) return 1
+  if (!endDate) return 1
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const diffDays = Math.round(
+    (end.getTime() - start.getTime()) / 86400000
+  )
+  return Math.max(1, diffDays + 1)
+}
 
 type BudgetAllocation = {
   travel: number
@@ -37,77 +67,6 @@ const MainPage: React.FC<MainPageProps> = ({
     food: 25,
     activities: 25,
   })
-
-  const [itinerary] = useState<ItineraryDay[]>([
-    { day: 1, date: new Date().toISOString(), points: [
-      "Arrive at Tokyo Narita Airport and go through immigration.",
-      "Check-in at your hotel and unpack luggage.",
-      "Take a leisurely evening walk around Shinjuku, enjoy neon lights and street food.",
-      "Have dinner at a local Izakaya and try different small plates and drinks."
-    ]},
-    { day: 2, date: new Date(Date.now() + 86400000).toISOString(), points: [
-      "Visit Asakusa and explore Senso-ji Temple, admire the historic architecture.",
-      "Walk along Nakamise Street and try local snacks like ningyo-yaki and senbei.",
-      "Take a Sumida River cruise to see Tokyo from a different perspective.",
-      "End the day at Tokyo Skytree for panoramic city views.",
-      "Dinner at a traditional sushi restaurant near Asakusa."
-    ]},
-    { day: 3, date: new Date(Date.now() + 2 * 86400000).toISOString(), points: [
-      "Head to Shibuya to experience the famous Shibuya Crossing.",
-      "Visit the Hachiko Statue and take pictures.",
-      "Explore the trendy shops and boutiques in Harajuku, including Takeshita Street.",
-      "Have lunch at a themed café in Harajuku.",
-      "Spend the evening at Meiji Jingu Shrine for a peaceful walk.",
-      "Return to Shibuya for dinner and nightlife."
-    ]},
-    { day: 4, date: new Date(Date.now() + 3 * 86400000).toISOString(), points: [
-      "Take a day trip to Yokohama and visit the Cup Noodles Museum.",
-      "Walk along Yokohama Chinatown and try dumplings and local specialties.",
-      "Explore Minato Mirai area and ride the Cosmo Clock 21 Ferris wheel.",
-      "Return to Tokyo in the evening and relax at the hotel."
-    ]},
-    { day: 5, date: new Date(Date.now() + 4 * 86400000).toISOString(), points: [
-      "Visit Tsukiji Outer Market and sample fresh seafood and street snacks.",
-      "Walk to Ginza for high-end shopping and sightseeing.",
-      "Have lunch at a traditional tempura restaurant.",
-      "Explore Kabukiza Theatre and possibly watch a short Kabuki performance.",
-      "Evening stroll at Hibiya Park and enjoy local cafes."
-    ]},
-    { day: 6, date: new Date(Date.now() + 5 * 86400000).toISOString(), points: [
-      "Day trip to Odaiba, visit teamLab Borderless digital art museum.",
-      "Walk along Odaiba Seaside Park and see the Rainbow Bridge.",
-      "Have lunch at DiverCity Tokyo Plaza and check out the giant Gundam statue.",
-      "Relax at Oedo-Onsen-Monogatari hot spring theme park.",
-      "Return to hotel and have dinner at a ramen shop."
-    ]},
-    { day: 7, date: new Date(Date.now() + 6 * 86400000).toISOString(), points: [
-      "Take a morning trip to Ueno Park and visit Tokyo National Museum.",
-      "Enjoy street food at Ameya-Yokocho Market.",
-      "Visit Akihabara to explore electronics shops and anime/manga stores.",
-      "Play arcade games at a local game center.",
-      "Have dinner at a local curry house or tonkatsu restaurant."
-    ]},
-    { day: 8, date: new Date(Date.now() + 7 * 86400000).toISOString(), points: [
-      "Travel to Mitaka to visit Ghibli Museum, pre-book tickets required.",
-      "Enjoy the exhibits and short animated films exclusive to the museum.",
-      "Lunch at a nearby café with themed snacks and drinks.",
-      "Return to central Tokyo and explore Ikebukuro’s Sunshine City complex.",
-      "Evening shopping and dinner in Ikebukuro."
-    ]},
-    { day: 9, date: new Date(Date.now() + 8 * 86400000).toISOString(), points: [
-      "Visit Roppongi Hills and Mori Art Museum for contemporary art exhibitions.",
-      "Walk through Tokyo Midtown and enjoy modern architecture.",
-      "Lunch at a rooftop café with city views.",
-      "Explore nightlife in Roppongi or take a cruise along Tokyo Bay.",
-      "Dinner at a sushi or yakiniku restaurant nearby."
-    ]},
-    { day: 10, date: new Date(Date.now() + 9 * 86400000).toISOString(), points: [
-      "Check out of the hotel and store luggage if needed.",
-      "Last-minute shopping at local souvenir shops.",
-      "Visit any missed attractions or take a relaxing stroll in a local park.",
-      "Head to Narita/Haneda Airport for departure."
-    ]},
-  ]);
 
   useEffect(() => {
     const fetchRate = async () => {
@@ -147,31 +106,58 @@ const MainPage: React.FC<MainPageProps> = ({
     travelers: number
     activities: string[]
   }) => {
-    const tripData = { ...data, budget, budgetAllocation }
-    console.log("🚀 Sending to orchestrator:", tripData)
+    const trip_days = calculateTripDays(data.startDate, data.endDate)
+
+    const payload = {
+      source: data.source,
+      destination: data.destination,
+      start_date: data.startDate,
+      trip_days,
+      adults: data.travelers,
+      interests: mapActivitiesToInterests(data.activities),
+      budget: {
+        total: budget,
+        travel: budgetAllocation.travel,
+        accommodation: budgetAllocation.accommodation,
+        food: budgetAllocation.food,
+        activities: budgetAllocation.activities,
+      },
+    }
+
+    console.log("🚀 Planner request payload:", payload)
     setLoading(true)
 
     try {
-      const res = await fetch("http://localhost:5000/api/orchestrator", {
+      const res = await fetch(`${API_BASE}/api/planner`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tripData),
+        body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error(`Backend returned ${res.status}`)
-      const result = await res.json()
-      console.log("✅ Parsed orchestrator response:", result)
 
-      const safetyData =
-        result?.safety || result?.insights?.safety || result?.trip?.safety || null
+      const result = await res.json()
+      console.log("✅ Planner API response:", result)
+
+      if (!res.ok) {
+        throw new Error(
+          result?.message || result?.error || `Backend returned ${res.status}`
+        )
+      }
+
+      const plannerData = result.data
+      if (!plannerData) {
+        throw new Error("No planner data in response")
+      }
 
       navigate("/results", {
         state: {
-          itinerary,
-          weatherData: result.weather?.forecast || [],
-          restaurants: result.food?.restaurants || [],
-          redditPosts: result.reddit?.analyzedPosts || [],
-          safety: safetyData,
-          calendarUrl: result.calendar?.downloadUrl || "",
+          plannerData,
+          itinerary: plannerData.itinerary,
+          weatherData: plannerData.weather,
+          restaurants: plannerData.restaurants,
+          events: plannerData.events,
+          safety: plannerData.safety,
+          flights: plannerData.flights,
+          hotels: plannerData.hotels,
         },
       })
     } catch (err) {
