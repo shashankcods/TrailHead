@@ -148,18 +148,7 @@ const MainPage: React.FC<MainPageProps> = ({
         throw new Error("No planner data in response")
       }
 
-      navigate("/results", {
-        state: {
-          plannerData,
-          itinerary: plannerData.itinerary,
-          weatherData: plannerData.weather,
-          restaurants: plannerData.restaurants,
-          events: plannerData.events,
-          safety: plannerData.safety,
-          flights: plannerData.flights,
-          hotels: plannerData.hotels,
-        },
-      })
+      navigate("/results", { state: { plannerData } })
     } catch (err) {
       console.error("❌ Failed to fetch trip data:", err)
       alert("Error fetching trip details. Check backend logs or endpoint URL.")
