@@ -1,12 +1,9 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { Currency } from "@/components/Navbar";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
-import ResultsSidebar from "@/components/results/ResultsSidebar";
 import TripSummaryContent from "@/components/results/TripSummaryContent";
-import ItineraryPreview from "@/components/results/ItineraryPreview";
-import PlannerExtras from "@/components/results/PlannerExtras";
 import type { PlannerData } from "@/types/planner";
 
 interface ResultsPageProps {
@@ -19,6 +16,7 @@ interface ResultsLocationState {
 
 const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCurrency }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const plannerData = (location.state as ResultsLocationState | null)
     ?.plannerData;
 
@@ -29,25 +27,19 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCurrency }) => {
 
         <div className="flex flex-1 flex-col lg:flex-row">
           {plannerData ? (
-            <>
-              <div className="lg:border-r border-black/10 dark:border-white/20 p-4 lg:p-6 lg:sticky lg:top-0 lg:self-start lg:max-h-screen lg:overflow-y-auto">
-                <ResultsSidebar plannerData={plannerData} />
-              </div>
-
-              <main className="flex-1 p-4 lg:p-8 pb-12 max-w-5xl">
-                <div className="th-card p-6 md:p-8 space-y-10">
+            <main className="flex-1 p-4 lg:p-8 pb-12 max-w-5xl mx-auto w-full">
+              <div className="th-card p-6 md:p-8 space-y-10">
+                <section id="summary-section" className="scroll-mt-24">
                   <TripSummaryContent
                     plannerData={plannerData}
                     selectedCurrency={selectedCurrency}
+                    onViewItinerary={() =>
+                      navigate("/itinerary", { state: { plannerData } })
+                    }
                   />
-                  <ItineraryPreview plannerData={plannerData} />
-                  <PlannerExtras
-                    plannerData={plannerData}
-                    selectedCurrency={selectedCurrency}
-                  />
-                </div>
-              </main>
-            </>
+                </section>
+              </div>
+            </main>
           ) : (
             <main className="flex-1 flex items-center justify-center px-4 py-16">
               <div className="th-soft-card p-8 text-center max-w-md">

@@ -13,12 +13,17 @@ const formatDayDate = (startDate: string | undefined, dayNum: number) => {
   });
 };
 
+const getItineraryDays = (plannerData: PlannerData): PlannerItineraryDay[] => {
+  if (Array.isArray(plannerData.itinerary)) return plannerData.itinerary;
+  return plannerData.itinerary?.days ?? [];
+};
+
 interface ItineraryPreviewProps {
   plannerData: PlannerData;
 }
 
 const ItineraryPreview: React.FC<ItineraryPreviewProps> = ({ plannerData }) => {
-  const days = plannerData.itinerary?.days ?? [];
+  const days = getItineraryDays(plannerData);
   const startDate = plannerData.trip?.start_date;
 
   if (days.length === 0) {

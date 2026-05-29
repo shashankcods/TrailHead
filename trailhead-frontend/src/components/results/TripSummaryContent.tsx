@@ -2,11 +2,16 @@ import React from "react";
 import type { Currency } from "@/components/Navbar";
 import type { PlannerData } from "@/types/planner";
 
+const getItineraryDays = (plannerData: PlannerData) => {
+  if (Array.isArray(plannerData.itinerary)) return plannerData.itinerary;
+  return plannerData.itinerary?.days ?? [];
+};
+
 const countActivities = (plannerData: PlannerData): number => {
   if (plannerData.activities?.length) {
     return plannerData.activities.length;
   }
-  const days = plannerData.itinerary?.days ?? [];
+  const days = getItineraryDays(plannerData);
   return days.reduce(
     (sum, day) => sum + (day.activities?.length ?? 0),
     0
@@ -16,16 +21,18 @@ const countActivities = (plannerData: PlannerData): number => {
 interface TripSummaryContentProps {
   plannerData: PlannerData;
   selectedCurrency: Currency;
+  onViewItinerary?: () => void;
 }
 
 const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
   plannerData,
   selectedCurrency,
+  onViewItinerary,
 }) => {
   const trip = plannerData.trip ?? {};
   const source = trip.source || "—";
   const destination = trip.destination || "—";
-  const tripDays = trip.trip_days ?? plannerData.itinerary?.days?.length ?? 0;
+  const tripDays = trip.trip_days ?? getItineraryDays(plannerData).length ?? 0;
   const adults = trip.adults ?? 1;
   const interests = plannerData.interests ?? [];
   const totalBudget = plannerData.budgets?.total ?? 0;
@@ -43,12 +50,6 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
     { key: "food", label: "Food" },
     { key: "activities", label: "Activities" },
   ] as const;
-
-  const scrollToItinerary = () => {
-    document
-      .getElementById("itinerary-section")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const tripStyle =
     interests.length > 0
@@ -190,7 +191,7 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           type="button"
-          onClick={scrollToItinerary}
+          onClick={onViewItinerary}
           className="flex-1 py-3 px-6 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold border border-black dark:border-white hover:scale-[1.01] transition duration-200"
         >
           View Itinerary →
@@ -205,8 +206,8 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
         </button>
       </div>
       <p className="th-subtitle text-center">
-        View your full itinerary below, or chat with AI to refine your plan —
-        chat coming soon.
+        Open your full itinerary in a dedicated view, or chat with AI to refine
+        your plan - chat coming soon.
       </p>
     </div>
   );
