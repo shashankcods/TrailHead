@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/Home";
 import MainPage from "./pages/MainPage";
 import ResultsPage from "./pages/ResultsPage";
+import DetailedItineraryPage from "./pages/DetailedItineraryPage";
 import type { Currency } from "./components/Navbar";
 import OAuthSuccess from "./pages/OAuthSuccess";
 
@@ -37,6 +38,14 @@ const App: React.FC = () => {
           path="/results"
           element={
             <ResultsPage
+              selectedCurrency={selectedCurrency}
+            />
+          }
+        />
+        <Route
+          path="/itinerary"
+          element={
+            <DetailedItineraryPage
               selectedCurrency={selectedCurrency}
             />
           }

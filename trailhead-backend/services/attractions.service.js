@@ -1,6 +1,7 @@
 import axios from "axios";
 import APIError from "../utils/APIError.js";
 import { resolveDestinationGeo } from "../utils/geocode.js";
+import { getPlacesPhotoProxyUrl } from "../utils/googlePlacesPhoto.js";
 
 
 // =========================
@@ -272,6 +273,10 @@ export const getTouristAttractions = async (
         photoReference:
           place.photos?.[0]
             ?.photo_reference || null,
+
+        photoUrl: getPlacesPhotoProxyUrl(
+          place.photos?.[0]?.photo_reference || null
+        ),
 
         googleMapsUrl:
           `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
