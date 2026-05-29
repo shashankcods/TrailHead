@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { getPlacesPhotoProxyUrl } from "./googlePlacesPhoto.js";
 
 // =========================
 // Helpers
@@ -116,8 +117,19 @@ const normalizeAttractions = (
           `${interest} attraction in ${interestData.destination}`,
 
         image:
-          attraction.photoReference
+          attraction.photoUrl
+          || getPlacesPhotoProxyUrl(attraction.photoReference)
           || "",
+
+        photoUrl:
+          attraction.photoUrl
+          || getPlacesPhotoProxyUrl(attraction.photoReference),
+
+        photoReference:
+          attraction.photoReference || null,
+
+        googleMapsUrl:
+          attraction.googleMapsUrl || "",
 
         rating:
           safeNumber(
@@ -405,6 +417,15 @@ const normalizeEvents = (
       image:
         event.image
         || "",
+
+      imageUrl:
+        event.image || "",
+
+      website:
+        event.ticketUrl || "",
+
+      ticketUrl:
+        event.ticketUrl || "",
 
       rating:
         null,

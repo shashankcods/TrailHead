@@ -1,6 +1,7 @@
 import axios from "axios";
 import APIError from "../utils/APIError.js";
 import { resolveDestinationGeo } from "../utils/geocode.js";
+import { getPlacesPhotoProxyUrl } from "../utils/googlePlacesPhoto.js";
 
 
 // =========================
@@ -277,6 +278,10 @@ export const getRestaurants = async (
               photoReference:
                 r.photos?.[0]
                   ?.photo_reference || null,
+
+              photoUrl: getPlacesPhotoProxyUrl(
+                r.photos?.[0]?.photo_reference || null
+              ),
 
               googleMapsUrl:
                 `https://www.google.com/maps/place/?q=place_id:${r.place_id}`,
