@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { PlannerData } from "@/types/planner";
 import ItineraryDayPanel from "@/components/results/ItineraryDayPanel";
+import TravelView from "@/components/results/TravelView";
 import {
   countItineraryActivities,
   normalizePlannerItinerary,
 } from "@/components/results/itineraryUtils";
 
-const NAV_TABS = ["Timeline", "Itinerary", "Travel", "Hotels", "Overview", "Map"];
+const NAV_TABS = ["Timeline", "Itinerary", "Travel", "Hotels", "Overview", "Map"] as const;
+type DetailedItineraryTab = "Timeline" | "Itinerary" | "Travel";
+const ENABLED_TABS: DetailedItineraryTab[] = ["Timeline", "Itinerary", "Travel"];
 
 interface DetailedItineraryProps {
   plannerData: PlannerData;
@@ -19,7 +22,8 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
 }) => {
   const normalizedDays = useMemo(() => normalizePlannerItinerary(plannerData), [plannerData]);
   const [activeDayId, setActiveDayId] = useState<string>(normalizedDays[0]?.id ?? "");
-  const [activeTab, setActiveTab] = useState<"Timeline" | "Itinerary">("Timeline");
+  const [activeTab, setActiveTab] = useState<DetailedItineraryTab>("Timeline");
+  const showDayNav = activeTab !== "Travel";
   const trip = plannerData.trip ?? {};
   const activityCount = countItineraryActivities(normalizedDays);
 
@@ -118,20 +122,12 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
         </div>
       </header>
 
-      {normalizedDays.length === 0 ? (
-        <div className="th-soft-card p-6">
-          <h4 className="font-bold text-lg">Detailed itinerary unavailable</h4>
-          <p className="th-subtitle mt-1">
-            We could not find day-wise itinerary data for this trip yet.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
           <aside className="lg:sticky lg:top-24 space-y-4">
             <nav className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-black/35 p-3 shadow-sm">
               <div className="grid grid-cols-3 lg:grid-cols-2 gap-2">
                 {NAV_TABS.map((tab) => {
-                  const isEnabled = tab === "Timeline" || tab === "Itinerary";
+                  const isEnabled = ENABLED_TABS.includes(tab as DetailedItineraryTab);
                   const isActive = isEnabled && activeTab === tab;
                   return (
                     <button
@@ -139,7 +135,9 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
                       type="button"
                       disabled={!isEnabled}
                       onClick={() => {
-                        if (tab === "Timeline" || tab === "Itinerary") setActiveTab(tab);
+                        if (ENABLED_TABS.includes(tab as DetailedItineraryTab)) {
+                          setActiveTab(tab as DetailedItineraryTab);
+                        }
                       }}
                       className={`rounded-lg px-2 py-2 text-xs font-semibold border transition ${
                         isActive
@@ -154,33 +152,44 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
               </div>
             </nav>
 
-            <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-black/35 p-3 shadow-sm space-y-2">
-              <h4 className="text-sm font-bold px-2 pt-1">Days</h4>
-              {normalizedDays.map((day) => (
-                <button
-                  key={day.id}
-                  type="button"
-                  onClick={() => scrollToSection(day.id)}
-                  className={`w-full text-left rounded-xl border px-3 py-2.5 transition ${
-                    activeDayId === day.id
-                      ? "border-black dark:border-white bg-black text-white dark:bg-white dark:text-black"
-                      : "border-black/10 dark:border-white/15 bg-black/[0.02] dark:bg-white/[0.03]"
-                  }`}
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
-                    Day {day.dayNumber}
-                  </p>
-                  <p className="font-bold text-sm mt-0.5 truncate">{day.title}</p>
-                  <p className="text-xs opacity-80 mt-1">
-                    {day.activities.length} activit{day.activities.length === 1 ? "y" : "ies"}
-                  </p>
-                </button>
-              ))}
-            </div>
+            {showDayNav && normalizedDays.length > 0 && (
+              <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-black/35 p-3 shadow-sm space-y-2">
+                <h4 className="text-sm font-bold px-2 pt-1">Days</h4>
+                {normalizedDays.map((day) => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    onClick={() => scrollToSection(day.id)}
+                    className={`w-full text-left rounded-xl border px-3 py-2.5 transition ${
+                      activeDayId === day.id
+                        ? "border-black dark:border-white bg-black text-white dark:bg-white dark:text-black"
+                        : "border-black/10 dark:border-white/15 bg-black/[0.02] dark:bg-white/[0.03]"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                      Day {day.dayNumber}
+                    </p>
+                    <p className="font-bold text-sm mt-0.5 truncate">{day.title}</p>
+                    <p className="text-xs opacity-80 mt-1">
+                      {day.activities.length} activit{day.activities.length === 1 ? "y" : "ies"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </aside>
 
           <div className="space-y-4">
-            {activeTab === "Timeline" ? (
+            {activeTab === "Travel" ? (
+              <TravelView plannerData={plannerData} />
+            ) : normalizedDays.length === 0 ? (
+              <div className="th-soft-card p-6">
+                <h4 className="font-bold text-lg">Detailed itinerary unavailable</h4>
+                <p className="th-subtitle mt-1">
+                  We could not find day-wise itinerary data for this trip yet.
+                </p>
+              </div>
+            ) : activeTab === "Timeline" ? (
               <div className="space-y-4">
                 {normalizedDays.map((day) => (
                   <section
@@ -227,7 +236,6 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
             )}
           </div>
         </div>
-      )}
     </section>
   );
 };

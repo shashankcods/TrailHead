@@ -124,17 +124,63 @@ export interface PlannerItinerary {
   days?: PlannerItineraryDay[];
 }
 
+export interface FlightOption {
+  airline?: string;
+  carrier?: string;
+  airlineName?: string;
+  flightNumber?: string;
+  price?: number | string;
+  totalPrice?: number | string;
+  amount?: number | string;
+  currency?: string;
+  duration?: string;
+  totalDuration?: string;
+  departureTime?: string;
+  departure_time?: string;
+  arrivalTime?: string;
+  arrival_time?: string;
+  departureAirport?: string;
+  from?: string;
+  origin?: string;
+  arrivalAirport?: string;
+  to?: string;
+  destination?: string;
+  stops?: number | string;
+  stopCount?: number;
+  bookingLink?: string;
+  link?: string;
+  url?: string;
+  segments?: unknown[];
+  legs?: unknown[];
+}
+
+export interface PlannerFlightsBudgetRange {
+  min?: number;
+  max?: number;
+}
+
+export interface PlannerFlights {
+  flights?: FlightOption[];
+  route?: string;
+  totalResults?: number;
+  departureAirport?: string;
+  arrivalAirport?: string;
+  outboundDate?: string;
+  returnDate?: string;
+  adults?: number;
+  currency?: string;
+  requestedResults?: number;
+  bookingLink?: string;
+  budgetRange?: PlannerFlightsBudgetRange;
+}
+
 export interface PlannerData {
   trip?: PlannerTrip;
   interests?: string[];
   budgets?: PlannerBudgets;
   itinerary?: PlannerItinerary | PlannerItineraryDay[];
   activities?: PlannerActivity[];
-  flights?: {
-    flights?: Record<string, unknown>[];
-    route?: string;
-    totalResults?: number;
-  } | null;
+  flights?: PlannerFlights | null;
   hotels?: {
     hotels?: Record<string, unknown>[];
     destination?: string;
