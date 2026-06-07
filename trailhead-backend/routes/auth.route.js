@@ -5,6 +5,7 @@ import {
   logoutUser,
   refreshAccessToken,
   getProfile,
+  deleteAccount,
   googleAuth,
   googleCallback,
 } from "../controllers/auth.controller.js";
@@ -17,6 +18,7 @@ router.post("/login", loginUser);
 router.post("/refresh", refreshAccessToken);
 router.post("/logout", verifyToken, logoutUser);
 router.get("/profile", verifyToken, getProfile);
+router.delete("/me", verifyToken, deleteAccount);
 
 router.get("/google", googleAuth);
 router.get("/google/callback", googleCallback);

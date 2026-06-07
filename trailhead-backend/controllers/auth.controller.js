@@ -5,6 +5,7 @@ import {
   logoutUserService,
   refreshAccessTokenService,
   getProfileService,
+  deleteUserService,
 } from "../services/auth.service.js";
 
 export const registerUser = async (req, res) => {
@@ -95,6 +96,20 @@ export const getProfile = async (req, res) => {
 export const googleAuth = (req, res, next) => {
   console.log("✅ Google OAuth route hit");
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    await deleteUserService(userId);
+    res.status(200).json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    const status = error.message === "User not found" ? 404 : 400;
+    res.status(status).json({ error: error.message });
+  }
 };
 
 export const googleCallback = (req, res, next) => {

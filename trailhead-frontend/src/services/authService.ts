@@ -110,3 +110,13 @@ export async function getProfile(accessToken: string): Promise<ProfileResponse> 
   });
   return parseResponse<ProfileResponse>(res);
 }
+
+export async function deleteAccount(accessToken: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return parseResponse<{ success: boolean; message: string }>(res);
+}
