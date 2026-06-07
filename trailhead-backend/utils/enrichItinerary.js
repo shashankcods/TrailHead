@@ -6,6 +6,11 @@ export const enrichItinerary = ({
 
 }) => {
 
+  if (!itinerary || !Array.isArray(itinerary.days)) {
+
+    return { days: [] };
+  }
+
   return {
 
     ...itinerary,

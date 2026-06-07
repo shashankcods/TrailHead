@@ -14,11 +14,13 @@ const ENABLED_TABS: DetailedItineraryTab[] = ["Timeline", "Itinerary", "Travel"]
 interface DetailedItineraryProps {
   plannerData: PlannerData;
   onBack: () => void;
+  onOpenChat: () => void;
 }
 
 const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
   plannerData,
   onBack,
+  onOpenChat,
 }) => {
   const normalizedDays = useMemo(() => normalizePlannerItinerary(plannerData), [plannerData]);
   const [activeDayId, setActiveDayId] = useState<string>(normalizedDays[0]?.id ?? "");
@@ -113,9 +115,8 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           </button>
           <button
             type="button"
-            disabled
-            title="Coming soon"
-            className="rounded-xl px-4 py-2.5 border border-black/20 dark:border-white/25 text-sm font-semibold opacity-60 cursor-not-allowed"
+            onClick={onOpenChat}
+            className="rounded-xl px-4 py-2.5 border border-black dark:border-white bg-white dark:bg-black text-sm font-bold hover:scale-[1.01] transition"
           >
             Open Chat
           </button>

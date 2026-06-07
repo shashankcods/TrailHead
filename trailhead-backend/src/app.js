@@ -42,6 +42,7 @@ import attractionsRoute from "../routes/attractions.route.js";
 import plannerRouter from "../routes/planner.route.js";
 import modifyItineraryRouter from "../routes/modifyItinerary.route.js";
 import placesRoute from "../routes/places.route.js";
+import chatRoute from "../routes/chat.route.js";
 
 // API routes
 app.use("/api/auth", authRoute);
@@ -56,6 +57,7 @@ app.use("/api/calendar", calendarRoute);
 app.use("/api/attractions", attractionsRoute);
 app.use("/api/planner", plannerRouter);
 app.use("/api/places", placesRoute);
+app.use("/api/chat", chatRoute);
 
 app.use("/modify-itinerary", modifyItineraryRouter);
 
