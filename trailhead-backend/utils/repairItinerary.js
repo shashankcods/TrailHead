@@ -1,231 +1,109 @@
+import { timeToMinutes, addMinutes } from "./time.js";
 import {
-
-  timeToMinutes,
-
-  addMinutes
-
-} from "./time.js";
-
-import {
-
   ensureScheduledTime,
-
   getScheduledEnd,
-
   getScheduledStart,
-
   setScheduledTimes,
-
 } from "./scheduledTime.js";
+import { normalizeItineraryShape } from "./itineraryShape.js";
 
 export const repairItinerary = ({
-
   itinerary,
-
   activities,
-
-  activityMap
-
+  activityMap,
 }) => {
+  const normalized = normalizeItineraryShape(itinerary);
+  const days = normalized.days;
 
-  const usedIds =
-    new Set();
+  if (!days.length) {
+    console.warn(
+      "[repairItinerary] No days to repair; returning empty itinerary."
+    );
+    return { days: [] };
+  }
 
-  // =========================
-  // PICK UNUSED ACTIVITY
-  // =========================
+  if (!Array.isArray(activities) || !activityMap) {
+    console.warn(
+      "[repairItinerary] Missing activities or activityMap; returning normalized itinerary."
+    );
+    return normalized;
+  }
 
-  const getUnusedActivity =
-    () => {
+  const usedIds = new Set();
 
-      return activities.find(
+  const getUnusedActivity = () =>
+    activities.find((activity) => !usedIds.has(activity.id));
 
-        (a) =>
+  days.forEach((dayObj) => {
+    if (!Array.isArray(dayObj.activities)) {
+      dayObj.activities = [];
+      return;
+    }
 
-          !usedIds.has(
-            a.id
-          )
-      );
-  };
+    dayObj.activities = dayObj.activities.map((activity) => {
+      ensureScheduledTime(activity);
 
-  itinerary.days.forEach(
+      const activityId = activity.id || activity.activityId;
 
-    (dayObj) => {
+      if (!activityId || !activityMap.has(activityId)) {
+        const replacement = getUnusedActivity();
 
-      dayObj.activities =
-        dayObj.activities.map(
+        if (replacement) {
+          activity = {
+            ...replacement,
+            scheduledTime: activity.scheduledTime,
+          };
+        }
+      }
 
-          (activity) => {
+      const updatedActivityId = activity.id || activity.activityId;
 
-            ensureScheduledTime(
-              activity
+      if (updatedActivityId && usedIds.has(updatedActivityId)) {
+        const replacement = getUnusedActivity();
+
+        if (replacement) {
+          activity = {
+            ...replacement,
+            scheduledTime: activity.scheduledTime,
+          };
+        }
+      }
+
+      const finalActivityId = activity.id || activity.activityId;
+
+      if (finalActivityId) {
+        usedIds.add(finalActivityId);
+      }
+
+      const start = timeToMinutes(getScheduledStart(activity));
+      const end = timeToMinutes(getScheduledEnd(activity));
+
+      if (start !== null && end !== null) {
+        const isOvernight = end < start && start - end >= 360;
+        const needsRepair =
+          start === end || (start > end && !isOvernight);
+
+        if (needsRepair) {
+          const repairedEnd = addMinutes(getScheduledStart(activity), 90);
+
+          if (repairedEnd) {
+            setScheduledTimes(
+              activity,
+              getScheduledStart(activity),
+              repairedEnd
             );
+          }
+        }
+      }
 
-            const activityId =
-
-              activity.id ||
-
-              activity.activityId;
-
-            // =========================
-            // INVALID ACTIVITY FIX
-            // =========================
-
-            if (
-
-              !activityId ||
-
-              !activityMap.has(
-                activityId
-              )
-            ) {
-
-              const replacement =
-                getUnusedActivity();
-
-              if (replacement) {
-
-                activity = {
-
-                  ...replacement,
-
-                  scheduledTime:
-                    activity.scheduledTime
-                };
-              }
-            }
-
-            const updatedActivityId =
-
-              activity.id ||
-
-              activity.activityId;
-
-            // =========================
-            // DUPLICATE FIX
-            // =========================
-
-            if (
-
-              updatedActivityId &&
-
-              usedIds.has(
-                updatedActivityId
-              )
-            ) {
-
-              const replacement =
-                getUnusedActivity();
-
-              if (replacement) {
-
-                activity = {
-
-                  ...replacement,
-
-                  scheduledTime:
-                    activity.scheduledTime
-                };
-              }
-            }
-
-            const finalActivityId =
-
-              activity.id ||
-
-              activity.activityId;
-
-            if (finalActivityId) {
-
-              usedIds.add(
-                finalActivityId
-              );
-            }
-
-            // =========================
-            // TIME REPAIR
-            // =========================
-
-            const start =
-              timeToMinutes(
-
-                getScheduledStart(
-                  activity
-                )
-              );
-
-            const end =
-              timeToMinutes(
-
-                getScheduledEnd(
-                  activity
-                )
-              );
-
-            if (
-
-              start !== null &&
-
-              end !== null
-            ) {
-
-              const isOvernight =
-
-                end < start &&
-
-                start - end >= 360;
-
-              const needsRepair =
-
-                start === end ||
-
-                (
-                  start > end &&
-                  !isOvernight
-                );
-
-              if (needsRepair) {
-
-                const repairedEnd =
-                  addMinutes(
-
-                    getScheduledStart(
-                      activity
-                    ),
-
-                    90
-                  );
-
-                if (repairedEnd) {
-
-                  setScheduledTimes(
-
-                    activity,
-
-                    getScheduledStart(
-                      activity
-                    ),
-
-                    repairedEnd
-                  );
-                }
-              }
-            }
-
-            return activity;
-        });
+      return activity;
+    });
   });
 
   console.log(
-
     "[repairItinerary] repaired itinerary:",
-
-    JSON.stringify(
-      itinerary,
-      null,
-      2
-    )
+    JSON.stringify(normalized, null, 2)
   );
 
-  return itinerary;
+  return normalized;
 };

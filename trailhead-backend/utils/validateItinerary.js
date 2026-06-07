@@ -10,6 +10,8 @@ import {
 
 } from "./scheduledTime.js";
 
+import { normalizeItineraryShape } from "./itineraryShape.js";
+
 export const validateItinerary = ({
 
   itinerary,
@@ -22,14 +24,7 @@ export const validateItinerary = ({
 
   const warnings = [];
 
-  if (
-
-    !itinerary ||
-
-    !Array.isArray(
-      itinerary.days
-    )
-  ) {
+  if (!itinerary) {
 
     errors.push(
       "Invalid itinerary structure"
@@ -47,8 +42,38 @@ export const validateItinerary = ({
       errors,
 
       warnings,
+
+      normalizedItinerary: { days: [] },
     };
   }
+
+  const normalizedItinerary =
+    normalizeItineraryShape(itinerary);
+
+  if (!Array.isArray(normalizedItinerary.days)) {
+
+    errors.push(
+      "Invalid itinerary structure"
+    );
+
+    console.log(
+      "[validateItinerary] errors:",
+      errors
+    );
+
+    return {
+
+      valid: false,
+
+      errors,
+
+      warnings,
+
+      normalizedItinerary: { days: [] },
+    };
+  }
+
+  itinerary = normalizedItinerary;
 
   const usedIds =
     new Set();

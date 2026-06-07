@@ -1,4 +1,4 @@
-import { getFlights }
+import { getFlights, buildFlightsFallback }
 from "./flights.service.js";
 
 import { getHotelsFromBooking }
@@ -39,6 +39,10 @@ import { compactLLMActivities } from "../utils/compactLLMactivities.js";
 import { enrichItinerary } from "../utils/enrichItinerary.js";
 
 import { repairItinerary } from "../utils/repairItinerary.js";
+
+import { normalizeItineraryShape } from "../utils/itineraryShape.js";
+
+import { buildFallbackItinerary } from "../utils/buildFallbackItinerary.js";
 
 
 // CACHING NEEDS TO BE ADDED FOR SAFETY AS IT IS THE BOTTLENECK
@@ -578,10 +582,30 @@ export const generateTripPlan = async (
 
     ] = serviceResults;
 
-    const flights =
+    let flights =
       flightsResult.status === "fulfilled"
         ? flightsResult.value
         : null;
+
+    if (!flights) {
+      try {
+        flights = buildFlightsFallback({
+          source,
+          destination,
+          start_date,
+          end_date,
+          adults,
+          limit: retrievalConfig.flights,
+          min_budget: allocations.travel * 0.5,
+          max_budget: allocations.travel,
+        });
+      } catch (fallbackError) {
+        console.warn(
+          "Flights fallback unavailable:",
+          fallbackError?.message ?? fallbackError
+        );
+      }
+    }
 
     const hotels =
       hotelsResult.status === "fulfilled"
@@ -723,72 +747,140 @@ export const generateTripPlan = async (
         )
       );
 
-      const itinerary =
-    await generateStructuredItinerary({
+      let itinerary;
 
-      trip: {
+      try {
 
-        source,
+        itinerary =
+          await generateStructuredItinerary({
 
-        destination,
+            trip: {
 
-        start_date,
+              source,
 
-        end_date,
+              destination,
 
-        adults,
+              start_date,
 
-        trip_days
-      },
+              end_date,
 
-      interests,
+              adults,
 
-      budget: allocations,
+              trip_days
+            },
 
-      compactActivities:
-        compactActivitiesForLLM
-    });
-    
-    let validationResult =
-      validateItinerary({
+            interests,
 
-        itinerary,
-        activityMap
-    });
+            budget: allocations,
 
-    if (!validationResult.valid) {
+            compactActivities:
+              compactActivitiesForLLM
+          });
+      } catch (llmError) {
 
-      itinerary =
-        repairItinerary({
+        console.error(
+          "Structured Itinerary Error:",
+          llmError?.message ?? llmError
+        );
 
-          itinerary,
-          activities,
-          activityMap
-        });
+        itinerary = { days: [] };
+      }
 
-      validationResult =
+      itinerary = normalizeItineraryShape(itinerary);
+
+      let validationResult =
         validateItinerary({
 
           itinerary,
           activityMap
-      });
-    }
+        });
 
-    if (!validationResult.valid) {
+      if (
+        !validationResult.valid &&
+        itinerary?.days?.length > 0
+      ) {
 
-      throw new APIError(
-        500,
-        "Failed to repair itinerary"
-      );
-    }
+        itinerary =
+          repairItinerary({
 
-    const enrichedItinerary =
-      enrichItinerary({
+            itinerary,
+            activities,
+            activityMap
+          });
 
-        itinerary:
-          validationResult.normalizedItinerary,
-        activityMap
-    });
+        itinerary =
+          normalizeItineraryShape(itinerary);
+
+        validationResult =
+          validateItinerary({
+
+            itinerary,
+            activityMap
+          });
+      }
+
+      if (!validationResult.valid) {
+
+        console.log(
+          "[planner] Invalid structured itinerary; using fallback itinerary."
+        );
+
+        console.log(
+          "[planner] validation errors:",
+          validationResult.errors
+        );
+
+        itinerary =
+          buildFallbackItinerary({
+
+            trip_days,
+
+            destination,
+
+            activities,
+          });
+
+        validationResult =
+          validateItinerary({
+
+            itinerary,
+            activityMap
+          });
+      }
+
+      if (!validationResult.valid) {
+
+        console.warn(
+          "[planner] Fallback itinerary still invalid; using minimal empty-day itinerary."
+        );
+
+        console.warn(
+          "[planner] validation errors:",
+          validationResult.errors
+        );
+
+        itinerary =
+          buildFallbackItinerary({
+
+            trip_days,
+
+            destination,
+
+            activities: [],
+          });
+      }
+
+      const enrichedItinerary =
+        normalizeItineraryShape(
+
+          enrichItinerary({
+
+            itinerary:
+              validationResult.normalizedItinerary
+              ?? itinerary,
+            activityMap
+          })
+        );
 
     const plannerData = {
 
@@ -838,7 +930,7 @@ export const generateTripPlan = async (
 
       compactActivitiesForLLM,
 
-      itinerary: enrichedItinerary
+      itinerary: enrichedItinerary ?? { days: [] }
     };
     
     return plannerData

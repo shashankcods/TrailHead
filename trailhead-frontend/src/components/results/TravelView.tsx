@@ -1,10 +1,45 @@
 import React from "react";
-import type { PlannerData } from "@/types/planner";
+import type { PlannerData, PlannerFlights } from "@/types/planner";
 import FlightCard from "@/components/results/FlightCard";
 
 interface TravelViewProps {
   plannerData: PlannerData;
 }
+
+type FlightsRecord = PlannerFlights & Record<string, unknown>;
+
+const readFlightsMeta = (plannerData: PlannerData) => {
+  const trip = plannerData.trip ?? {};
+  const raw = (plannerData.flights ?? {}) as FlightsRecord;
+
+  return {
+    route: raw.route as string | undefined,
+    departureAirport:
+      (raw.departureAirport as string | undefined) ??
+      (raw.departure_airport as string | undefined),
+    arrivalAirport:
+      (raw.arrivalAirport as string | undefined) ??
+      (raw.arrival_airport as string | undefined),
+    outboundDate:
+      (raw.outboundDate as string | undefined) ??
+      (raw.outbound_date as string | undefined) ??
+      trip.start_date,
+    returnDate:
+      (raw.returnDate as string | undefined) ??
+      (raw.return_date as string | undefined) ??
+      trip.end_date,
+    adults: raw.adults ?? trip.adults,
+    currency: (raw.currency as string | undefined) ?? "USD",
+    bookingLink:
+      (raw.bookingLink as string | undefined) ??
+      (raw.booking_link as string | undefined),
+    budgetRange: raw.budgetRange,
+    totalResults:
+      raw.totalResults ??
+      (raw.total_results as number | undefined),
+    flights: raw.flights ?? [],
+  };
+};
 
 const formatDate = (value?: string) => {
   if (!value) return null;
@@ -28,13 +63,13 @@ const statItem = (label: string, value: string) => (
 
 const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
   const trip = plannerData.trip ?? {};
-  const flights = plannerData.flights;
-  const flightList = flights?.flights ?? [];
+  const flights = readFlightsMeta(plannerData);
+  const flightList = flights.flights ?? [];
   const hasResults = flightList.length > 0;
-  const bookingLink = flights?.bookingLink;
-  const currency = flights?.currency ?? "USD";
-  const budgetMin = flights?.budgetRange?.min;
-  const budgetMax = flights?.budgetRange?.max;
+  const bookingLink = flights.bookingLink;
+  const currency = flights.currency ?? "USD";
+  const budgetMin = flights.budgetRange?.min;
+  const budgetMax = flights.budgetRange?.max;
 
   const budgetLabel =
     budgetMin != null && budgetMax != null
@@ -46,14 +81,14 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
           : "Not available";
 
   const routeLabel =
-    flights?.route ??
+    flights.route ??
     (trip.source && trip.destination
       ? `${trip.source} ↔ ${trip.destination}`
       : trip.source || trip.destination || "Not available");
 
   const datesLabel = (() => {
-    const outbound = formatDate(flights?.outboundDate);
-    const ret = formatDate(flights?.returnDate);
+    const outbound = formatDate(flights.outboundDate);
+    const ret = formatDate(flights.returnDate);
     if (outbound && ret) return `${outbound} → ${ret}`;
     if (outbound) return outbound;
     if (ret) return ret;
@@ -61,16 +96,16 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
   })();
 
   const travelersLabel = (() => {
-    const adults = flights?.adults ?? trip.adults;
+    const adults = flights.adults ?? trip.adults;
     if (adults == null) return "Not available";
     return `${adults} adult${adults === 1 ? "" : "s"}`;
   })();
 
   const resultsLabel = hasResults
     ? `${flightList.length} live flight${flightList.length === 1 ? "" : "s"}`
-    : flights?.totalResults === 0 || !hasResults
+    : flights.totalResults === 0 || !hasResults
       ? "No live results"
-      : flights?.totalResults != null
+      : flights.totalResults != null
         ? `${flights.totalResults} live flight${flights.totalResults === 1 ? "" : "s"}`
         : "No live results";
 
@@ -97,7 +132,7 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
           {statItem("Route", routeLabel)}
           {statItem(
             "Airports",
-            flights?.departureAirport && flights?.arrivalAirport
+            flights.departureAirport && flights.arrivalAirport
               ? `${flights.departureAirport} → ${flights.arrivalAirport}`
               : "Not available"
           )}

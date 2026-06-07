@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { Currency } from "@/components/Navbar";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
 import DetailedItinerary from "@/components/results/DetailedItinerary";
 import PlannerExtras from "@/components/results/PlannerExtras";
+import TripChatDrawer from "@/components/chat/TripChatDrawer";
+import { applyItineraryAction, isMutatingAction } from "@/components/chat/itineraryActions";
+import type { ItineraryAction } from "@/types/chat";
 import type { PlannerData } from "@/types/planner";
 
 interface DetailedItineraryPageProps {
@@ -20,8 +23,33 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const plannerData = (location.state as ItineraryLocationState | null)
+  const initialPlannerData = (location.state as ItineraryLocationState | null)
     ?.plannerData;
+
+  const [plannerData, setPlannerData] = useState<PlannerData | undefined>(
+    initialPlannerData
+  );
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const undoSnapshotRef = useRef<PlannerData | null>(null);
+
+  const handleApplyItineraryAction = useCallback((action: ItineraryAction) => {
+    if (!isMutatingAction(action)) return;
+
+    setPlannerData((prev) => {
+      if (!prev) return prev;
+      undoSnapshotRef.current = prev;
+      setCanUndo(true);
+      return applyItineraryAction(prev, action);
+    });
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (!undoSnapshotRef.current) return;
+    setPlannerData(undoSnapshotRef.current);
+    undoSnapshotRef.current = null;
+    setCanUndo(false);
+  }, []);
 
   return (
     <GradientBackground>
@@ -33,6 +61,7 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
               <DetailedItinerary
                 plannerData={plannerData}
                 onBack={() => navigate("/results", { state: { plannerData } })}
+                onOpenChat={() => setIsChatOpen(true)}
               />
               <PlannerExtras
                 plannerData={plannerData}
@@ -66,6 +95,15 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
             </div>
           </main>
         )}
+
+        <TripChatDrawer
+          open={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          plannerData={plannerData ?? null}
+          onApplyItineraryAction={handleApplyItineraryAction}
+          canUndo={canUndo}
+          onUndo={handleUndo}
+        />
       </div>
     </GradientBackground>
   );
