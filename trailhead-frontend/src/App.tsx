@@ -5,6 +5,7 @@ import MainPage from "./pages/MainPage";
 import ResultsPage from "./pages/ResultsPage";
 import DetailedItineraryPage from "./pages/DetailedItineraryPage";
 import ProfilePage from "./pages/ProfilePage";
+import TripsPage from "./pages/TripsPage";
 import type { Currency } from "./components/Navbar";
 import OAuthSuccess from "./pages/OAuthSuccess";
 
@@ -52,6 +53,7 @@ const App: React.FC = () => {
           }
         />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/trips" element={<TripsPage />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
       </Routes>
     </Router>

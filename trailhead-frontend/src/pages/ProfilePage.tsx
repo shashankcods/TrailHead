@@ -7,11 +7,15 @@ import ProfileInfoForm from "@/components/profile/ProfileInfoForm";
 import TravelPreferences from "@/components/profile/TravelPreferences";
 import ProfileDangerZone from "@/components/profile/ProfileDangerZone";
 import GradientBackground from "@/components/GradientBackground";
+import { getTrips } from "@/api/trips";
 
 const ProfilePage: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, accessToken } = useAuth();
   const navigate = useNavigate();
   const [isClient, setIsClient] = useState(false);
+  const [savedTripsCount, setSavedTripsCount] = useState(0);
+  const [upcomingTripsCount, setUpcomingTripsCount] = useState(0);
+  const [completedTripsCount, setCompletedTripsCount] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -22,6 +26,22 @@ const ProfilePage: React.FC = () => {
       navigate("/");
     }
   }, [isClient, isAuthenticated, isLoading, navigate]);
+
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      const fetchTrips = async () => {
+        try {
+          const data = await getTrips(accessToken);
+          setSavedTripsCount(data.trips.filter(t => t.status === "saved").length);
+          setUpcomingTripsCount(data.trips.filter(t => t.status === "upcoming").length);
+          setCompletedTripsCount(data.trips.filter(t => t.status === "completed").length);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchTrips();
+    }
+  }, [isAuthenticated, accessToken]);
 
   if (!isClient || isLoading || !isAuthenticated) {
     return null;
@@ -42,9 +62,9 @@ const ProfilePage: React.FC = () => {
             daysTraveled: 0,
             citiesVisited: 0,
             countries: 0,
-            savedTrips: 0,
-            upcomingTrips: 0,
-            completedTrips: 0,
+            savedTrips: savedTripsCount,
+            upcomingTrips: upcomingTripsCount,
+            completedTrips: completedTripsCount,
           }}
         />
 

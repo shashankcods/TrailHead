@@ -148,7 +148,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                   </button>
                   <button
                     onClick={() => {
-                      navigate("/results");
+                      navigate("/trips");
                       setIsDropdownOpen(false);
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"

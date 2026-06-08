@@ -15,12 +15,22 @@ interface DetailedItineraryProps {
   plannerData: PlannerData;
   onBack: () => void;
   onOpenChat: () => void;
+  onSaveTrip: () => void;
+  isSaving: boolean;
+  isSaved: boolean;
+  saveError: string | null;
+  isAuthenticated: boolean;
 }
 
 const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
   plannerData,
   onBack,
   onOpenChat,
+  onSaveTrip,
+  isSaving,
+  isSaved,
+  saveError,
+  isAuthenticated,
 }) => {
   const normalizedDays = useMemo(() => normalizePlannerItinerary(plannerData), [plannerData]);
   const [activeDayId, setActiveDayId] = useState<string>(normalizedDays[0]?.id ?? "");
@@ -97,6 +107,10 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           </div>
         </div>
 
+        {saveError && (
+          <p className="text-red-600 dark:text-red-400 text-sm mb-3">{saveError}</p>
+        )}
+
         <div className="mt-5 flex flex-col sm:flex-row gap-2">
           <button
             type="button"
@@ -107,11 +121,15 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           </button>
           <button
             type="button"
-            disabled
-            title="Coming soon"
-            className="rounded-xl px-4 py-2.5 border border-black/20 dark:border-white/25 text-sm font-semibold opacity-60 cursor-not-allowed"
+            onClick={onSaveTrip}
+            disabled={!isAuthenticated || isSaving || isSaved}
+            className={`rounded-xl px-4 py-2.5 border text-sm font-semibold transition ${
+              isSaved
+                ? "border-green-500 bg-green-500 text-white dark:bg-green-600 dark:border-green-600"
+                : "border-black/20 dark:border-white/25 bg-white dark:bg-black hover:scale-[1.01]"
+            } ${(!isAuthenticated || isSaving) ? "opacity-60 cursor-not-allowed" : ""}`}
           >
-            Save Trip
+            {isSaving ? "Saving..." : isSaved ? "Saved!" : "Save Trip"}
           </button>
           <button
             type="button"
