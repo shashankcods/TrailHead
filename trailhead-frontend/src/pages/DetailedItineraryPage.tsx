@@ -9,6 +9,8 @@ import TripChatDrawer from "@/components/chat/TripChatDrawer";
 import { applyItineraryAction, isMutatingAction } from "@/components/chat/itineraryActions";
 import type { ItineraryAction } from "@/types/chat";
 import type { PlannerData } from "@/types/planner";
+import { useAuth } from "@/context/AuthContext";
+import { createTrip } from "@/api/trips";
 
 interface DetailedItineraryPageProps {
   selectedCurrency: Currency;
@@ -23,6 +25,7 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, accessToken } = useAuth();
   const initialPlannerData = (location.state as ItineraryLocationState | null)
     ?.plannerData;
 
@@ -31,6 +34,10 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
   );
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedTripId, setSavedTripId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const undoSnapshotRef = useRef<PlannerData | null>(null);
 
   const handleApplyItineraryAction = useCallback((action: ItineraryAction) => {
@@ -40,6 +47,8 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
       if (!prev) return prev;
       undoSnapshotRef.current = prev;
       setCanUndo(true);
+      setIsSaved(false);
+      setSavedTripId(null);
       return applyItineraryAction(prev, action);
     });
   }, []);
@@ -49,7 +58,69 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
     setPlannerData(undoSnapshotRef.current);
     undoSnapshotRef.current = null;
     setCanUndo(false);
+    setIsSaved(false);
+    setSavedTripId(null);
   }, []);
+
+  const handleSaveTrip = useCallback(async () => {
+    console.log("[SaveTrip] Button clicked");
+    
+    if (!isAuthenticated) {
+      console.log("[SaveTrip] Not authenticated");
+      return;
+    }
+
+    if (!accessToken) {
+      console.log("[SaveTrip] No access token");
+      return;
+    }
+
+    if (!plannerData) {
+      console.log("[SaveTrip] No planner data");
+      return;
+    }
+
+    if (isSaved && savedTripId) {
+      console.log("[SaveTrip] Already saved, skipping");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    const trip = plannerData.trip ?? {};
+    const normalizedDays = (() => {
+      if (!plannerData.itinerary) return [];
+      if (Array.isArray(plannerData.itinerary)) return plannerData.itinerary;
+      return plannerData.itinerary.days || [];
+    })();
+
+    const tripData = {
+      title: `${trip.source || "Trip"} → ${trip.destination || "Destination"}`,
+      source: trip.source || "",
+      destination: trip.destination || "",
+      startDate: trip.start_date || "",
+      endDate: trip.end_date || "",
+      tripDays: trip.trip_days || normalizedDays.length || 1,
+      adults: trip.adults || 1,
+      status: "saved",
+      plannerData: plannerData,
+    };
+
+    console.log("[SaveTrip] Request payload:", tripData);
+
+    try {
+      const response = await createTrip(accessToken, tripData);
+      console.log("[SaveTrip] Response:", response);
+      setSavedTripId(response.trip._id);
+      setIsSaved(true);
+    } catch (error) {
+      console.error("[SaveTrip] Error:", error);
+      setSaveError(error instanceof Error ? error.message : "Failed to save trip");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [isAuthenticated, accessToken, plannerData, isSaved, savedTripId]);
 
   return (
     <GradientBackground>
@@ -62,6 +133,11 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
                 plannerData={plannerData}
                 onBack={() => navigate("/results", { state: { plannerData } })}
                 onOpenChat={() => setIsChatOpen(true)}
+                onSaveTrip={handleSaveTrip}
+                isSaving={isSaving}
+                isSaved={isSaved}
+                saveError={saveError}
+                isAuthenticated={isAuthenticated}
               />
               <PlannerExtras
                 plannerData={plannerData}

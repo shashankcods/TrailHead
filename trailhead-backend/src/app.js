@@ -12,7 +12,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: [process.env.CORS_ORIGIN, "http://localhost:5174"],
     credentials: true,
   })
 );
@@ -43,6 +43,7 @@ import plannerRouter from "../routes/planner.route.js";
 import modifyItineraryRouter from "../routes/modifyItinerary.route.js";
 import placesRoute from "../routes/places.route.js";
 import chatRoute from "../routes/chat.route.js";
+import tripsRoute from "../routes/trips.route.js";
 
 // API routes
 app.use("/api/auth", authRoute);
@@ -58,6 +59,7 @@ app.use("/api/attractions", attractionsRoute);
 app.use("/api/planner", plannerRouter);
 app.use("/api/places", placesRoute);
 app.use("/api/chat", chatRoute);
+app.use("/api/trips", tripsRoute);
 
 app.use("/modify-itinerary", modifyItineraryRouter);
 
