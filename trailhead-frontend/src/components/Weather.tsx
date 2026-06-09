@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 export interface WeatherData {
   date: string;
@@ -13,6 +13,8 @@ interface WeatherForecastProps {
 }
 
 const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const getWeatherIcon = (condition: string) => {
     const c = condition.toLowerCase();
     if (c.includes("clear")) return "/weather/clear.svg";
@@ -23,61 +25,125 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
     if (c.includes("rain") || c.includes("showers")) return "/weather/rain.svg";
     if (c.includes("snow")) return "/weather/snow.svg";
     if (c.includes("thunder")) return "/weather/thunder.svg";
-    return "/weather/clear.svg"; 
+    return "/weather/clear.svg";
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDayParts = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
+    return {
+      weekday: date.toLocaleDateString("en-US", { weekday: "short" }),
+      monthDay: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+    };
   };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      container.classList.add("cursor-grabbing");
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      container.classList.remove("cursor-grabbing");
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      container.classList.remove("cursor-grabbing");
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.2;
+      container.scrollLeft = scrollLeft - walk;
+    };
+
+    container.addEventListener("mousedown", handleMouseDown);
+    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      container.removeEventListener("mousedown", handleMouseDown);
+      container.removeEventListener("mouseleave", handleMouseLeave);
+      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
 
   return (
-    <div className="w-full mt-4 mb-10 p-4">
-      <h3 className="text-black dark:text-white text-2xl font-bold mb-6 text-center">
-        Weather
-      </h3>
+    <div className="w-full">
+      <div
+        ref={containerRef}
+        className="flex gap-2.5 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide cursor-grab select-none py-1 -mx-1 px-1"
+      >
+        {weatherData.map((day, index) => {
+          const { weekday, monthDay } = formatDayParts(day.date);
 
-      <div className="flex flex-col gap-4 max-h-[820px] overflow-y-auto scroll-smooth snap-y snap-mandatory scrollbar-hide px-2">
-    {weatherData.map((day, index) => (
-    <div
-      key={index}
-      className="snap-start 
-        bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5
-        backdrop-blur-2xl
-        border border-black/20 dark:border-white/20
-        rounded-xl p-5 text-black dark:text-white text-center
-        hover:bg-black/10 dark:hover:bg-white/20
-        transition-all duration-300
-        w-100
-        h-48
-        mx-auto"
-    >
+          return (
+            <div
+              key={index}
+              title={day.condition}
+              style={{ animationDelay: `${index * 55}ms` }}
+              className="weather-day-card flex-shrink-0 snap-start
+                min-w-[5.75rem] sm:min-w-[6.25rem]
+                rounded-xl border border-black/10 dark:border-white/15
+                bg-white/60 dark:bg-black/40
+                px-3 py-2.5
+                flex flex-col items-center gap-1
+                text-black dark:text-white text-center
+                hover:scale-[1.04] hover:border-black/20 dark:hover:border-white/25
+                hover:bg-white/85 dark:hover:bg-black/55
+                hover:shadow-sm
+                transition-all duration-300 ease-out"
+            >
+              <div className="leading-tight">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">
+                  {weekday}
+                </p>
+                <p className="text-xs font-bold">{monthDay}</p>
+              </div>
 
-        <div className="font-semibold text-sm mb-4">
-          {formatDate(day.date)}
-        </div>
-        <img
-          src={getWeatherIcon(day.condition)}
-          alt={day.condition}
-          className="w-15 h-12 mx-auto mb-2"
-        />
-        <div className="text-sm text-black/70 dark:text-white/70 mb-2 -mt-2 capitalize font-family-opensans">
-          {day.condition}
-        </div>
-        <div className="flex justify-between text-sm mb-1 px-15">
-          <span className="text-black dark:text-white">H: {day.maxTemp}°C</span>
-          <span className="text-black/80 dark:text-white/80">L: {day.minTemp}°C</span>
-        </div>
-        <div className="text-xs text-black/80 dark:text-white/80">💧 {day.rainAmount}mm</div>
+              <img
+                src={getWeatherIcon(day.condition)}
+                alt={day.condition}
+                className="w-9 h-9 object-contain my-0.5 transition-transform duration-300 group-hover:scale-110"
+                draggable={false}
+              />
+
+              <p className="text-[10px] leading-tight text-black/60 dark:text-white/60 capitalize truncate w-full px-0.5">
+                {day.condition}
+              </p>
+
+              <div className="flex items-baseline gap-1 text-xs font-semibold">
+                <span>{day.maxTemp}°</span>
+                <span className="text-black/45 dark:text-white/45 font-normal">
+                  {day.minTemp}°
+                </span>
+              </div>
+
+              <p className="text-[10px] text-black/55 dark:text-white/55">
+                💧 {day.rainAmount}mm
+              </p>
+            </div>
+          );
+        })}
       </div>
-    ))}
-  </div>
 
-      {/* Hide scrollbar */}
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -86,23 +152,22 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        @keyframes weatherFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .weather-day-card {
+          animation: weatherFadeIn 0.45s ease-out both;
+        }
       `}</style>
     </div>
   );
 };
 
 export default WeatherForecast;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
