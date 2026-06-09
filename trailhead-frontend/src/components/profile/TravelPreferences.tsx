@@ -122,57 +122,6 @@ const TravelPreferences: React.FC<TravelPreferencesProps> = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* App Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>App Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-black dark:text-white">
-                Enable Notifications
-              </p>
-              <p className="text-xs text-black/60 dark:text-white/60">
-                Get updates about your trips
-              </p>
-            </div>
-            <button
-              onClick={() => setNotifications(!notifications)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifications ? "bg-black dark:bg-white" : "bg-black/20 dark:bg-white/20"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-black transition-transform ${
-                  notifications ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-black dark:text-white">
-                Dark Mode
-              </p>
-            </div>
-            <button
-              onClick={toggleDarkMode}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                darkMode ? "bg-black dark:bg-white" : "bg-black/20 dark:bg-white/20"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-black transition-transform ${
-                  darkMode ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

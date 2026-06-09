@@ -63,9 +63,6 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
         <div className="bg-gradient-to-br from-black via-black/90 to-black/75 dark:from-white dark:via-white/95 dark:to-white/85 px-6 py-8 md:px-8 md:py-10 text-white dark:text-black">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="rounded-full border border-white/30 dark:border-black/20 bg-white/15 dark:bg-black/10 px-3 py-1 text-xs font-semibold">
-              AI Generated
-            </span>
-            <span className="rounded-full border border-white/30 dark:border-black/20 bg-white/15 dark:bg-black/10 px-3 py-1 text-xs font-semibold">
               {tripStyle}
             </span>
           </div>
@@ -76,17 +73,12 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {[
           { label: "Days", value: String(tripDays) },
-          { label: "Activities", value: String(activityCount) },
           {
             label: "Travelers",
             value: String(adults),
-          },
-          {
-            label: "Per Day",
-            value: formatMoney(budgetPerDay),
           },
         ].map((stat) => (
           <div
@@ -111,18 +103,6 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
             </p>
             <p className="text-3xl font-extrabold mt-1">
               {formatMoney(totalBudget)}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-black/55 dark:text-white/55">
-              Activities Budget / Day
-            </p>
-            <p className="text-3xl font-extrabold mt-1">
-              {formatMoney(
-                tripDays > 0
-                  ? Math.round((allocations.activities ?? 0) / tripDays)
-                  : allocations.activities ?? 0
-              )}
             </p>
           </div>
         </div>
@@ -158,33 +138,14 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
         </div>
       </div>
 
-      {/* Journey */}
-      <div className="space-y-3">
-        <h3 className="th-title">Your Journey</h3>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div className="th-soft-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50 mb-2">
-              Starting From
-            </p>
-            <p className="rounded-xl border border-black/15 dark:border-white/20 bg-black/[0.04] dark:bg-white/[0.06] px-4 py-3 font-semibold">
-              {source}
-            </p>
-          </div>
-          <div className="th-soft-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-black/50 dark:text-white/50 mb-2">
-              Destination
-            </p>
-            <p className="rounded-xl border border-black/15 dark:border-white/20 bg-black/[0.04] dark:bg-white/[0.06] px-4 py-3 font-semibold">
-              {destination}
-              {tripDays > 0 && (
-                <span className="text-black/55 dark:text-white/55 font-normal">
-                  {" "}
-                  · {tripDays}d
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
+      {/* Completion Message */}
+      <div className="text-center mb-4">
+        <h3 className="text-lg font-bold">
+          Your itinerary is ready
+        </h3>
+        <p className="text-sm text-black/60 dark:text-white/60 mt-1">
+          We've finished planning your trip. Click below to view your full itinerary.
+        </p>
       </div>
 
       {/* CTAs */}
@@ -196,19 +157,7 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
         >
           View Itinerary →
         </button>
-        <button
-          type="button"
-          disabled
-          title="Coming soon"
-          className="flex-1 py-3 px-6 rounded-xl border border-black/25 dark:border-white/30 bg-white dark:bg-black text-black dark:text-white font-bold opacity-50 cursor-not-allowed"
-        >
-          Open Chat (Coming soon)
-        </button>
       </div>
-      <p className="th-subtitle text-center">
-        Open your full itinerary in a dedicated view, or chat with AI to refine
-        your plan - chat coming soon.
-      </p>
     </div>
   );
 };
