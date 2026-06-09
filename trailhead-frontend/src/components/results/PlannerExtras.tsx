@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import type { Currency } from "@/components/Navbar";
 import type { PlannerData } from "@/types/planner";
 import WeatherForecast from "@/components/Weather";
 import SafetyInfo from "@/components/SafetyInfo";
 
 interface PlannerExtrasProps {
   plannerData: PlannerData;
-  selectedCurrency: Currency;
 }
 
 const getListFromPayload = (
@@ -23,12 +21,7 @@ const getListFromPayload = (
   return Array.isArray(list) ? list : [];
 };
 
-const PlannerExtras: React.FC<PlannerExtrasProps> = ({
-  plannerData,
-  selectedCurrency,
-}) => {
-  const flights = plannerData.flights?.flights ?? [];
-  const hotels = plannerData.hotels?.hotels ?? [];
+const PlannerExtras: React.FC<PlannerExtrasProps> = ({ plannerData }) => {
   const restaurants = getListFromPayload(plannerData.restaurants, "restaurants");
   const events = getListFromPayload(plannerData.events, "events");
   const weatherForecast = plannerData.weather?.forecast ?? [];
@@ -42,26 +35,17 @@ const PlannerExtras: React.FC<PlannerExtrasProps> = ({
   return (
     <section className="space-y-6">
       <div>
-        <h3 className="th-title">Trip Details</h3>
+        <h3 className="th-title">Know before you go</h3>
         <p className="th-subtitle mt-1">
-          Flights, stays, dining, weather, and safety when available.
+          Weather, safety, dining, and events when available.
         </p>
       </div>
 
-      {[
-        "weather",
-        "safety",
-        "flights",
-        "hotels",
-        "restaurants",
-        "events",
-      ].map((section) => {
+      {["weather", "safety", "restaurants", "events"].map((section) => {
         const isOpen = openSection === section;
         const titleMap: Record<string, string> = {
           weather: "Weather Forecast",
           safety: "Safety Info",
-          flights: "Flights",
-          hotels: "Hotels",
           restaurants: "Restaurants",
           events: "Events",
         };
@@ -111,64 +95,6 @@ const PlannerExtras: React.FC<PlannerExtrasProps> = ({
                   ) : (
                     <p className="text-sm text-black/60 dark:text-white/60">
                       Safety information is unavailable for this trip.
-                    </p>
-                  ))}
-
-                {section === "flights" &&
-                  (flights.length > 0 ? (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {flights.slice(0, 4).map((flight, idx) => {
-                        const f = flight as Record<string, unknown>;
-                        return (
-                          <div
-                            key={idx}
-                            className="rounded-xl border border-black/10 dark:border-white/15 p-4 bg-white/60 dark:bg-black/40"
-                          >
-                            <p className="font-semibold">{String(f.airline ?? "Flight option")}</p>
-                            <p className="text-sm text-black/65 dark:text-white/65 mt-1">
-                              {String(f.departureAirport ?? "—")} → {String(f.arrivalAirport ?? "—")}
-                            </p>
-                            {f.price != null && (
-                              <p className="text-sm font-medium mt-2">
-                                {selectedCurrency.symbol}
-                                {String(f.price)}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-black/60 dark:text-white/60">
-                      Flight information is unavailable for this trip.
-                    </p>
-                  ))}
-
-                {section === "hotels" &&
-                  (hotels.length > 0 ? (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {hotels.slice(0, 4).map((hotel, idx) => {
-                        const h = hotel as Record<string, unknown>;
-                        return (
-                          <div
-                            key={idx}
-                            className="rounded-xl border border-black/10 dark:border-white/15 p-4 bg-white/60 dark:bg-black/40"
-                          >
-                            <p className="font-semibold">{String(h.name ?? "Hotel option")}</p>
-                            {h.rating != null && <p className="text-sm mt-1">★ {String(h.rating)}</p>}
-                            {h.parsed_price != null && (
-                              <p className="text-sm font-medium mt-1">
-                                {selectedCurrency.symbol}
-                                {String(h.parsed_price)}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-black/60 dark:text-white/60">
-                      Hotel information is unavailable for this trip.
                     </p>
                   ))}
 
