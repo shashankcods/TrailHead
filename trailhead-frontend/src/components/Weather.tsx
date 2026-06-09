@@ -86,10 +86,10 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
   }, []);
 
   return (
-    <div className="w-full">
+    <div className="w-full text-center">
       <div
         ref={containerRef}
-        className="flex gap-2.5 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide cursor-grab select-none py-1 -mx-1 px-1"
+        className="flex w-full gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide cursor-grab select-none py-1"
       >
         {weatherData.map((day, index) => {
           const { weekday, monthDay } = formatDayParts(day.date);
@@ -99,14 +99,13 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
               key={index}
               title={day.condition}
               style={{ animationDelay: `${index * 55}ms` }}
-              className="weather-day-card flex-shrink-0 snap-start
-                min-w-[5.75rem] sm:min-w-[6.25rem]
+              className="weather-day-card flex-1 basis-0 min-w-[4.75rem] snap-start
                 rounded-xl border border-black/10 dark:border-white/15
                 bg-white/60 dark:bg-black/40
-                px-3 py-2.5
-                flex flex-col items-center gap-1
+                px-2 py-2.5
+                flex flex-col items-center justify-center gap-1
                 text-black dark:text-white text-center
-                hover:scale-[1.04] hover:border-black/20 dark:hover:border-white/25
+                hover:scale-[1.03] hover:border-black/20 dark:hover:border-white/25
                 hover:bg-white/85 dark:hover:bg-black/55
                 hover:shadow-sm
                 transition-all duration-300 ease-out"
@@ -121,7 +120,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
               <img
                 src={getWeatherIcon(day.condition)}
                 alt={day.condition}
-                className="w-9 h-9 object-contain my-0.5 transition-transform duration-300 group-hover:scale-110"
+                className="w-8 h-8 object-contain my-0.5"
                 draggable={false}
               />
 
@@ -129,7 +128,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ weatherData }) => {
                 {day.condition}
               </p>
 
-              <div className="flex items-baseline gap-1 text-xs font-semibold">
+              <div className="flex items-baseline justify-center gap-1 text-xs font-semibold">
                 <span>{day.maxTemp}°</span>
                 <span className="text-black/45 dark:text-white/45 font-normal">
                   {day.minTemp}°

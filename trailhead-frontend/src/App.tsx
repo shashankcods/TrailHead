@@ -47,9 +47,7 @@ const App: React.FC = () => {
         <Route
           path="/itinerary"
           element={
-            <DetailedItineraryPage
-              selectedCurrency={selectedCurrency}
-            />
+            <DetailedItineraryPage />
           }
         />
         <Route path="/profile" element={<ProfilePage />} />

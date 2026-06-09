@@ -1,6 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import type { Currency } from "@/components/Navbar";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
 import DetailedItinerary from "@/components/results/DetailedItinerary";
@@ -12,17 +11,11 @@ import type { PlannerData } from "@/types/planner";
 import { useAuth } from "@/context/AuthContext";
 import { createTrip } from "@/api/trips";
 
-interface DetailedItineraryPageProps {
-  selectedCurrency: Currency;
-}
-
 interface ItineraryLocationState {
   plannerData?: PlannerData;
 }
 
-const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
-  selectedCurrency,
-}) => {
+const DetailedItineraryPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, accessToken } = useAuth();
@@ -139,10 +132,7 @@ const DetailedItineraryPage: React.FC<DetailedItineraryPageProps> = ({
                 saveError={saveError}
                 isAuthenticated={isAuthenticated}
               />
-              <PlannerExtras
-                plannerData={plannerData}
-                selectedCurrency={selectedCurrency}
-              />
+              <PlannerExtras plannerData={plannerData} />
             </div>
           </main>
         ) : (
