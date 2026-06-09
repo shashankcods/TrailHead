@@ -19,7 +19,13 @@ interface SafetyProps {
 }
 
 const SafetyInfo: React.FC<SafetyProps> = ({ safety }) => {
-  if (!safety) return <div className="text-black/70 dark:text-white/70">Safety info not available.</div>;
+  if (!safety) {
+    return (
+      <p className="text-sm text-center text-black/60 dark:text-white/60">
+        Safety info not available.
+      </p>
+    );
+  }
 
   const {
     destination = "N/A",
@@ -29,67 +35,86 @@ const SafetyInfo: React.FC<SafetyProps> = ({ safety }) => {
     localSafety = { radiusKm: 0, hospitals: 0, policeStations: 0, fireStations: 0 },
   } = safety;
 
+  const stats = [
+    {
+      label: "Crime Index",
+      value: citySafety.crimeIndex.toFixed(1),
+      hint: "City",
+    },
+    {
+      label: "Safety Index",
+      value: citySafety.safetyIndex.toFixed(1),
+      hint: "City",
+    },
+    {
+      label: "Hospitals",
+      value: String(localSafety.hospitals),
+      hint: `${localSafety.radiusKm} km`,
+    },
+    {
+      label: "Police",
+      value: String(localSafety.policeStations),
+      hint: `${localSafety.radiusKm} km`,
+    },
+    {
+      label: "Fire Stations",
+      value: String(localSafety.fireStations),
+      hint: `${localSafety.radiusKm} km`,
+    },
+  ];
 
   return (
-    <div className="w-full bg-transparentp-6 rounded-2xl shadow-lg flex flex-col">
-      <h2 className="text-2xl font-semibold text-center mb-6">
-        🛡️ Safety Overview of {destination}, {country}
-      </h2>
+    <div className="w-full space-y-3 text-center">
+      <p className="text-xs font-semibold text-black/55 dark:text-white/55">
+        {destination}, {country}
+      </p>
 
-      <div className="flex flex-col lg:flex-row justify-around gap-6 items-center w-full">
-        {/* city safety */}
-        <div className="flex-1 bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5 rounded-xl shadow p-5 flex flex-col items-center text-center border border-black/20 dark:border-white/20">
-          <h3 className="text-lg font-medium text-black dark:text-white mb-3">
-            City Safety Index
-          </h3>
-          <div className="flex gap-10">
-            <div>
-              <p className="text-sm text-black/60 dark:text-white/60">Crime Index</p>
-              <p className="text-2xl font-semibold">
-                {citySafety.crimeIndex}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-black/60 dark:text-white/60">Safety Index</p>
-              <p className="text-2xl font-semibold">
-                {citySafety.safetyIndex}
-              </p>
-            </div>
+      <div className="grid w-full grid-cols-5 gap-2">
+        {stats.map((stat, index) => (
+          <div
+            key={stat.label}
+            style={{ animationDelay: `${index * 55}ms` }}
+            className="safety-stat-card
+              rounded-xl border border-black/10 dark:border-white/15
+              bg-white/60 dark:bg-black/40
+              px-2 py-2.5
+              flex flex-col items-center justify-center gap-0.5 text-center
+              text-black dark:text-white
+              hover:scale-[1.03] hover:border-black/20 dark:hover:border-white/25
+              hover:bg-white/85 dark:hover:bg-black/55
+              hover:shadow-sm
+              transition-all duration-300 ease-out"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-black/50 dark:text-white/50 leading-tight">
+              {stat.label}
+            </p>
+            <p className="text-base font-bold leading-none">{stat.value}</p>
+            <p className="text-[10px] text-black/45 dark:text-white/45">
+              {stat.hint}
+            </p>
           </div>
-        </div>
-
-        {/* local safety- */}
-        <div className="flex-1 bg-gradient-to-br from-black/10 via-black/5 to-transparent dark:from-white/10 dark:via-white/5 rounded-xl shadow p-5 flex flex-col items-center text-center border border-black/20 dark:border-white/20">
-          <h3 className="text-lg font-medium text-black dark:text-white mb-3">
-            Local Safety (within {localSafety.radiusKm} km)
-          </h3>
-          <div className="flex gap-10">
-            <div>
-              <p className="text-sm text-black/60 dark:text-white/60">Hospitals</p>
-              <p className="text-2xl font-semibold">
-                {localSafety.hospitals}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-black/60 dark:text-white/60">Police Stations</p>
-              <p className="text-2xl font-semibold">
-                {localSafety.policeStations}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-black/60 dark:text-white/60">Fire Stations</p>
-              <p className="text-2xl font-semibold">
-                {localSafety.fireStations}
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* summary */}
-      <div className="mt-1 text-center bg-transparent rounded-lg p-4 text-shadow-indigo-100">
-        <p className="italic">{summary}</p>
-      </div>
+      <p className="text-xs leading-relaxed text-black/60 dark:text-white/60 max-w-3xl mx-auto">
+        {summary}
+      </p>
+
+      <style>{`
+        @keyframes safetyFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .safety-stat-card {
+          animation: safetyFadeIn 0.45s ease-out both;
+        }
+      `}</style>
     </div>
   );
 };
