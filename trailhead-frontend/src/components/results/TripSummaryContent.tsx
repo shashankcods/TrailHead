@@ -7,17 +7,6 @@ const getItineraryDays = (plannerData: PlannerData) => {
   return plannerData.itinerary?.days ?? [];
 };
 
-const countActivities = (plannerData: PlannerData): number => {
-  if (plannerData.activities?.length) {
-    return plannerData.activities.length;
-  }
-  const days = getItineraryDays(plannerData);
-  return days.reduce(
-    (sum, day) => sum + (day.activities?.length ?? 0),
-    0
-  );
-};
-
 interface TripSummaryContentProps {
   plannerData: PlannerData;
   selectedCurrency: Currency;
@@ -37,9 +26,6 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
   const interests = plannerData.interests ?? [];
   const totalBudget = plannerData.budgets?.total ?? 0;
   const allocations = plannerData.budgets?.allocations ?? {};
-  const activityCount = countActivities(plannerData);
-  const budgetPerDay =
-    tripDays > 0 ? Math.round(totalBudget / tripDays) : totalBudget;
 
   const formatMoney = (amount: number) =>
     `${selectedCurrency.symbol}${amount.toLocaleString()}`;

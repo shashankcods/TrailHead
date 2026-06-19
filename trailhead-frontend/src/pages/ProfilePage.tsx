@@ -78,7 +78,6 @@ const ProfilePage: React.FC = () => {
           initialBudget="mid-range"
           initialStyle="cultural"
           initialInterests={["Food", "Museums"]}
-          initialNotifications={false}
         />
 
         <ProfileDangerZone />

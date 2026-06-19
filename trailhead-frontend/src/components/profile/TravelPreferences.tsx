@@ -5,7 +5,6 @@ interface TravelPreferencesProps {
   initialBudget: "budget" | "mid-range" | "luxury";
   initialStyle: "adventure" | "relaxation" | "cultural" | "business";
   initialInterests: string[];
-  initialNotifications: boolean;
 }
 
 const INTERESTS = [
@@ -22,16 +21,10 @@ const TravelPreferences: React.FC<TravelPreferencesProps> = ({
   initialBudget,
   initialStyle,
   initialInterests,
-  initialNotifications,
 }) => {
   const [budget, setBudget] = useState(initialBudget);
   const [style, setStyle] = useState(initialStyle);
   const [interests, setInterests] = useState(initialInterests);
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem("theme");
-    return stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  });
 
   const toggleInterest = (interest: string) => {
     if (interests.includes(interest)) {
@@ -39,13 +32,6 @@ const TravelPreferences: React.FC<TravelPreferencesProps> = ({
     } else {
       setInterests([...interests, interest]);
     }
-  };
-
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    document.documentElement.classList.toggle("dark", newMode);
-    localStorage.setItem("theme", newMode ? "dark" : "light");
   };
 
   return (
