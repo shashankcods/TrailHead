@@ -83,38 +83,46 @@ RETURN JSON IN THIS EXACT FORMAT:
 
 `;
 
-    try {
+    const modelsToTry = [
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.5-flash"
+    ];
 
-      const response =
-        await ai.models.generateContent({
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Trying model: ${model}`);
+        const response =
+          await ai.models.generateContent({
 
-          model:
-            "gemini-3.5-flash",
+            model:
+              model,
+            contents:
+              prompt
+          });
 
-          contents:
-            prompt
-        });
+        const rawText =
+          response.text;
 
-      const rawText =
-        response.text;
+        const cleaned =
+          rawText
+            .replace(/```json/g, "")
+            .replace(/```/g, "")
+            .trim();
 
-      const cleaned =
-        rawText
-          .replace(/```json/g, "")
-          .replace(/```/g, "")
-          .trim();
+        const parsed = JSON.parse(cleaned);
+        console.log(`Success with model: ${model}`);
+        return parsed;
 
-      return JSON.parse(
-        cleaned
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Structured Itinerary Error:",
-        error.message
-      );
-
-      throw error;
+      } catch (error) {
+        console.error(
+          `Structured Itinerary Error with ${model}:`,
+          error.message
+        );
+        // Continue to next model if this one fails
+      }
     }
+
+    // If all models fail
+    throw new Error("All models failed. Please try again later.");
 };

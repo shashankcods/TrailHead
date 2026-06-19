@@ -12,6 +12,7 @@ interface ResultsPageProps {
 
 interface ResultsLocationState {
   plannerData?: PlannerData;
+  savedTripId?: string;
 }
 
 const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCurrency }) => {
@@ -19,6 +20,8 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCurrency }) => {
   const navigate = useNavigate();
   const plannerData = (location.state as ResultsLocationState | null)
     ?.plannerData;
+  const savedTripId = (location.state as ResultsLocationState | null)
+    ?.savedTripId;
 
   return (
     <GradientBackground>
@@ -34,7 +37,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCurrency }) => {
                     plannerData={plannerData}
                     selectedCurrency={selectedCurrency}
                     onViewItinerary={() =>
-                      navigate("/itinerary", { state: { plannerData } })
+                      navigate("/itinerary", { state: { plannerData, savedTripId } })
                     }
                   />
                 </section>

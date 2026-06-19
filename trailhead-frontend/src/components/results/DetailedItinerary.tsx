@@ -122,9 +122,9 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           <button
             type="button"
             onClick={onSaveTrip}
-            disabled={!isAuthenticated || isSaving || isSaved}
+            disabled={!isAuthenticated || isSaving}
             className={`rounded-xl px-4 py-2.5 border text-sm font-semibold transition ${
-              isSaved
+              isSaved && !isSaving
                 ? "border-green-500 bg-green-500 text-white dark:bg-green-600 dark:border-green-600"
                 : "border-black/20 dark:border-white/25 bg-white dark:bg-black hover:scale-[1.01]"
             } ${(!isAuthenticated || isSaving) ? "opacity-60 cursor-not-allowed" : ""}`}

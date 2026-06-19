@@ -55,11 +55,11 @@ const TripsPage: React.FC = () => {
   };
 
   const handleViewResults = (trip: Trip) => {
-    navigate("/results", { state: { plannerData: trip.plannerData } });
+    navigate("/results", { state: { plannerData: trip.plannerData, savedTripId: trip._id } });
   };
 
   const handleViewItinerary = (trip: Trip) => {
-    navigate("/itinerary", { state: { plannerData: trip.plannerData } });
+    navigate("/itinerary", { state: { plannerData: trip.plannerData, savedTripId: trip._id } });
   };
 
   if (isLoading || isLoadingTrips) {

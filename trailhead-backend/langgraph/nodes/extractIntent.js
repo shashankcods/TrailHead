@@ -19,25 +19,34 @@ const ai =
 export const extractIntentNode =
   async (state) => {
 
-    try {
+    const modelsToTry = [
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.5-flash"
+    ];
 
-      const compactActivities =
-        state.activities.map((a) => ({
+    for (const model of modelsToTry) {
+      try {
 
-          id: a.id,
+        console.log(`Extract intent trying model: ${model}`);
 
-          title: a.title,
+        const compactActivities =
+          state.activities.map((a) => ({
 
-          category: a.category,
+            id: a.id,
 
-          estimatedCost:
-            a.estimatedCost,
+            title: a.title,
 
-          sourceType:
-            a.sourceType
-      }));
+            category: a.category,
 
-      const prompt = `
+            estimatedCost:
+              a.estimatedCost,
+
+            sourceType:
+              a.sourceType
+          }));
+
+        const prompt = `
 
 ${extractIntentPrompt}
 
@@ -55,83 +64,87 @@ ${state.userMessage}
 
 `;
 
-      const response =
-        await ai.models.generateContent({
+        const response =
+          await ai.models.generateContent({
 
-          model:
-            "gemini-2.5-flash",
+            model:
+              model,
 
-          contents:
-            prompt
-      });
+            contents:
+              prompt
+          });
 
-      const text =
-        response
-          .candidates?.[0]
-          ?.content?.parts?.[0]
-          ?.text || "";
+        const text =
+          response
+            .candidates?.[0]
+            ?.content?.parts?.[0]
+            ?.text || "";
 
-      console.log(
-        "RAW GEMINI:",
-        text
-      );
+        console.log(
+          "RAW GEMINI:",
+          text
+        );
 
-      const cleaned =
-        text
-          .replace(
-            /```json\s*/gi,
-            ""
-          )
-          .replace(
-            /```\s*/g,
-            ""
-          )
-          .trim();
+        const cleaned =
+          text
+            .replace(
+              /```json\s*/gi,
+              ""
+            )
+            .replace(
+              /```\s*/g,
+              ""
+            )
+            .trim();
 
-      console.log(
-        "CLEANED:",
-        cleaned
-      );
+        console.log(
+          "CLEANED:",
+          cleaned
+        );
 
-      const parsed =
-        JSON.parse(cleaned);
+        const parsed =
+          JSON.parse(cleaned);
 
-      const intent =
-        ModifyIntentSchema.parse(
-          parsed
-      );
+        const intent =
+          ModifyIntentSchema.parse(
+            parsed
+          );
+        console.log(`Extract intent success with model: ${model}`);
 
-      return {
+        return {
 
-        ...state,
+          ...state,
 
-        intent
-      };
+          intent
+        };
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(
-        "Intent Extraction Error:",
-        error.message
-      );
-
-      return {
-
-        ...state,
-
-        intent: {
-
-          action:
-            "unknown",
-
-          day: null,
-
-          targetActivityId:
-            null,
-
-          targetType:
-            null
-        }
-      };
+        console.error(
+          `Extract Intent Error with ${model}:`,
+          error.message
+        );
+        // Continue to next model if this one fails
+      }
     }
+
+    // If all models fail
+    return {
+
+      ...state,
+
+      intent: {
+
+        action:
+          "unknown",
+
+        day: null,
+
+        targetActivityId:
+          null,
+
+        targetType:
+          null
+      }
+    };
 };

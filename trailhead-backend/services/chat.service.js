@@ -169,34 +169,46 @@ ${JSON.stringify(history)}
 USER MESSAGE:
 ${message}`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        { role: "user", parts: [{ text: `${SYSTEM_PROMPT}\n\n${userPrompt}` }] },
-      ],
-      config: {
-        responseMimeType: "application/json",
-      },
-    });
+  const modelsToTry = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-2.5-flash",
+  ];
 
-    const text = response.text ?? "";
-    const parsed = parseModelJson(text);
+  for (const model of modelsToTry) {
+    try {
+      console.log(`Chat trying model: ${model}`);
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: [
+          { role: "user", parts: [{ text: `${SYSTEM_PROMPT}\n\n${userPrompt}` }] },
+        ],
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
 
-    return {
-      reply: String(parsed.reply ?? "Here is my response."),
-      action: sanitizeAction(parsed.action),
-    };
-  } catch (error) {
-    console.error("Chat service error:", error?.message ?? error);
+      const text = response.text ?? "";
+      const parsed = parseModelJson(text);
+      console.log(`Chat success with model: ${model}`);
 
-    const local = tryLocalRemove(message);
-    if (local) return local;
-
-    return {
-      reply:
-        "Something went wrong while processing your request. Please try again in a moment.",
-      action: { type: "ANSWER_ONLY" },
-    };
+      return {
+        reply: String(parsed.reply ?? "Here is my response."),
+        action: sanitizeAction(parsed.action),
+      };
+    } catch (error) {
+      console.error(`Chat error with ${model}:`, error?.message ?? error);
+      // Continue to next model if this one fails
+    }
   }
+
+  // If all models fail, try local fallback or return error
+  const local = tryLocalRemove(message);
+  if (local) return local;
+
+  return {
+    reply:
+      "Something went wrong while processing your request. Please try again in a moment.",
+    action: { type: "ANSWER_ONLY" },
+  };
 }
