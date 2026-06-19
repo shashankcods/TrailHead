@@ -9,10 +9,11 @@ import { applyItineraryAction, isMutatingAction } from "@/components/chat/itiner
 import type { ItineraryAction } from "@/types/chat";
 import type { PlannerData } from "@/types/planner";
 import { useAuth } from "@/context/AuthContext";
-import { createTrip } from "@/api/trips";
+import { createTrip, updateTrip } from "@/api/trips";
 
 interface ItineraryLocationState {
   plannerData?: PlannerData;
+  savedTripId?: string;
 }
 
 const DetailedItineraryPage: React.FC = () => {
@@ -21,6 +22,8 @@ const DetailedItineraryPage: React.FC = () => {
   const { isAuthenticated, accessToken } = useAuth();
   const initialPlannerData = (location.state as ItineraryLocationState | null)
     ?.plannerData;
+  const initialSavedTripId = (location.state as ItineraryLocationState | null)
+    ?.savedTripId;
 
   const [plannerData, setPlannerData] = useState<PlannerData | undefined>(
     initialPlannerData
@@ -28,8 +31,8 @@ const DetailedItineraryPage: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [savedTripId, setSavedTripId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(!!initialSavedTripId);
+  const [savedTripId, setSavedTripId] = useState<string | null>(initialSavedTripId ?? null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const undoSnapshotRef = useRef<PlannerData | null>(null);
 
@@ -41,7 +44,7 @@ const DetailedItineraryPage: React.FC = () => {
       undoSnapshotRef.current = prev;
       setCanUndo(true);
       setIsSaved(false);
-      setSavedTripId(null);
+      // Keep savedTripId so we know to PATCH instead of POST when saving
       return applyItineraryAction(prev, action);
     });
   }, []);
@@ -52,7 +55,7 @@ const DetailedItineraryPage: React.FC = () => {
     undoSnapshotRef.current = null;
     setCanUndo(false);
     setIsSaved(false);
-    setSavedTripId(null);
+    // Keep savedTripId
   }, []);
 
   const handleSaveTrip = useCallback(async () => {
@@ -74,7 +77,7 @@ const DetailedItineraryPage: React.FC = () => {
     }
 
     if (isSaved && savedTripId) {
-      console.log("[SaveTrip] Already saved, skipping");
+      console.log("[SaveTrip] Already saved and no changes, skipping");
       return;
     }
 
@@ -103,9 +106,21 @@ const DetailedItineraryPage: React.FC = () => {
     console.log("[SaveTrip] Request payload:", tripData);
 
     try {
-      const response = await createTrip(accessToken, tripData);
+      let response;
+      if (savedTripId) {
+        // Update existing trip
+        console.log("[SaveTrip] Updating existing trip with ID:", savedTripId);
+        response = await updateTrip(accessToken, savedTripId, {
+          plannerData: plannerData,
+          title: tripData.title,
+        });
+      } else {
+        // Create new trip
+        console.log("[SaveTrip] Creating new trip");
+        response = await createTrip(accessToken, tripData);
+        setSavedTripId(response.trip._id);
+      }
       console.log("[SaveTrip] Response:", response);
-      setSavedTripId(response.trip._id);
       setIsSaved(true);
     } catch (error) {
       console.error("[SaveTrip] Error:", error);
@@ -124,7 +139,7 @@ const DetailedItineraryPage: React.FC = () => {
             <div className="th-card p-6 md:p-8 space-y-10">
               <DetailedItinerary
                 plannerData={plannerData}
-                onBack={() => navigate("/results", { state: { plannerData } })}
+                onBack={() => navigate("/results", { state: { plannerData, savedTripId } })}
                 onOpenChat={() => setIsChatOpen(true)}
                 onSaveTrip={handleSaveTrip}
                 isSaving={isSaving}
