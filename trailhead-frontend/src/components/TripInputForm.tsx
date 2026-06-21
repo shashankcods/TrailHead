@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Calendar } from "./ui/calendar";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
 interface TripInputFormProps {
   onSubmit: (data: {
     source: string;
@@ -21,15 +19,6 @@ type ActivityType = {
   description: string;
 };
 
-type SuggestionItem = {
-  label: string;
-  city: string;
-  country: string;
-  placeId: string;
-  lat?: number;
-  lng?: number;
-};
-
 const activities: ActivityType[] = [
   { id: "beaches", title: "Beaches", description: "Coastal relaxation and water views" },
   { id: "city-sightseeing", title: "City Sightseeing", description: "Landmarks and urban highlights" },
@@ -41,9 +30,6 @@ const activities: ActivityType[] = [
   { id: "spa-wellness", title: "Spa Wellness", description: "Relaxation, wellness, and recovery" },
 ];
 
-// Cache for suggestions
-const suggestionCache = new Map<string, SuggestionItem[]>();
-
 export const TripInputForm: React.FC<TripInputFormProps> = ({
   onSubmit: _onSubmit,
   formId = "trip-input-form",
@@ -51,17 +37,15 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
   const [departDate, setDepartDate] = useState<Date | undefined>(undefined);
   const [tripDays, setTripDays] = useState<number>(3);
   const [sourceChoice, setSourceChoice] = useState("");
-  const [sourceSuggestions, setSourceSuggestions] = useState<SuggestionItem[]>([]);
+  const [sourceSuggestions, setSourceSuggestions] = useState<string[]>([]);
   const [sourceHighlight, setSourceHighlight] = useState<number>(-1);
   const [destinationChoice, setDestinationChoice] = useState("");
-  const [destinationSuggestions, setDestinationSuggestions] = useState<SuggestionItem[]>([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [destinationHighlight, setDestinationHighlight] = useState<number>(-1);
   const [travelersCount, setTravelersCount] = useState<number>(1);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
   const dateRef = useRef<HTMLDivElement>(null);
-  const sourceAbortControllerRef = useRef<AbortController | null>(null);
-  const destinationAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,39 +57,22 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const normalizeQuery = (query: string) => query.toLowerCase().trim();
-
-  const fetchLocations = async (
-    query: string,
-    abortController: AbortController
-  ): Promise<SuggestionItem[]> => {
-    if (!query || query.length < 2) return [];
-    const normalizedQuery = normalizeQuery(query);
-    if (suggestionCache.has(normalizedQuery)) {
-      return suggestionCache.get(normalizedQuery) || [];
-    }
-
-    const url = `${API_BASE}/api/maps/autocomplete?query=${encodeURIComponent(query)}`;
-    
-    try {
-      const res = await fetch(url, {
-        signal: abortController.signal,
-      });
-      const responseData = await res.json();
-      
-      // Extract the suggestions from our APIResponse format
-      const suggestions: SuggestionItem[] = responseData.data || [];
-      
-      suggestionCache.set(normalizedQuery, suggestions);
-      return suggestions;
-    } catch (error) {
-      if ((error as Error).name === "AbortError") {
-        // Ignore aborted requests
-        return [];
-      }
-      console.error("Autocomplete fetch error:", error);
-      return [];
-    }
+  const fetchLocations = async (query: string) => {
+    if (!query) return [];
+    const url = `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(
+      query
+    )}&format=json&addressdetails=1&limit=10`;
+    const res = await fetch(url, {
+      headers: { "Accept-Language": "en", "User-Agent": "TrailHead" },
+    });
+    const data = await res.json();
+    const resultsSet = new Set<string>();
+    data.forEach((item: any) => {
+      const city = item.address.city || item.address.town || item.address.village;
+      const country = item.address.country;
+      if (city && country) resultsSet.add(`${city}, ${country}`);
+    });
+    return Array.from(resultsSet);
   };
 
   const debounce = (fn: Function, delay: number) => {
@@ -118,55 +85,21 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
 
   const handleSourceChange = useCallback(
     debounce(async (value: string) => {
-      // Cancel previous request
-      if (sourceAbortControllerRef.current) {
-        sourceAbortControllerRef.current.abort();
-      }
-      const newAbortController = new AbortController();
-      sourceAbortControllerRef.current = newAbortController;
-      try {
-        const results = await fetchLocations(value, newAbortController);
-        setSourceSuggestions(results);
-      } catch (error: any) {
-        if (error.name !== "AbortError") {
-          console.error("Source search error:", error);
-        }
-      }
-    }, 300),
+      const results = await fetchLocations(value);
+      setSourceSuggestions(results);
+    }, 400),
     []
   );
 
   const handleDestinationChange = useCallback(
     debounce(async (value: string) => {
-      // Cancel previous request
-      if (destinationAbortControllerRef.current) {
-        destinationAbortControllerRef.current.abort();
-      }
-      const newAbortController = new AbortController();
-      destinationAbortControllerRef.current = newAbortController;
-      try {
-        const results = await fetchLocations(value, newAbortController);
-        setDestinationSuggestions(results);
-      } catch (error: any) {
-        if (error.name !== "AbortError") {
-          console.error("Destination search error:", error);
-        }
-      }
-    }, 300),
+      const results = await fetchLocations(value);
+      setDestinationSuggestions(results);
+    }, 400),
     []
   );
 
-  const cleanLocation = (value: string) => {
-    if (!value) return "";
-    // Handle both "City - Country" and "City, Country" formats
-    let cleaned = value;
-    // Replace hyphen format with comma format
-    if (cleaned.includes(" - ")) {
-      cleaned = cleaned.replace(" - ", ", ");
-    }
-    // Take just the city part
-    return cleaned.split(",")[0].trim();
-  };
+  const cleanLocation = (value: string) => (value ? value.split(",")[0].trim() : "");
   const formatDisplayDate = (date: Date | undefined) =>
     date
       ? date.toLocaleDateString("en-GB", {
@@ -238,8 +171,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
                   } else if (e.key === "Enter") {
                     e.preventDefault();
                     if (sourceHighlight >= 0) {
-                      // Use just the city name for the input
-                      setSourceChoice(sourceSuggestions[sourceHighlight].city);
+                      setSourceChoice(sourceSuggestions[sourceHighlight]);
                       setSourceSuggestions([]);
                       setSourceHighlight(-1);
                     }
@@ -256,8 +188,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
                     <div
                       key={idx}
                       onClick={() => {
-                        // Use just the city name for the input
-                        setSourceChoice(item.city);
+                        setSourceChoice(item);
                         setSourceSuggestions([]);
                         setSourceHighlight(-1);
                       }}
@@ -267,7 +198,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
                           : ""
                       }`}
                     >
-                      {item.label}
+                      {item}
                     </div>
                   ))}
                 </div>
@@ -301,8 +232,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
                   } else if (e.key === "Enter") {
                     e.preventDefault();
                     if (destinationHighlight >= 0) {
-                      // Use just the city name for the input
-                      setDestinationChoice(destinationSuggestions[destinationHighlight].city);
+                      setDestinationChoice(destinationSuggestions[destinationHighlight]);
                       setDestinationSuggestions([]);
                       setDestinationHighlight(-1);
                     }
@@ -319,8 +249,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
                     <div
                       key={idx}
                       onClick={() => {
-                        // Use just the city name for the input
-                        setDestinationChoice(item.city);
+                        setDestinationChoice(item);
                         setDestinationSuggestions([]);
                         setDestinationHighlight(-1);
                       }}
@@ -330,7 +259,7 @@ export const TripInputForm: React.FC<TripInputFormProps> = ({
                           : ""
                       }`}
                     >
-                      {item.label}
+                      {item}
                     </div>
                   ))}
                 </div>
