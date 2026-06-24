@@ -18,11 +18,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const passwordRules = [
-    { regex: /.{8,}/, message: "Atleast 8 characters" },
-    { regex: /[A-Z]/, message: "Atleast 1 uppercase letter" },
-    { regex: /[a-z]/, message: "Atleast 1 lowercase letter" },
-    { regex: /[0-9]/, message: "Atleast 1 number" },
-    { regex: /[^A-Za-z0-9]/, message: "Atleast 1 special character" },
+    { regex: /.{8,}/, message: "At least 8 characters" },
+    { regex: /[A-Z]/, message: "At least 1 uppercase letter" },
+    { regex: /[a-z]/, message: "At least 1 lowercase letter" },
+    { regex: /[0-9]/, message: "At least 1 number" },
+    { regex: /[^A-Za-z0-9]/, message: "At least 1 special character" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,7 +119,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
               className={
                 rule.regex.test(password)
                   ? "text-black dark:text-white font-semibold"
-                  : "text-black/70 dark:text-white/70"
+                  : "text-red-600 dark:text-red-400"
               }
             >
               {rule.message}
@@ -129,7 +129,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       )}
 
       {error && (
-        <p className="text-black dark:text-white font-semibold">{error}</p>
+        <p className="text-red-600 dark:text-red-400 font-semibold">{error}</p>
       )}
 
       <button
