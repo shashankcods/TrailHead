@@ -47,12 +47,14 @@ interface FlightCardProps {
   flight: FlightOption;
   index: number;
   defaultCurrency?: string;
+  globalBookingLink?: string;
 }
 
 const FlightCard: React.FC<FlightCardProps> = ({
   flight,
   index,
   defaultCurrency,
+  globalBookingLink,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const record = flight as UnknownRecord & FlightOption;
@@ -84,7 +86,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
     (pickNumber(record, ["stops", "stopCount"]) != null
       ? String(pickNumber(record, ["stops", "stopCount"]))
       : undefined);
-  const bookingLink = pickField(record, ["bookingLink", "link", "url"]);
+  const bookingLink = pickField(record, ["bookingLink", "link", "url"]) ?? globalBookingLink;
   const segments = formatSegments(record);
 
   return (

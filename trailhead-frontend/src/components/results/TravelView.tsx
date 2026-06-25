@@ -157,6 +157,7 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
                 flight={flight}
                 index={index}
                 defaultCurrency={currency}
+                globalBookingLink={bookingLink}
               />
             ))}
           </div>

@@ -226,6 +226,15 @@ export const getFlights = async (
       return buildFlightsMetadata({ ...metadataBase, flights: [] });
     }
 
+    const topLevelBookingLink = buildFlightSearchUrl({
+      departureAirport: departure_id,
+      arrivalAirport: arrival_id,
+      outboundDate: start_date,
+      returnDate: end_date,
+      adults,
+      currency,
+    });
+
     flights = flights.map((f) => {
       const firstLeg = f.flights?.[0];
       const lastLeg = f.flights?.[f.flights.length - 1];
@@ -246,6 +255,7 @@ export const getFlights = async (
         travelClass: firstLeg?.travel_class || null,
         carbonEmissions: f.carbon_emissions?.this_flight || null,
         bookingToken: f.booking_token || null,
+        bookingLink: topLevelBookingLink,
         price: totalPrice,
         totalEstimatedPrice: totalPrice ? totalPrice * adults : null,
         flights: f.flights || [],
