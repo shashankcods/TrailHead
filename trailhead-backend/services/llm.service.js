@@ -1,5 +1,6 @@
 import { GoogleGenAI }
 from "@google/genai";
+import { buildFallbackItinerary } from "../utils/buildFallbackItinerary.js";
 
 const ai =
   new GoogleGenAI({
@@ -83,11 +84,18 @@ RETURN JSON IN THIS EXACT FORMAT:
 
 `;
 
-    const modelsToTry = [
+    const defaultModels = [
       "gemini-2.0-flash",
       "gemini-1.5-flash",
-      "gemini-2.5-flash"
+      "gemini-2.5-flash",
+      "gemini-3.5-flash"
     ];
+
+    const envModels = process.env.GEMINI_MODELS 
+      ? process.env.GEMINI_MODELS.split(',').map(m => m.trim()).filter(Boolean)
+      : [];
+
+    const modelsToTry = envModels.length > 0 ? envModels : defaultModels;
 
     for (const model of modelsToTry) {
       try {
@@ -115,14 +123,28 @@ RETURN JSON IN THIS EXACT FORMAT:
         return parsed;
 
       } catch (error) {
-        console.error(
-          `Structured Itinerary Error with ${model}:`,
-          error.message
-        );
-        // Continue to next model if this one fails
+        // Check error code/status
+        const statusCode = error.status || error.response?.status;
+        const is404 = statusCode === 404 || error.message.toLowerCase().includes("not found");
+        const is429 = statusCode === 429 || error.message.toLowerCase().includes("quota");
+        const is503 = statusCode === 503 || error.message.toLowerCase().includes("unavailable");
+
+        if (is404) {
+          console.error(`Model ${model} not found (404), skipping...`);
+        } else if (is429 || is503) {
+          console.error(`Model ${model} returned ${statusCode}: ${error.message}, trying next model...`);
+        } else {
+          console.error(`Error with model ${model}:`, error.message);
+        }
+        // Continue to next model for all errors
       }
     }
 
-    // If all models fail
-    throw new Error("All models failed. Please try again later.");
+    // If all models fail, build fallback itinerary
+    console.warn("All Gemini models failed, using fallback itinerary.");
+    return buildFallbackItinerary({
+      trip_days: trip.trip_days,
+      destination: trip.destination,
+      activities: compactActivities,
+    });
 };

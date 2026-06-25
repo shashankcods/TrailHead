@@ -89,8 +89,13 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = ({
     setAllocations(next);
   };
 
-  const formatMoney = (value: number) =>
-    `${selectedCurrency.symbol}${Math.round(value).toLocaleString()}`;
+  const formatMoney = (value: number) => {
+    // For AED/KWD, use code first to avoid RTL issues; otherwise symbol first
+    if (["AED", "KWD"].includes(selectedCurrency.code)) {
+      return `${selectedCurrency.code} ${Math.round(value).toLocaleString()}`
+    }
+    return `${selectedCurrency.symbol}${Math.round(value).toLocaleString()}`
+  };
 
   const resetBalanced = () =>
     setAllocations({
