@@ -61,6 +61,10 @@ const statItem = (label: string, value: string) => (
   </div>
 );
 
+const formatBudgetNumber = (value: number) => {
+  return Math.round(value).toLocaleString();
+};
+
 const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
   const trip = plannerData.trip ?? {};
   const flights = readFlightsMeta(plannerData);
@@ -73,11 +77,11 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
 
   const budgetLabel =
     budgetMin != null && budgetMax != null
-      ? `${currency} ${budgetMin}–${budgetMax}`
+      ? `${currency} ${formatBudgetNumber(budgetMin)}–${formatBudgetNumber(budgetMax)}`
       : budgetMin != null
-        ? `${currency} ${budgetMin}+`
+        ? `${currency} ${formatBudgetNumber(budgetMin)}+`
         : budgetMax != null
-          ? `Up to ${currency} ${budgetMax}`
+          ? `Up to ${currency} ${formatBudgetNumber(budgetMax)}`
           : "Not available";
 
   const routeLabel =

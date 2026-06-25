@@ -186,21 +186,35 @@ export const getFlights = async (
   };
 
   try {
+    const timeoutMs = parseInt(process.env.FLIGHTS_API_TIMEOUT_MS || "45000", 10);
+    const params = {
+      engine: "google_flights",
+      departure_id,
+      arrival_id,
+      outbound_date: start_date,
+      return_date: end_date,
+      adults,
+      currency,
+      hl: "en",
+      gl: "us",
+    };
+
+    console.log(`[Flights] Using provider: serpapi`);
+    console.log(`[Flights] Request params:`, { ...params, api_key: "***REDACTED***" });
+    console.log(`[Flights] Timeout set to: ${timeoutMs}ms`);
+
     const response = await axios.get("https://serpapi.com/search.json", {
       params: {
-        engine: "google_flights",
-        departure_id,
-        arrival_id,
-        outbound_date: start_date,
-        return_date: end_date,
-        adults,
-        currency,
-        hl: "en",
-        gl: "us",
+        ...params,
         api_key: process.env.SERPAPI_KEY,
       },
-      timeout: 30000,
+      timeout: timeoutMs,
     });
+
+    console.log(`[Flights] Response status: ${response.status}`);
+    console.log(`[Flights] Response keys:`, Object.keys(response.data));
+    console.log(`[Flights] best_flights count: ${response.data.best_flights?.length ?? 0}`);
+    console.log(`[Flights] other_flights count: ${response.data.other_flights?.length ?? 0}`);
 
     let flights = [
       ...(response.data.best_flights || []),
@@ -208,9 +222,7 @@ export const getFlights = async (
     ];
 
     if (!flights.length) {
-      console.warn(
-        `No live flights returned for ${source} → ${destination}; using metadata fallback.`
-      );
+      console.warn(`[Flights] No live flights returned; using metadata fallback.`);
       return buildFlightsMetadata({ ...metadataBase, flights: [] });
     }
 
@@ -240,31 +252,21 @@ export const getFlights = async (
       };
     });
 
-    flights = flights.filter((f) => {
-      if (!f.price) return false;
-      return f.price >= min_budget && f.price <= max_budget;
-    });
+    console.log(`[Flights] Mapped flights count: ${flights.length}`);
 
+    // Removed strict budget filtering to show more results
     flights = flights.slice(0, limit);
 
     if (!flights.length) {
-      console.warn(
-        `No flights within budget for ${source} → ${destination}; using metadata fallback.`
-      );
+      console.warn(`[Flights] No flights after filtering/slicing; using metadata fallback.`);
       return buildFlightsMetadata({ ...metadataBase, flights: [] });
     }
 
+    console.log(`[Flights] Returning ${flights.length} flights`);
     return buildFlightsMetadata({ ...metadataBase, flights });
   } catch (error) {
-    console.error(
-      "Flights Service Error:",
-      error.response?.data || error.message
-    );
-
-    console.warn(
-      `Flights API failed for ${source} → ${destination}; using metadata fallback.`
-    );
-
+    console.error(`[Flights] Service Error:`, error.response?.data || error.message);
+    console.warn(`[Flights] API failed; using metadata fallback.`);
     return buildFlightsMetadata({ ...metadataBase, flights: [] });
   }
 };

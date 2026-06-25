@@ -355,12 +355,24 @@ export const generateTripPlan = async (
     const totalBudget =
       budget.total ?? 0;
 
+    const totalBudgetUSD =
+      budget.totalUSD ?? totalBudget;
+
+    const selectedCurrency =
+      budget.currency ?? "USD";
+
     const allocations = {
 
       travel:
         totalBudget
         *
         ((budget.travel ?? 25) / 100),
+
+      travelUSD:
+        budget.travelUSD ??
+        (totalBudgetUSD
+        *
+        ((budget.travel ?? 25) / 100)),
 
       accommodation:
         totalBudget
@@ -433,13 +445,14 @@ export const generateTripPlan = async (
 
                 end_date,
 
-                allocations.travel * 0.5,
+                allocations.travelUSD * 0.5,
 
-                allocations.travel,
+                allocations.travelUSD,
 
                 adults,
 
-                retrievalConfig.flights
+                retrievalConfig.flights,
+                selectedCurrency
               )
             )
         ),
@@ -598,6 +611,7 @@ export const generateTripPlan = async (
           limit: retrievalConfig.flights,
           min_budget: allocations.travel * 0.5,
           max_budget: allocations.travel,
+          currency: selectedCurrency,
         });
       } catch (fallbackError) {
         console.warn(
@@ -905,7 +919,9 @@ export const generateTripPlan = async (
 
         total:
           totalBudget,
-
+        totalUSD: totalBudgetUSD,
+        currency: selectedCurrency,
+        exchangeRate: budget.exchangeRate,
         allocations,
       },
 

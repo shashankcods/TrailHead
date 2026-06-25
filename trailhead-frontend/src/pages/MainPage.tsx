@@ -53,12 +53,10 @@ const MainPage: React.FC<MainPageProps> = ({
   setSelectedCurrency,
 }) => {
   const navigate = useNavigate()
-  const BASE_MIN_USD = 1000
-  const BASE_MAX_USD = 100000
 
-  const [budget, setBudget] = useState(BASE_MIN_USD)
-  const [minBudget, setMinBudget] = useState(BASE_MIN_USD)
-  const [maxBudget, setMaxBudget] = useState(BASE_MAX_USD)
+  const [budget, setBudget] = useState(selectedCurrency.defaultBudget)
+  const [minBudget, setMinBudget] = useState(selectedCurrency.sliderMin)
+  const [maxBudget, setMaxBudget] = useState(selectedCurrency.sliderMax)
   const [exchangeRate, setExchangeRate] = useState(1)
   const [loading, setLoading] = useState(false)
   const [budgetAllocation, setBudgetAllocation] = useState<BudgetAllocation>({
@@ -72,27 +70,23 @@ const MainPage: React.FC<MainPageProps> = ({
     const fetchRate = async () => {
       if (selectedCurrency.code === "USD") {
         setExchangeRate(1)
-        setMinBudget(BASE_MIN_USD)
-        setMaxBudget(BASE_MAX_USD)
-        return
-      }
-
-      try {
-        const res = await fetch(
-          `https://hexarate.paikama.co/api/rates/latest/USD?target=${selectedCurrency.code}`
-        )
-        const data = await res.json()
-        if (data?.data?.mid) {
-          const rate = data.data.mid
-          setExchangeRate(rate)
-          const newMin = Math.round(BASE_MIN_USD * rate)
-          const newMax = Math.round(BASE_MAX_USD * rate)
-          setMinBudget(newMin)
-          setMaxBudget(newMax)
+      } else {
+        try {
+          const res = await fetch(
+            `https://hexarate.paikama.co/api/rates/latest/USD?target=${selectedCurrency.code}`
+          )
+          const data = await res.json()
+          if (data?.data?.mid) {
+            setExchangeRate(data.data.mid)
+          }
+        } catch (error) {
+          console.error("Error fetching exchange rate:", error)
         }
-      } catch (error) {
-        console.error("Error fetching exchange rate:", error)
       }
+      // Update slider config and reset budget to default
+      setMinBudget(selectedCurrency.sliderMin)
+      setMaxBudget(selectedCurrency.sliderMax)
+      setBudget(selectedCurrency.defaultBudget)
     }
 
     fetchRate()
@@ -108,6 +102,13 @@ const MainPage: React.FC<MainPageProps> = ({
   }) => {
     const trip_days = calculateTripDays(data.startDate, data.endDate)
 
+    // Calculate USD values from selected currency
+    const totalUSD = budget / exchangeRate
+    const travelUSD = totalUSD * (budgetAllocation.travel / 100)
+    const accommodationUSD = totalUSD * (budgetAllocation.accommodation / 100)
+    const foodUSD = totalUSD * (budgetAllocation.food / 100)
+    const activitiesUSD = totalUSD * (budgetAllocation.activities / 100)
+
     const payload = {
       source: data.source,
       destination: data.destination,
@@ -121,6 +122,13 @@ const MainPage: React.FC<MainPageProps> = ({
         accommodation: budgetAllocation.accommodation,
         food: budgetAllocation.food,
         activities: budgetAllocation.activities,
+        currency: selectedCurrency.code,
+        exchangeRate,
+        totalUSD,
+        travelUSD,
+        accommodationUSD,
+        foodUSD,
+        activitiesUSD,
       },
     }
 

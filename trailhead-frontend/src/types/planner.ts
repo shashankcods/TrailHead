@@ -9,8 +9,12 @@ export interface PlannerTrip {
 
 export interface PlannerBudgets {
   total?: number;
+  totalUSD?: number;
+  currency?: string;
+  exchangeRate?: number;
   allocations?: {
     travel?: number;
+    travelUSD?: number;
     accommodation?: number;
     food?: number;
     activities?: number;

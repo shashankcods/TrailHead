@@ -6,14 +6,11 @@ import ResultsPage from "./pages/ResultsPage";
 import DetailedItineraryPage from "./pages/DetailedItineraryPage";
 import ProfilePage from "./pages/ProfilePage";
 import TripsPage from "./pages/TripsPage";
-import type { Currency } from "./components/Navbar";
+import { currencies, type Currency } from "./components/Navbar";
 import OAuthSuccess from "./pages/OAuthSuccess";
 
 const App: React.FC = () => {
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>({
-    code: "INR",
-    symbol: "₹",
-  });
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
 
   return (
     <Router>

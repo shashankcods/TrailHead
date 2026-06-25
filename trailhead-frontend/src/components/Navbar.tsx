@@ -5,14 +5,18 @@ import { useAuth } from "../context/AuthContext";
 export type Currency = {
   code: string;
   symbol: string;
+  sliderMin: number;
+  sliderMax: number;
+  sliderStep: number;
+  defaultBudget: number;
 };
 
 export const currencies: Currency[] = [
-  { code: "INR", symbol: "₹" },
-  { code: "USD", symbol: "$" },
-  { code: "EUR", symbol: "€" },
-  { code: "AED", symbol: "د.إ" },
-  { code: "KWD", symbol: "د.ك" },
+  { code: "INR", symbol: "₹", sliderMin: 25000, sliderMax: 500000, sliderStep: 5000, defaultBudget: 100000 },
+  { code: "USD", symbol: "$", sliderMin: 500, sliderMax: 10000, sliderStep: 100, defaultBudget: 1000 },
+  { code: "EUR", symbol: "€", sliderMin: 500, sliderMax: 10000, sliderStep: 100, defaultBudget: 1000 },
+  { code: "AED", symbol: "د.إ", sliderMin: 2000, sliderMax: 40000, sliderStep: 500, defaultBudget: 5000 },
+  { code: "KWD", symbol: "د.ك", sliderMin: 150, sliderMax: 3000, sliderStep: 50, defaultBudget: 300 },
 ];
 
 interface NavbarProps {
