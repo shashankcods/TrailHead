@@ -1,14 +1,7 @@
-import { getFlights }
-from "../services/flights.service.js";
-
-import APIError
-from "../utils/APIError.js";
-
-import APIResponse
-from "../utils/APIResponse.js";
-
-import asyncHandler
-from "../utils/asyncHandler.js";
+import { getFlights } from "../services/flights.service.js";
+import APIError from "../utils/APIError.js";
+import APIResponse from "../utils/APIResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 
 // =========================
