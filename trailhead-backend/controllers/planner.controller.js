@@ -21,19 +21,12 @@ export const generatePlanner =
   asyncHandler(async (req, res) => {
 
     const {
-
       source,
-
       destination,
-
       start_date,
-
       trip_days,
-
       adults,
-
       interests,
-
       budget,
     } = req.body;
 
@@ -61,19 +54,12 @@ export const generatePlanner =
 
     const data =
       await generateTripPlan(
-
         source,
-
         destination,
-
         start_date,
-
         Number(trip_days),
-
         Number(adults),
-
         parsedInterests,
-
         parsedBudget
       );
 

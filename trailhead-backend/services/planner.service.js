@@ -284,19 +284,12 @@ const getRetrievalConfig = (
 // =========================
 
 export const generateTripPlan = async (
-
   source,
-
   destination,
-
   start_date,
-
   trip_days,
-
   adults = 1,
-
   interests = [],
-
   budget = {}
 ) => {
 
@@ -429,30 +422,22 @@ export const generateTripPlan = async (
       await Promise.allSettled([
 
         timedServiceCall(
-
           "Flights",
-
           () =>
             withTimeout(
-
               getFlights(
-
                 source,
-
                 destination,
-
                 start_date,
-
                 end_date,
-
                 allocations.travelUSD * 0.5,
-
                 allocations.travelUSD,
-
                 adults,
-
                 retrievalConfig.flights,
-                selectedCurrency
+                selectedCurrency,
+                "roundTrip",
+                allocations.travel * 0.5,
+                allocations.travel
               )
             )
         ),
@@ -897,19 +882,12 @@ export const generateTripPlan = async (
         );
 
     const plannerData = {
-
       trip: {
-
         source,
-
         destination,
-
         start_date,
-
         end_date,
-
         trip_days,
-
         adults,
       },
 
