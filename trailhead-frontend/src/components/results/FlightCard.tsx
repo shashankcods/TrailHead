@@ -59,6 +59,8 @@ const FlightCard: React.FC<FlightCardProps> = ({
   const [expanded, setExpanded] = useState(false);
   const record = flight as UnknownRecord & FlightOption;
 
+  console.log(`[FlightCard ${index}] Flight object:`, record);
+
   const airline = pickField(record, ["airline", "carrier", "airlineName"]);
   const flightNumber = pickField(record, ["flightNumber"]);
   const price =
@@ -86,7 +88,10 @@ const FlightCard: React.FC<FlightCardProps> = ({
     (pickNumber(record, ["stops", "stopCount"]) != null
       ? String(pickNumber(record, ["stops", "stopCount"]))
       : undefined);
-  const bookingLink = pickField(record, ["bookingLink", "link", "url"]) ?? globalBookingLink;
+  const bookingLink = pickField(record, [
+    "bookingLink", "link", "url", "booking_link", "serpapi_link", "google_flights_url"
+  ]) ?? globalBookingLink;
+  console.log(`[FlightCard ${index}] bookingLink chosen:`, bookingLink);
   const segments = formatSegments(record);
 
   return (
