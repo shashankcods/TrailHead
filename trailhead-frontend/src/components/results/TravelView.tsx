@@ -14,29 +14,15 @@ const readFlightsMeta = (plannerData: PlannerData) => {
 
   return {
     route: raw.route as string | undefined,
-    departureAirport:
-      (raw.departureAirport as string | undefined) ??
-      (raw.departure_airport as string | undefined),
-    arrivalAirport:
-      (raw.arrivalAirport as string | undefined) ??
-      (raw.arrival_airport as string | undefined),
-    outboundDate:
-      (raw.outboundDate as string | undefined) ??
-      (raw.outbound_date as string | undefined) ??
-      trip.start_date,
-    returnDate:
-      (raw.returnDate as string | undefined) ??
-      (raw.return_date as string | undefined) ??
-      trip.end_date,
+    departureAirport: (raw.departureAirport as string | undefined) ?? (raw.departure_airport as string | undefined),
+    arrivalAirport: (raw.arrivalAirport as string | undefined) ?? (raw.arrival_airport as string | undefined),
+    outboundDate: (raw.outboundDate as string | undefined) ?? (raw.outbound_date as string | undefined) ?? trip.start_date,
+    returnDate: (raw.returnDate as string | undefined) ?? (raw.return_date as string | undefined) ?? trip.end_date,
     adults: raw.adults ?? trip.adults,
     currency: (raw.currency as string | undefined) ?? "USD",
-    bookingLink:
-      (raw.bookingLink as string | undefined) ??
-      (raw.booking_link as string | undefined),
+    bookingLink: (raw.bookingLink as string | undefined) ?? (raw.booking_link as string | undefined),
     budgetRange: raw.budgetRange,
-    totalResults:
-      raw.totalResults ??
-      (raw.total_results as number | undefined),
+    totalResults: raw.totalResults ?? (raw.total_results as number | undefined),
     flights: raw.flights ?? [],
   };
 };
@@ -54,9 +40,7 @@ const formatDate = (value?: string) => {
 
 const statItem = (label: string, value: string) => (
   <div className="rounded-lg border border-black/10 dark:border-white/15 px-3 py-2.5 bg-white/70 dark:bg-black/35">
-    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">
-      {label}
-    </p>
+    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">{label}</p>
     <p className="font-bold mt-0.5 text-sm">{value}</p>
   </div>
 );
@@ -86,9 +70,7 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
 
   const routeLabel =
     flights.route ??
-    (trip.source && trip.destination
-      ? `${trip.source} ↔ ${trip.destination}`
-      : trip.source || trip.destination || "Not available");
+    (trip.source && trip.destination ? `${trip.source} ↔ ${trip.destination}` : trip.source || trip.destination || "Not available");
 
   const datesLabel = (() => {
     const outbound = formatDate(flights.outboundDate);
