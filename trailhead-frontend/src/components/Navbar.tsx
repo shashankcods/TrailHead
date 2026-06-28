@@ -23,9 +23,10 @@ interface NavbarProps {
   showCurrencyToggle?: boolean;
   selectedCurrency?: Currency;
   setSelectedCurrency?: React.Dispatch<React.SetStateAction<Currency>>;
+  showPlanAndResultsButtons?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = () => {
+const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -92,32 +93,34 @@ const Navbar: React.FC<NavbarProps> = () => {
       </Link>
 
       <div className="flex items-center gap-3">
-        <div className="hidden md:flex items-center gap-2 mr-2">
-          <NavLink
-            to="/main"
-            className={({ isActive }) =>
-              `px-3 py-2 rounded-lg border text-[0.92rem] font-semibold tracking-tight transition-colors ${
-                isActive
-                  ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
-                  : "bg-white dark:bg-black text-black dark:text-white border-black/25 dark:border-white/30 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-              }`
-            }
-          >
-            Plan Your Trip
-          </NavLink>
-          <NavLink
-            to="/results"
-            className={({ isActive }) =>
-              `px-3 py-2 rounded-lg border text-[0.92rem] font-semibold tracking-tight transition-colors ${
-                isActive
-                  ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
-                  : "bg-white dark:bg-black text-black dark:text-white border-black/25 dark:border-white/30 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-              }`
-            }
-          >
-            Results
-          </NavLink>
-        </div>
+        {showPlanAndResultsButtons && (
+          <div className="hidden md:flex items-center gap-2 mr-2">
+            <NavLink
+              to="/main"
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-lg border text-[0.92rem] font-semibold tracking-tight transition-colors ${
+                  isActive
+                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
+                    : "bg-white dark:bg-black text-black dark:text-white border-black/25 dark:border-white/30 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+                }`
+              }
+            >
+              Plan Your Trip
+            </NavLink>
+            <NavLink
+              to="/results"
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-lg border text-[0.92rem] font-semibold tracking-tight transition-colors ${
+                  isActive
+                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
+                    : "bg-white dark:bg-black text-black dark:text-white border-black/25 dark:border-white/30 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+                }`
+              }
+            >
+              Results
+            </NavLink>
+          </div>
+        )}
 
         {isAuthenticated && (
           <div className="relative" ref={dropdownRef}>

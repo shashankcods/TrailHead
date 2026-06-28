@@ -47,6 +47,9 @@ const HotelsView: React.FC<HotelsViewProps> = ({ plannerData }) => {
     return hotelsRecord.hotels.map(asRecord).filter((item): item is UnknownRecord => Boolean(item));
   })();
   const hasResults = hotelsArray.length > 0;
+  if (hotelsArray.length > 0) {
+    console.log("sample hotel", hotelsArray[0]);
+  }
 
   const destination = (() => {
     const d = hotelsRecord?.destination;
@@ -159,6 +162,7 @@ const HotelsView: React.FC<HotelsViewProps> = ({ plannerData }) => {
                 hotel={hotel}
                 index={index}
                 defaultCurrency={defaultCurrency}
+                destination={destination}
               />
             ))}
           </div>

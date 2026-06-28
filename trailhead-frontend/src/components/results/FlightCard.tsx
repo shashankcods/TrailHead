@@ -57,11 +57,13 @@ const FlightCard: React.FC<FlightCardProps> = ({
   globalBookingLink,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const record = flight as UnknownRecord & FlightOption;
 
   console.log(`[FlightCard ${index}] Flight object:`, record);
 
   const airline = pickField(record, ["airline", "carrier", "airlineName"]);
+  const airlineLogo = pickField(record, ["airlineLogo", "airline_logo", "logo", "carrierLogo"]);
   const flightNumber = pickField(record, ["flightNumber"]);
   const price =
     pickField(record, ["price", "totalPrice", "amount"]) ??
@@ -97,18 +99,30 @@ const FlightCard: React.FC<FlightCardProps> = ({
   return (
     <article className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/85 dark:bg-black/35 shadow-sm p-4 md:p-5 space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">
-            Flight {index + 1}
-          </p>
-          <h4 className="text-lg font-bold mt-0.5">
-            {airline ?? "Airline not provided"}
-          </h4>
-          {flightNumber && (
-            <p className="text-sm text-black/60 dark:text-white/60 mt-0.5">
-              {flightNumber}
-            </p>
+        <div className="flex items-start gap-3">
+          {airlineLogo && !logoError && (
+            <div className="rounded-lg border border-black/10 dark:border-white/15 w-10 h-10 flex items-center justify-center bg-white/70 dark:bg-white/5 overflow-hidden">
+              <img
+                src={airlineLogo}
+                alt={airline ?? "Airline logo"}
+                className="w-auto h-auto max-w-full max-h-full object-contain"
+                onError={() => setLogoError(true)}
+              />
+            </div>
           )}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">
+              Flight {index + 1}
+            </p>
+            <h4 className="text-lg font-bold mt-0.5">
+              {airline ?? "Airline not provided"}
+            </h4>
+            {flightNumber && (
+              <p className="text-sm text-black/60 dark:text-white/60 mt-0.5">
+                {flightNumber}
+              </p>
+            )}
+          </div>
         </div>
         {price && (
           <span className="rounded-lg border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm font-bold bg-black/[0.03] dark:bg-white/[0.06]">

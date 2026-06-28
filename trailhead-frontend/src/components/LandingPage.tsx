@@ -26,7 +26,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ selectedCurrency, setSelected
 
   return (
     <GradientBackground>
-      <Navbar selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} />
+      <Navbar selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} showPlanAndResultsButtons={false} />
       <div className="flex flex-col items-center justify-center flex-1 text-center px-4">
         <h2 className="text-black dark:text-white text-4xl sm:text-5xl md:text-6xl font-extrabold font-family-ubuntu">
           A hassle-free way to plan your trips

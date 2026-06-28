@@ -1,4 +1,19 @@
 import React from "react";
+import {
+  Wifi,
+  Car,
+  Coffee,
+  Waves,
+  Snowflake,
+  Dumbbell,
+  Sparkles,
+  Utensils,
+  GlassWater,
+  Bell,
+  Check,
+  MapPin,
+  Heart
+} from "lucide-react";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -45,9 +60,27 @@ interface HotelCardProps {
   hotel: UnknownRecord;
   index: number;
   defaultCurrency?: string;
+  destination?: string;
 }
 
-const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency }) => {
+const getAmenityIcon = (amenityName: string) => {
+  const lower = amenityName.toLowerCase();
+  if (lower.includes("wi-fi") || lower.includes("wifi")) return <Wifi className="w-3.5 h-3.5" />;
+  if (lower.includes("parking")) return <Car className="w-3.5 h-3.5" />;
+  if (lower.includes("breakfast")) return <Coffee className="w-3.5 h-3.5" />;
+  if (lower.includes("pool")) return <Waves className="w-3.5 h-3.5" />;
+  if (lower.includes("air conditioning") || lower.includes("ac")) return <Snowflake className="w-3.5 h-3.5" />;
+  if (lower.includes("fitness") || lower.includes("gym")) return <Dumbbell className="w-3.5 h-3.5" />;
+  if (lower.includes("spa")) return <Sparkles className="w-3.5 h-3.5" />;
+  if (lower.includes("restaurant")) return <Utensils className="w-3.5 h-3.5" />;
+  if (lower.includes("bar")) return <GlassWater className="w-3.5 h-3.5" />;
+  if (lower.includes("shuttle")) return <Car className="w-3.5 h-3.5" />;
+  if (lower.includes("pet")) return <Heart className="w-3.5 h-3.5" />;
+  if (lower.includes("room service")) return <Bell className="w-3.5 h-3.5" />;
+  return <Check className="w-3.5 h-3.5" />;
+};
+
+const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency, destination }) => {
   const record = hotel;
 
   const hotelName = pickField(record, ["name", "title"]);
@@ -60,10 +93,12 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency }) 
   const type = pickField(record, ["type", "propertyType", "property_type"]);
   const checkInTime = pickField(record, ["check_in_time", "checkInTime"]);
   const checkOutTime = pickField(record, ["check_out_time", "checkOutTime"]);
-  const amenities = asArray(record["amenities"]).slice(0, 6);
+  const allAmenities = asArray(record["amenities"]);
+  const visibleAmenities = allAmenities.slice(0, 6);
   const nearbyPlaces = asArray(record["nearby_places"]).slice(0, 3);
   const address = pickField(record, ["address", "location", "vicinity"]);
   const bookingLink = pickField(record, ["link", "url", "booking_link", "bookingLink", "website"]);
+  const gpsCoordinates = asRecord(record["gps_coordinates"]);
   
   // Get thumbnail/image
   let thumbnail: string | undefined;
@@ -81,6 +116,20 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency }) 
   if (!thumbnail) {
     thumbnail = asString(record["image"]) ?? asString(record["photo"]);
   }
+
+  // Build Google Maps link
+  const getGoogleMapsLink = () => {
+    if (gpsCoordinates) {
+      const lat = gpsCoordinates["latitude"];
+      const lng = gpsCoordinates["longitude"];
+      if (typeof lat === "number" && typeof lng === "number") {
+        return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      }
+    }
+    const query = encodeURIComponent(`${hotelName || "Hotel"} ${destination || ""}`);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  };
+  const mapsLink = getGoogleMapsLink();
 
   return (
     <article className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/85 dark:bg-black/35 shadow-sm p-4 md:p-5 space-y-4">
@@ -153,20 +202,29 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency }) 
             </p>
           )}
         </div>
-        {amenities.length > 0 && (
+        {visibleAmenities.length > 0 && (
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">
               Amenities
             </p>
             <div className="flex flex-wrap gap-2">
-              {amenities.map((amenity, aIdx) => {
+              {visibleAmenities.map((amenity, aIdx) => {
                 const amenityName = asString(amenity["name"]) ?? asString(amenity) ?? "Amenity";
                 return (
-                  <span key={aIdx} className="rounded-full border border-black/15 dark:border-white/20 px-2 py-0.5 text-xs">
+                  <span
+                    key={aIdx}
+                    className="flex items-center gap-1.5 rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-xs bg-white/50 dark:bg-white/5"
+                  >
+                    {getAmenityIcon(amenityName)}
                     {amenityName}
                   </span>
                 );
               })}
+              {allAmenities.length > 6 && (
+                <span className="flex items-center gap-1.5 rounded-full border border-black/15 dark:border-white/20 px-3 py-1.5 text-xs bg-black/5 dark:bg-white/5 font-semibold">
+                  +{allAmenities.length - 6} more
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -212,6 +270,15 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency }) 
             View / Book
           </button>
         )}
+        <a
+          href={mapsLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold border border-black/20 dark:border-white/25 bg-white dark:bg-black hover:bg-black/5 dark:hover:bg-white/10 transition"
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          View on Maps
+        </a>
       </div>
     </article>
   );

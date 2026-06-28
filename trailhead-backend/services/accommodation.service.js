@@ -126,6 +126,14 @@ export const getHotelsFromBooking = async (
 
     console.log("[Hotels] Raw hotels count before filtering:", hotels.length);
 
+    // Temporary log: raw first hotel
+    if (hotels.length > 0) {
+      console.log("[Hotels] Raw first hotel name:", hotels[0].name);
+      console.log("[Hotels] Raw first hotel images:", hotels[0].images);
+      console.log("[Hotels] Raw first hotel thumbnail:", hotels[0].thumbnail);
+      console.log("[Hotels] Raw first hotel image:", hotels[0].image);
+    }
+
     if (hotels.length > 0) {
       const samplePrice = hotels[0].rate_per_night?.lowest;
       console.log("[Hotels] Sample hotel price string:", samplePrice);
@@ -204,6 +212,13 @@ export const getHotelsFromBooking = async (
         extracted_hotel_class: h.extracted_hotel_class || null,
         link: h.link || null,
       }));
+
+    // Temporary log: cleaned first hotel
+    if (cleanedHotels.length > 0) {
+      console.log("[Hotels] Cleaned first hotel name:", cleanedHotels[0].name);
+      console.log("[Hotels] Cleaned first hotel images:", cleanedHotels[0].images);
+      console.log("[Hotels] Cleaned first hotel thumbnail:", cleanedHotels[0].thumbnail);
+    }
 
     return {
       destination,
