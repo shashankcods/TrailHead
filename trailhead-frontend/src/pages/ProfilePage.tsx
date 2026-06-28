@@ -9,6 +9,66 @@ import ProfileDangerZone from "@/components/profile/ProfileDangerZone";
 import GradientBackground from "@/components/GradientBackground";
 import { getTrips } from "@/api/trips";
 
+const getTripStartDate = (trip: any): Date | null => {
+  let startStr = null;
+  if (trip.startDate) {
+    startStr = trip.startDate;
+  } else if (trip.plannerData?.trip?.start_date) {
+    startStr = trip.plannerData.trip.start_date;
+  }
+  if (!startStr) return null;
+  const date = new Date(startStr);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+const getTripEndDate = (trip: any): Date | null => {
+  let endStr = null;
+  if (trip.endDate) {
+    endStr = trip.endDate;
+  } else if (trip.plannerData?.trip?.end_date) {
+    endStr = trip.plannerData.trip.end_date;
+  }
+  if (!endStr) {
+    const startDate = getTripStartDate(trip);
+    let tripDays = null;
+    if (trip.tripDays) {
+      tripDays = trip.tripDays;
+    } else if (trip.plannerData?.trip?.trip_days) {
+      tripDays = trip.plannerData.trip.trip_days;
+    }
+    if (startDate && tripDays && typeof tripDays === 'number') {
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + (tripDays - 1));
+      return endDate;
+    }
+    return null;
+  }
+  const date = new Date(endStr);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+const normalizeDateToStartOfDay = (date: Date): Date => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
+
+const isCompletedTrip = (trip: any): boolean => {
+  const endDate = getTripEndDate(trip);
+  if (!endDate) return false;
+  const today = normalizeDateToStartOfDay(new Date());
+  const normalizedEndDate = normalizeDateToStartOfDay(endDate);
+  return normalizedEndDate < today;
+};
+
+const isUpcomingTrip = (trip: any): boolean => {
+  const endDate = getTripEndDate(trip);
+  if (!endDate) return false;
+  const today = normalizeDateToStartOfDay(new Date());
+  const normalizedEndDate = normalizeDateToStartOfDay(endDate);
+  return normalizedEndDate >= today;
+};
+
 const ProfilePage: React.FC = () => {
   const { user, isAuthenticated, isLoading, accessToken } = useAuth();
   const navigate = useNavigate();
@@ -32,9 +92,10 @@ const ProfilePage: React.FC = () => {
       const fetchTrips = async () => {
         try {
           const data = await getTrips(accessToken);
-          setSavedTripsCount(data.trips.filter(t => t.status === "saved").length);
-          setUpcomingTripsCount(data.trips.filter(t => t.status === "upcoming").length);
-          setCompletedTripsCount(data.trips.filter(t => t.status === "completed").length);
+          const allTrips = data.trips;
+          setSavedTripsCount(allTrips.length);
+          setUpcomingTripsCount(allTrips.filter(isUpcomingTrip).length);
+          setCompletedTripsCount(allTrips.filter(isCompletedTrip).length);
         } catch (err) {
           console.error(err);
         }
