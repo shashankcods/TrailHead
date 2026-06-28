@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
 import DetailedItinerary from "@/components/results/DetailedItinerary";
@@ -173,6 +174,17 @@ const DetailedItineraryPage: React.FC = () => {
               </div>
             </div>
           </main>
+        )}
+
+        {plannerData && (
+          <button
+            type="button"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open trip assistant"
+            className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-20 h-20 rounded-full bg-black dark:bg-white text-white dark:text-black shadow-lg hover:scale-105 transition-transform"
+          >
+            <MessageCircle className="w-9 h-9" />
+          </button>
         )}
 
         <TripChatDrawer

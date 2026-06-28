@@ -132,13 +132,6 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           >
             {isSaving ? "Saving..." : isSaved ? "Saved!" : "Save Trip"}
           </button>
-          <button
-            type="button"
-            onClick={onOpenChat}
-            className="rounded-xl px-4 py-2.5 border border-black dark:border-white bg-white dark:bg-black text-sm font-bold hover:scale-[1.01] transition"
-          >
-            Open Chat
-          </button>
         </div>
       </header>
 

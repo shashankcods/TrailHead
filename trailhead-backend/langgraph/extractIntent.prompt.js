@@ -19,6 +19,7 @@ Supported actions:
 - reduce_budget
 - add_food
 - remove_activity
+- summarize
 
 IMPORTANT:
 

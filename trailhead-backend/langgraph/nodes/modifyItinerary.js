@@ -33,8 +33,10 @@ export const modifyItineraryNode =
     const intent =
       state.intent;
 
-    if (!intent?.action || intent.action === "unknown") {
-      console.warn("[modifyItineraryNode] No valid intent — returning itinerary unchanged");
+    if (!intent?.action || intent.action === "unknown" || intent.action === "summarize") {
+      if (intent?.action !== "summarize") {
+        console.warn("[modifyItineraryNode] No valid intent — returning itinerary unchanged");
+      }
       return { ...state, itinerary };
     }
 

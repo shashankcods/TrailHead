@@ -87,6 +87,7 @@ const TripChatDrawer: React.FC<TripChatDrawerProps> = ({
         userMessage: text,
         activities: plannerData.activities,
         budget: plannerData.budgets,
+        trip: plannerData.trip,
       });
 
       onItineraryReplaced(response.itinerary);

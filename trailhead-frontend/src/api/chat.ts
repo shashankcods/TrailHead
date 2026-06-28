@@ -37,6 +37,7 @@ export interface ModifyItineraryRequest {
   userMessage: string;
   activities: PlannerData["activities"];
   budget: PlannerData["budgets"];
+  trip: PlannerData["trip"];
 }
 
 export interface ModifyItineraryResponse {
