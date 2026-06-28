@@ -33,6 +33,11 @@ export const modifyItineraryNode =
     const intent =
       state.intent;
 
+    if (!intent?.action || intent.action === "unknown") {
+      console.warn("[modifyItineraryNode] No valid intent — returning itinerary unchanged");
+      return { ...state, itinerary };
+    }
+
     switch (
       intent.action
     ) {
@@ -45,7 +50,13 @@ export const modifyItineraryNode =
             itinerary,
 
             activities:
-              state.activities
+              state.activities,
+
+            day:
+              intent.entities?.day,
+
+            afterActivityId:
+              intent.entities?.targetActivityId
         });
 
         break;
@@ -90,7 +101,10 @@ export const modifyItineraryNode =
             itinerary,
 
             activities:
-              state.activities
+              state.activities,
+
+            budgetPreference:
+              intent.entities?.budgetPreference
         });
 
         break;
@@ -103,7 +117,10 @@ export const modifyItineraryNode =
             itinerary,
 
             activities:
-              state.activities
+              state.activities,
+
+            day:
+              intent.entities?.day
         });
 
         break;

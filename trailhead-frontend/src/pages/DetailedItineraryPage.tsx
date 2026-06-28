@@ -5,9 +5,7 @@ import GradientBackground from "@/components/GradientBackground";
 import DetailedItinerary from "@/components/results/DetailedItinerary";
 import PlannerExtras from "@/components/results/PlannerExtras";
 import TripChatDrawer from "@/components/chat/TripChatDrawer";
-import { applyItineraryAction, isMutatingAction } from "@/components/chat/itineraryActions";
-import type { ItineraryAction } from "@/types/chat";
-import type { PlannerData } from "@/types/planner";
+import type { PlannerData, PlannerItinerary, PlannerItineraryDay } from "@/types/planner";
 import { useAuth } from "@/context/AuthContext";
 import { createTrip, updateTrip } from "@/api/trips";
 
@@ -36,18 +34,18 @@ const DetailedItineraryPage: React.FC = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const undoSnapshotRef = useRef<PlannerData | null>(null);
 
-  const handleApplyItineraryAction = useCallback((action: ItineraryAction) => {
-    if (!isMutatingAction(action)) return;
-
-    setPlannerData((prev) => {
-      if (!prev) return prev;
-      undoSnapshotRef.current = prev;
-      setCanUndo(true);
-      setIsSaved(false);
-      // Keep savedTripId so we know to PATCH instead of POST when saving
-      return applyItineraryAction(prev, action);
-    });
-  }, []);
+  const handleItineraryReplaced = useCallback(
+    (newItinerary: PlannerItinerary | PlannerItineraryDay[]) => {
+      setPlannerData((prev) => {
+        if (!prev) return prev;
+        undoSnapshotRef.current = prev;
+        setCanUndo(true);
+        setIsSaved(false);
+        return { ...prev, itinerary: newItinerary };
+      });
+    },
+    []
+  );
 
   const handleUndo = useCallback(() => {
     if (!undoSnapshotRef.current) return;
@@ -181,7 +179,7 @@ const DetailedItineraryPage: React.FC = () => {
           open={isChatOpen}
           onClose={() => setIsChatOpen(false)}
           plannerData={plannerData ?? null}
-          onApplyItineraryAction={handleApplyItineraryAction}
+          onItineraryReplaced={handleItineraryReplaced}
           canUndo={canUndo}
           onUndo={handleUndo}
         />

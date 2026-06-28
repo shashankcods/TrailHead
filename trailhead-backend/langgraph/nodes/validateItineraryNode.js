@@ -3,9 +3,13 @@ import {
 } from "../../utils/validateItinerary.js";
 
 export const validateItineraryNode = async (state) => {
+  const activityMap = new Map(
+    (state.activities ?? []).map((a) => [a.id ?? a.activityId, a])
+  );
+
   const validationResult = validateItinerary({
     itinerary: state.itinerary,
-    activities: state.activities,
+    activityMap,
   });
 
   console.log(

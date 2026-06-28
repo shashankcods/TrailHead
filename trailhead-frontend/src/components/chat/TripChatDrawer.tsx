@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X, Send, Loader2, RotateCcw } from "lucide-react";
-import type { PlannerData } from "@/types/planner";
-import type { ChatMessage, ItineraryAction } from "@/types/chat";
-import { sendTripChatMessage } from "@/api/chat";
+import type { PlannerData, PlannerItinerary, PlannerItineraryDay } from "@/types/planner";
+import type { ChatMessage } from "@/types/chat";
+import { modifyItinerary, replyFromIntent } from "@/api/chat";
 import ChatMessageBubble from "@/components/chat/ChatMessageBubble";
 import ChatPromptChips from "@/components/chat/ChatPromptChips";
-import { isMutatingAction } from "@/components/chat/itineraryActions";
 
 const WELCOME_ID = "welcome-assistant";
 
@@ -25,7 +24,7 @@ interface TripChatDrawerProps {
   open: boolean;
   onClose: () => void;
   plannerData: PlannerData | null;
-  onApplyItineraryAction: (action: ItineraryAction) => void;
+  onItineraryReplaced: (itinerary: PlannerItinerary | PlannerItineraryDay[]) => void;
   canUndo?: boolean;
   onUndo?: () => void;
 }
@@ -34,7 +33,7 @@ const TripChatDrawer: React.FC<TripChatDrawerProps> = ({
   open,
   onClose,
   plannerData,
-  onApplyItineraryAction,
+  onItineraryReplaced,
   canUndo,
   onUndo,
 }) => {
@@ -83,28 +82,20 @@ const TripChatDrawer: React.FC<TripChatDrawerProps> = ({
     setLoading(true);
 
     try {
-      const response = await sendTripChatMessage({
-        message: text,
-        plannerData,
-        chatHistory: [...historyForApi, { role: "user", content: text }],
+      const response = await modifyItinerary({
+        itinerary: plannerData.itinerary,
+        userMessage: text,
+        activities: plannerData.activities,
+        budget: plannerData.budgets,
       });
 
-      const action = response.action;
-      let assistantContent = response.reply;
-
-      if (action && isMutatingAction(action)) {
-        onApplyItineraryAction(action);
-        if (!assistantContent.toLowerCase().includes("updated")) {
-          assistantContent = `${response.reply}\n\nUpdated your itinerary.`;
-        }
-      }
+      onItineraryReplaced(response.itinerary);
 
       const assistantMessage: ChatMessage = {
         id: createMessageId(),
         role: "assistant",
-        content: assistantContent,
+        content: response.serverMessage ?? replyFromIntent(response.intent),
         createdAt: new Date().toISOString(),
-        action,
         status: "sent",
       };
 

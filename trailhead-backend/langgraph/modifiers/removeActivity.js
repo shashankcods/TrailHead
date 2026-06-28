@@ -12,8 +12,8 @@ export const removeActivity = ({
         (a) => {
 
           return (
-            a.activityId !==
-            targetActivityId
+            a.activityId !== targetActivityId &&
+            a.id !== targetActivityId
           );
         }
       );
