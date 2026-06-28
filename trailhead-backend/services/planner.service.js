@@ -468,7 +468,9 @@ export const generateTripPlan = async (
 
                 adults,
 
-                retrievalConfig.hotels
+                retrievalConfig.hotels,
+                
+                selectedCurrency
               )
             )
         ),

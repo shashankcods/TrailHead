@@ -2,14 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { PlannerData } from "@/types/planner";
 import ItineraryDayPanel from "@/components/results/ItineraryDayPanel";
 import TravelView from "@/components/results/TravelView";
+import HotelsView from "@/components/results/HotelsView";
 import {
   countItineraryActivities,
   normalizePlannerItinerary,
 } from "@/components/results/itineraryUtils";
 
 const NAV_TABS = ["Timeline", "Itinerary", "Travel", "Hotels", "Overview", "Map"] as const;
-type DetailedItineraryTab = "Timeline" | "Itinerary" | "Travel";
-const ENABLED_TABS: DetailedItineraryTab[] = ["Timeline", "Itinerary", "Travel"];
+type DetailedItineraryTab = "Timeline" | "Itinerary" | "Travel" | "Hotels";
+const ENABLED_TABS: DetailedItineraryTab[] = ["Timeline", "Itinerary", "Travel", "Hotels"];
 
 interface DetailedItineraryProps {
   plannerData: PlannerData;
@@ -35,7 +36,7 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
   const normalizedDays = useMemo(() => normalizePlannerItinerary(plannerData), [plannerData]);
   const [activeDayId, setActiveDayId] = useState<string>(normalizedDays[0]?.id ?? "");
   const [activeTab, setActiveTab] = useState<DetailedItineraryTab>("Timeline");
-  const showDayNav = activeTab !== "Travel";
+  const showDayNav = activeTab !== "Travel" && activeTab !== "Hotels";
   const trip = plannerData.trip ?? {};
   const activityCount = countItineraryActivities(normalizedDays);
 
@@ -201,6 +202,8 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           <div className="space-y-4">
             {activeTab === "Travel" ? (
               <TravelView plannerData={plannerData} />
+            ) : activeTab === "Hotels" ? (
+              <HotelsView plannerData={plannerData} />
             ) : normalizedDays.length === 0 ? (
               <div className="th-soft-card p-6">
                 <h4 className="font-bold text-lg">Detailed itinerary unavailable</h4>
