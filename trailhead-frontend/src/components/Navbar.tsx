@@ -107,18 +107,6 @@ const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => 
             >
               Plan Your Trip
             </NavLink>
-            <NavLink
-              to="/results"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded-lg border text-[0.92rem] font-semibold tracking-tight transition-colors ${
-                  isActive
-                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
-                    : "bg-white dark:bg-black text-black dark:text-white border-black/25 dark:border-white/30 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-                }`
-              }
-            >
-              Results
-            </NavLink>
           </div>
         )}
 

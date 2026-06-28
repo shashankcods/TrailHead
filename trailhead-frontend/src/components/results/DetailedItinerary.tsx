@@ -3,19 +3,19 @@ import type { PlannerData } from "@/types/planner";
 import ItineraryDayPanel from "@/components/results/ItineraryDayPanel";
 import TravelView from "@/components/results/TravelView";
 import HotelsView from "@/components/results/HotelsView";
+import MapView from "@/components/results/MapView";
 import {
   countItineraryActivities,
   normalizePlannerItinerary,
 } from "@/components/results/itineraryUtils";
 
-const NAV_TABS = ["Timeline", "Itinerary", "Travel", "Hotels", "Overview", "Map"] as const;
-type DetailedItineraryTab = "Timeline" | "Itinerary" | "Travel" | "Hotels";
-const ENABLED_TABS: DetailedItineraryTab[] = ["Timeline", "Itinerary", "Travel", "Hotels"];
+const NAV_TABS = ["Timeline", "Itinerary", "Travel", "Hotels", "Map"] as const;
+type DetailedItineraryTab = "Timeline" | "Itinerary" | "Travel" | "Hotels" | "Map";
+const ENABLED_TABS: DetailedItineraryTab[] = ["Timeline", "Itinerary", "Travel", "Hotels", "Map"];
 
 interface DetailedItineraryProps {
   plannerData: PlannerData;
   onBack: () => void;
-  onOpenChat: () => void;
   onSaveTrip: () => void;
   isSaving: boolean;
   isSaved: boolean;
@@ -26,7 +26,6 @@ interface DetailedItineraryProps {
 const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
   plannerData,
   onBack,
-  onOpenChat,
   onSaveTrip,
   isSaving,
   isSaved,
@@ -36,7 +35,7 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
   const normalizedDays = useMemo(() => normalizePlannerItinerary(plannerData), [plannerData]);
   const [activeDayId, setActiveDayId] = useState<string>(normalizedDays[0]?.id ?? "");
   const [activeTab, setActiveTab] = useState<DetailedItineraryTab>("Timeline");
-  const showDayNav = activeTab !== "Travel" && activeTab !== "Hotels";
+  const showDayNav = activeTab !== "Travel" && activeTab !== "Hotels" && activeTab !== "Map";
   const trip = plannerData.trip ?? {};
   const activityCount = countItineraryActivities(normalizedDays);
 
@@ -118,7 +117,7 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
             onClick={onBack}
             className="rounded-xl px-4 py-2.5 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black text-sm font-bold"
           >
-            Back to Results
+            Plan New Trip
           </button>
           <button
             type="button"
@@ -138,7 +137,7 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
           <aside className="lg:sticky lg:top-24 space-y-4">
             <nav className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-black/35 p-3 shadow-sm">
-              <div className="grid grid-cols-3 lg:grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {NAV_TABS.map((tab) => {
                   const isEnabled = ENABLED_TABS.includes(tab as DetailedItineraryTab);
                   const isActive = isEnabled && activeTab === tab;
@@ -153,6 +152,8 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
                         }
                       }}
                       className={`rounded-lg px-2 py-2 text-xs font-semibold border transition ${
+                        tab === "Map" ? "col-span-2" : ""
+                      } ${
                         isActive
                           ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
                           : "bg-transparent border-black/10 dark:border-white/15 text-black/75 dark:text-white/75"
@@ -193,7 +194,9 @@ const DetailedItinerary: React.FC<DetailedItineraryProps> = ({
           </aside>
 
           <div className="space-y-4">
-            {activeTab === "Travel" ? (
+            {activeTab === "Map" ? (
+              <MapView plannerData={plannerData} normalizedDays={normalizedDays} />
+            ) : activeTab === "Travel" ? (
               <TravelView plannerData={plannerData} />
             ) : activeTab === "Hotels" ? (
               <HotelsView plannerData={plannerData} />

@@ -94,7 +94,6 @@ export const getProfile = async (req, res) => {
 };
 
 export const googleAuth = (req, res, next) => {
-  console.log("✅ Google OAuth route hit");
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
 };
 
@@ -123,8 +122,6 @@ export const googleCallback = (req, res, next) => {
     const redirectUrl = `http://localhost:5173/oauth-success?token=${token}&username=${encodeURIComponent(
       user.username
     )}`;
-
-    console.log("✅ Google OAuth success for:", user.email);
 
     return res.redirect(redirectUrl);
   })(req, res, next);

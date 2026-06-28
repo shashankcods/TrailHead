@@ -47,10 +47,6 @@ const HotelsView: React.FC<HotelsViewProps> = ({ plannerData }) => {
     return hotelsRecord.hotels.map(asRecord).filter((item): item is UnknownRecord => Boolean(item));
   })();
   const hasResults = hotelsArray.length > 0;
-  if (hotelsArray.length > 0) {
-    console.log("sample hotel", hotelsArray[0]);
-  }
-
   const destination = (() => {
     const d = hotelsRecord?.destination;
     if (typeof d === "string") return d;
@@ -87,14 +83,10 @@ const HotelsView: React.FC<HotelsViewProps> = ({ plannerData }) => {
   if (hotelsBudgetRange && typeof hotelsBudgetRange === "object") {
     const min = "min" in hotelsBudgetRange ? Number(hotelsBudgetRange.min) : undefined;
     const max = "max" in hotelsBudgetRange ? Number(hotelsBudgetRange.max) : undefined;
-    if (min != null || max != null) {
-      if (min != null && max != null) {
-        budgetLabel = `${defaultCurrency} ${formatBudgetNumber(min)}–${formatBudgetNumber(max)}`;
-      } else if (min != null) {
-        budgetLabel = `${defaultCurrency} ${formatBudgetNumber(min)}+`;
-      } else {
-        budgetLabel = `Up to ${defaultCurrency} ${formatBudgetNumber(max!)}`;
-      }
+    if (max != null) {
+      budgetLabel = `Up to ${defaultCurrency} ${formatBudgetNumber(max)} / night`;
+    } else if (min != null && min > 0) {
+      budgetLabel = `${defaultCurrency} ${formatBudgetNumber(min)}+ / night`;
     }
   } else {
     // Fallback to budgets allocation
@@ -103,10 +95,8 @@ const HotelsView: React.FC<HotelsViewProps> = ({ plannerData }) => {
       const trip = plannerData.trip ?? {};
       const tripDays = trip.trip_days ?? 1;
       const adults = trip.adults ?? 1;
-      const perPersonPerNight = accommodationBudget / tripDays / adults;
-      const minBudget = Math.round(perPersonPerNight * 0.5);
-      const maxBudget = Math.round(perPersonPerNight);
-      budgetLabel = `${defaultCurrency} ${formatBudgetNumber(minBudget)}–${formatBudgetNumber(maxBudget)}`;
+      const maxBudget = Math.round(accommodationBudget / tripDays / adults);
+      budgetLabel = `Up to ${defaultCurrency} ${formatBudgetNumber(maxBudget)} / night`;
     }
   }
 

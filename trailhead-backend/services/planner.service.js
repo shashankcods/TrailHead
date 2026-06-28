@@ -457,10 +457,7 @@ export const generateTripPlan = async (
 
                 end_date,
 
-                allocations.accommodation
-                  / trip_days
-                  / adults
-                  * 0.5,
+                0,
 
                 allocations.accommodation
                   / trip_days
@@ -469,7 +466,7 @@ export const generateTripPlan = async (
                 adults,
 
                 retrievalConfig.hotels,
-                
+
                 selectedCurrency
               )
             )
@@ -596,7 +593,7 @@ export const generateTripPlan = async (
           end_date,
           adults,
           limit: retrievalConfig.flights,
-          min_budget: allocations.travel * 0.5,
+          min_budget: 0,
           max_budget: allocations.travel,
           currency: selectedCurrency,
         });
@@ -734,19 +731,6 @@ export const generateTripPlan = async (
       });
 
     const compactActivitiesForLLM = compactLLMActivities(activities);
-      console.log(
-
-        JSON.stringify(
-
-          compactActivitiesForLLM[
-            0
-          ],
-
-          null,
-
-          2
-        )
-      );
 
       let itinerary;
 

@@ -132,7 +132,6 @@ const MainPage: React.FC<MainPageProps> = ({
       },
     }
 
-    console.log("🚀 Planner request payload:", payload)
     setLoading(true)
 
     try {
@@ -143,7 +142,6 @@ const MainPage: React.FC<MainPageProps> = ({
       })
 
       const result = await res.json()
-      console.log("✅ Planner API response:", result)
 
       if (!res.ok) {
         throw new Error(

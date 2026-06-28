@@ -234,10 +234,6 @@ export const getFlights = async (
       params.return_date = actual_return_date;
     }
 
-    console.log(`[Flights] Using provider: serpapi`);
-    console.log(`[Flights] Request params:`, { ...params, api_key: "***REDACTED***" });
-    console.log(`[Flights] Timeout set to: ${timeoutMs}ms`);
-
     const response = await axios.get("https://serpapi.com/search.json", {
       params: {
         ...params,
@@ -245,15 +241,6 @@ export const getFlights = async (
       },
       timeout: timeoutMs
     });
-
-    console.log(`[Flights] Response status: ${response.status}`);
-    console.log(`[Flights] Response keys:`, Object.keys(response.data));
-    console.log(`[Flights] best_flights count: ${response.data.best_flights?.length ?? 0}`);
-    console.log(`[Flights] other_flights count: ${response.data.other_flights?.length ?? 0}`);
-    // Log a sample best flight to see all fields (without API key)
-    if (response.data.best_flights && response.data.best_flights.length > 0) {
-      console.log(`[Flights] Sample best flight:`, JSON.stringify(response.data.best_flights[0], null, 2));
-    }
 
     let flights = [
       ...(response.data.best_flights || []),
@@ -319,17 +306,20 @@ export const getFlights = async (
       };
     });
 
-    console.log(`[Flights] Mapped flights count: ${flights.length}`);
+    // Filter out flights exceeding the total budget (price is per person from SerpAPI)
+    const withinBudget = max_budget > 0
+      ? flights.filter((f) => f.price != null && f.price * adults <= max_budget)
+      : flights;
 
-    // Removed strict budget filtering to show more results
-    flights = flights.slice(0, limit);
+    // Fall back to all flights sorted cheapest-first if nothing fits
+    flights = (withinBudget.length > 0 ? withinBudget : flights.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)))
+      .slice(0, limit);
 
     if (!flights.length) {
       console.warn(`[Flights] No flights after filtering/slicing; using metadata fallback.`);
       return buildFlightsMetadata({ ...metadataBase, flights: [], bookingLink: topLevelBookingLink });
     }
 
-    console.log(`[Flights] Returning ${flights.length} flights`);
     return buildFlightsMetadata({ ...metadataBase, flights, bookingLink: topLevelBookingLink });
   } catch (error) {
     console.error(`[Flights] Service Error:`, error.response?.data || error.message);

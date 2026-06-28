@@ -60,13 +60,11 @@ const TravelView: React.FC<TravelViewProps> = ({ plannerData }) => {
   const budgetMax = flights.budgetRange?.max;
 
   const budgetLabel =
-    budgetMin != null && budgetMax != null
-      ? `${currency} ${formatBudgetNumber(budgetMin)}–${formatBudgetNumber(budgetMax)}`
-      : budgetMin != null
+    budgetMax != null
+      ? `Up to ${currency} ${formatBudgetNumber(budgetMax)}`
+      : budgetMin != null && budgetMin > 0
         ? `${currency} ${formatBudgetNumber(budgetMin)}+`
-        : budgetMax != null
-          ? `Up to ${currency} ${formatBudgetNumber(budgetMax)}`
-          : "Not available";
+        : "Not available";
 
   const routeLabel =
     flights.route ??

@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar, { type Currency } from "../components/Navbar";
-import { useState } from "react";
 import LoginPopup from "../components/LoginPopup";
 import { useAuth } from "../context/AuthContext";
 import GradientBackground from "./GradientBackground";
@@ -32,8 +31,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ selectedCurrency, setSelected
           A hassle-free way to plan your trips
         </h2>
         <p className="text-black/80 dark:text-white/80 text-lg sm:text-xl md:text-2xl mt-4 font-family-opensans px-40">
-          Get community-driven travel tips from fellow travelers, estimate your trip budget with sustainability scores, 
-          discover local food experiences, check area safety, and adjust plans with interactive budget ranges and group size options — all in one place.
+          Generate AI-powered itineraries with real flights, hotels, and local attractions. Chat to modify your plan on the fly, explore restaurant picks, live events, weather forecasts, area safety scores, and a full budget planner with multi-currency support.
         </p>
         <button
           onClick={handleButtonClick}

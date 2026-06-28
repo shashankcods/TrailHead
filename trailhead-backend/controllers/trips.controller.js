@@ -8,10 +8,6 @@ import {
 
 export const createTrip = async (req, res) => {
   try {
-    console.log("[saveTrip] user:", req.user);
-    console.log("[saveTrip] body keys:", Object.keys(req.body || {}));
-    console.log("[saveTrip] plannerData trip:", req.body?.plannerData?.trip);
-    
     const userId = req.user.id;
     const tripData = req.body;
 
@@ -25,12 +21,10 @@ export const createTrip = async (req, res) => {
       !tripData.adults ||
       !tripData.plannerData
     ) {
-      console.log("[saveTrip] Missing required fields", tripData);
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     const trip = await createTripService(userId, tripData);
-    console.log("[saveTrip] saved trip id:", trip?._id);
     return res.status(201).json({ message: "Trip saved successfully", trip });
   } catch (error) {
     console.error("Create Trip Error:", error);

@@ -73,10 +73,6 @@ const TripChatDrawer: React.FC<TripChatDrawerProps> = ({
       status: "sent",
     };
 
-    const historyForApi = messages
-      .filter((m) => m.id !== WELCOME_ID && m.status !== "error")
-      .map((m) => ({ role: m.role, content: m.content }));
-
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);

@@ -58,27 +58,8 @@ const DetailedItineraryPage: React.FC = () => {
   }, []);
 
   const handleSaveTrip = useCallback(async () => {
-    console.log("[SaveTrip] Button clicked");
-    
-    if (!isAuthenticated) {
-      console.log("[SaveTrip] Not authenticated");
-      return;
-    }
-
-    if (!accessToken) {
-      console.log("[SaveTrip] No access token");
-      return;
-    }
-
-    if (!plannerData) {
-      console.log("[SaveTrip] No planner data");
-      return;
-    }
-
-    if (isSaved && savedTripId) {
-      console.log("[SaveTrip] Already saved and no changes, skipping");
-      return;
-    }
+    if (!isAuthenticated || !accessToken || !plannerData) return;
+    if (isSaved && savedTripId) return;
 
     setIsSaving(true);
     setSaveError(null);
@@ -102,24 +83,17 @@ const DetailedItineraryPage: React.FC = () => {
       plannerData: plannerData,
     };
 
-    console.log("[SaveTrip] Request payload:", tripData);
-
     try {
       let response;
       if (savedTripId) {
-        // Update existing trip
-        console.log("[SaveTrip] Updating existing trip with ID:", savedTripId);
         response = await updateTrip(accessToken, savedTripId, {
           plannerData: plannerData,
           title: tripData.title,
         });
       } else {
-        // Create new trip
-        console.log("[SaveTrip] Creating new trip");
         response = await createTrip(accessToken, tripData);
         setSavedTripId(response.trip._id);
       }
-      console.log("[SaveTrip] Response:", response);
       setIsSaved(true);
     } catch (error) {
       console.error("[SaveTrip] Error:", error);
@@ -138,8 +112,7 @@ const DetailedItineraryPage: React.FC = () => {
             <div className="th-card p-6 md:p-8 space-y-10">
               <DetailedItinerary
                 plannerData={plannerData}
-                onBack={() => navigate("/results", { state: { plannerData, savedTripId } })}
-                onOpenChat={() => setIsChatOpen(true)}
+                onBack={() => navigate("/main")}
                 onSaveTrip={handleSaveTrip}
                 isSaving={isSaving}
                 isSaved={isSaved}

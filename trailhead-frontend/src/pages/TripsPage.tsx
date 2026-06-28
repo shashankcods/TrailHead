@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
-import { getTrips, deleteTrip, type Trip } from "@/api/trips";
+import { getTrips, getTripById, deleteTrip, type Trip } from "@/api/trips";
 import { Trash2 } from "lucide-react";
 
 const TripsPage: React.FC = () => {
@@ -13,6 +13,7 @@ const TripsPage: React.FC = () => {
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
+  const [openingTripId, setOpeningTripId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -54,13 +55,21 @@ const TripsPage: React.FC = () => {
     }
   };
 
-  const handleViewResults = (trip: Trip) => {
-    navigate("/results", { state: { plannerData: trip.plannerData, savedTripId: trip._id } });
+  const openTrip = async (trip: Trip, dest: "/results" | "/itinerary") => {
+    if (!accessToken || openingTripId) return;
+    setOpeningTripId(trip._id);
+    try {
+      const { trip: full } = await getTripById(accessToken, trip._id);
+      navigate(dest, { state: { plannerData: full.plannerData, savedTripId: full._id } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to open trip");
+    } finally {
+      setOpeningTripId(null);
+    }
   };
 
-  const handleViewItinerary = (trip: Trip) => {
-    navigate("/itinerary", { state: { plannerData: trip.plannerData, savedTripId: trip._id } });
-  };
+  const handleViewResults = (trip: Trip) => openTrip(trip, "/results");
+  const handleViewItinerary = (trip: Trip) => openTrip(trip, "/itinerary");
 
   if (isLoading || isLoadingTrips) {
     return (
@@ -140,16 +149,18 @@ const TripsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleViewResults(trip)}
-                      className="rounded-xl px-4 py-2 border border-black/20 dark:border-white/25 bg-white dark:bg-black text-sm font-semibold hover:scale-[1.01] transition"
+                      disabled={openingTripId === trip._id}
+                      className="rounded-xl px-4 py-2 border border-black/20 dark:border-white/25 bg-white dark:bg-black text-sm font-semibold hover:scale-[1.01] transition disabled:opacity-60"
                     >
-                      View Results
+                      {openingTripId === trip._id ? "Opening..." : "View Results"}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleViewItinerary(trip)}
-                      className="rounded-xl px-4 py-2 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black text-sm font-bold"
+                      disabled={openingTripId === trip._id}
+                      className="rounded-xl px-4 py-2 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black text-sm font-bold disabled:opacity-60"
                     >
-                      View Itinerary
+                      {openingTripId === trip._id ? "Opening..." : "View Itinerary"}
                     </button>
                     <button
                       type="button"

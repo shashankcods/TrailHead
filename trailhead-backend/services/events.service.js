@@ -69,6 +69,12 @@ export const getEventsFromTicketmaster = async (
         start:
           e.dates?.start?.dateTime,
 
+        localDate:
+          e.dates?.start?.localDate || null,
+
+        localTime:
+          e.dates?.start?.localTime || null,
+
         end:
           e.dates?.end?.dateTime
           || e.dates?.start?.dateTime,
