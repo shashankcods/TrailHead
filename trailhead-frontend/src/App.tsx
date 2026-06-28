@@ -1,19 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/Home";
 import MainPage from "./pages/MainPage";
-import ResultsPage from "./pages/ResultsPage";
-import DetailedItineraryPage from "./pages/DetailedItineraryPage";
-import ProfilePage from "./pages/ProfilePage";
-import TripsPage from "./pages/TripsPage";
-import { currencies, type Currency } from "./components/Navbar";
 import OAuthSuccess from "./pages/OAuthSuccess";
+import { currencies, type Currency } from "./components/Navbar";
+
+const ResultsPage = lazy(() => import("./pages/ResultsPage"));
+const DetailedItineraryPage = lazy(() => import("./pages/DetailedItineraryPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const TripsPage = lazy(() => import("./pages/TripsPage"));
 
 const App: React.FC = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
 
   return (
     <Router>
+      <Suspense fallback={null}>
       <Routes>
         <Route
           path="/"
@@ -51,6 +53,7 @@ const App: React.FC = () => {
         <Route path="/trips" element={<TripsPage />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
       </Routes>
+      </Suspense>
     </Router>
   );
 };

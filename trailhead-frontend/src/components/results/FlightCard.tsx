@@ -60,8 +60,6 @@ const FlightCard: React.FC<FlightCardProps> = ({
   const [logoError, setLogoError] = useState(false);
   const record = flight as UnknownRecord & FlightOption;
 
-  console.log(`[FlightCard ${index}] Flight object:`, record);
-
   const airline = pickField(record, ["airline", "carrier", "airlineName"]);
   const airlineLogo = pickField(record, ["airlineLogo", "airline_logo", "logo", "carrierLogo"]);
   const flightNumber = pickField(record, ["flightNumber"]);
@@ -93,7 +91,6 @@ const FlightCard: React.FC<FlightCardProps> = ({
   const bookingLink = pickField(record, [
     "bookingLink", "link", "url", "booking_link", "serpapi_link", "google_flights_url"
   ]) ?? globalBookingLink;
-  console.log(`[FlightCard ${index}] bookingLink chosen:`, bookingLink);
   const segments = formatSegments(record);
 
   return (

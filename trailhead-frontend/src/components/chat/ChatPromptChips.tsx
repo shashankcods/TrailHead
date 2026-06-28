@@ -2,10 +2,10 @@ import React from "react";
 
 const PROMPTS = [
   "Summarize this trip",
-  "Make this itinerary cheaper",
-  "Make this trip more relaxed",
-  "What if it rains?",
-  "Suggest food options",
+  "Add a restaurant on day 1",
+  "Add nightlife on day 1",
+  "Remove an activity from day 1",
+  "Reduce the trip budget",
 ] as const;
 
 interface ChatPromptChipsProps {

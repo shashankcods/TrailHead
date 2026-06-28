@@ -18,6 +18,8 @@ export const ModifyIntentSchema =
 
         "remove_activity",
 
+        "summarize",
+
         "unknown"
       ]),
 

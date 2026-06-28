@@ -1,9 +1,6 @@
 import { Trip } from "../models/trip.model.js";
 
 export const createTripService = async (userId, tripData) => {
-  console.log("[createTripService] userId:", userId);
-  console.log("[createTripService] tripData:", tripData);
-  
   // Auto-set status if not explicitly provided
   if (!tripData.status) {
     const startDate = tripData.plannerData?.trip?.start_date || tripData.startDate;
@@ -42,13 +39,13 @@ export const createTripService = async (userId, tripData) => {
     user: userId,
     ...tripData,
   });
-  
-  console.log("[createTripService] created trip:", trip);
   return trip;
 };
 
 export const getTripsService = async (userId) => {
-  const trips = await Trip.find({ user: userId }).sort({ createdAt: -1 });
+  const trips = await Trip.find({ user: userId })
+    .select("-plannerData")
+    .sort({ createdAt: -1 });
   return trips;
 };
 

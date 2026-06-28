@@ -1,24 +1,14 @@
-export const relaxDay = ({
+export const relaxDay = ({ itinerary, day }) => {
+  const targetDayNum = Number(day);
 
-  itinerary,
+  const targetDay = itinerary.days.find(
+    (d) => Number(d.day) === targetDayNum || Number(d.dayNumber) === targetDayNum
+  );
 
-  day
-}) => {
+  if (!targetDay) return itinerary;
 
-  const targetDay =
-    itinerary.days.find(
-      (d) => d.day === day
-    );
-
-  if (!targetDay) {
-    return itinerary;
-  }
-
-  targetDay.activities =
-    targetDay.activities.slice(
-      0,
-      2
-    );
+  // Keep only the first 2 activities (least packed = most relaxed)
+  targetDay.activities = targetDay.activities.slice(0, 2);
 
   return itinerary;
 };

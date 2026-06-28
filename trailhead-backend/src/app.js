@@ -2,11 +2,9 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
-// import passport from "passport";
-// import "./passport.js";
-
 // Initialize express app instance
 const app = express();
 
@@ -21,11 +19,13 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
-// app.use(passport.initialize());
 
-app.post("/testjson", (req, res) => {
-  console.log("Body received:", req.body);
-  res.json(req.body);
+const plannerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many trip planning requests. Please wait 15 minutes before trying again." },
 });
 
 // Import route handlers for each agent
@@ -42,7 +42,6 @@ import attractionsRoute from "../routes/attractions.route.js";
 import plannerRouter from "../routes/planner.route.js";
 import modifyItineraryRouter from "../routes/modifyItinerary.route.js";
 import placesRoute from "../routes/places.route.js";
-import chatRoute from "../routes/chat.route.js";
 import tripsRoute from "../routes/trips.route.js";
 
 // API routes
@@ -56,9 +55,8 @@ app.use("/api/safety", safetyRoute);
 app.use("/api/flights", flightsRoute);
 app.use("/api/calendar", calendarRoute);
 app.use("/api/attractions", attractionsRoute);
-app.use("/api/planner", plannerRouter);
+app.use("/api/planner", plannerLimiter, plannerRouter);
 app.use("/api/places", placesRoute);
-app.use("/api/chat", chatRoute);
 app.use("/api/trips", tripsRoute);
 
 app.use("/modify-itinerary", modifyItineraryRouter);

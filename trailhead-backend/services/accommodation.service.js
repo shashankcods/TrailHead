@@ -11,31 +11,11 @@ const SERPAPI_KEY =
 // Hotel Score Formula
 // =========================
 
-const calculateHotelScore = (
-
-  hotel,
-
-  price
-) => {
-
-  const rating =
-    hotel.overall_rating || 0;
-
-  const reviews =
-    hotel.reviews || 1;
-
-  return (
-
-    (
-      rating * 2
-      +
-      Math.log10(reviews)
-    )
-
-    /
-
-    Math.log10(price || 100)
-  );
+const calculateHotelScore = (hotel) => {
+  const rating = hotel.overall_rating || 0;
+  const reviews = hotel.reviews || 1;
+  // Quality-first: high rating + many reviews = higher score, price not penalised
+  return rating * 2 + Math.log10(reviews);
 };
 
 
@@ -76,7 +56,7 @@ export const getHotelsFromBooking = async (
 
   checkout_date,
 
-  minBudget = 50,
+  minBudget = 0,
 
   maxBudget = 500,
 
@@ -86,10 +66,6 @@ export const getHotelsFromBooking = async (
   
   currency = "USD"
 ) => {
-
-  console.log("[Hotels] Selected currency:", currency);
-  console.log("[Hotels] minBudget received:", minBudget);
-  console.log("[Hotels] maxBudget received:", maxBudget);
 
   try {
 
@@ -124,23 +100,6 @@ export const getHotelsFromBooking = async (
     let hotels =
       res.data.properties || [];
 
-    console.log("[Hotels] Raw hotels count before filtering:", hotels.length);
-
-    // Temporary log: raw first hotel
-    if (hotels.length > 0) {
-      console.log("[Hotels] Raw first hotel name:", hotels[0].name);
-      console.log("[Hotels] Raw first hotel images:", hotels[0].images);
-      console.log("[Hotels] Raw first hotel thumbnail:", hotels[0].thumbnail);
-      console.log("[Hotels] Raw first hotel image:", hotels[0].image);
-    }
-
-    if (hotels.length > 0) {
-      const samplePrice = hotels[0].rate_per_night?.lowest;
-      console.log("[Hotels] Sample hotel price string:", samplePrice);
-      const parsedSample = parsePrice(samplePrice);
-      console.log("[Hotels] Parsed sample price:", parsedSample);
-    }
-
     if (!hotels.length) {
       throw new APIError(
         404,
@@ -149,42 +108,37 @@ export const getHotelsFromBooking = async (
     }
 
     // =========================
-    // Budget Filtering
+    // Budget Filtering (floor = 0, ceiling = maxBudget)
     // =========================
 
     const budgetFilteredHotels = hotels.filter((h) => {
       const price = parsePrice(h.rate_per_night?.lowest);
-      if (!price)
-        return false;
-      return (
-        price >= minBudget
-        &&
-        price <= maxBudget
-      );
+      if (!price) return false;
+      return price <= maxBudget;
     });
 
-    console.log("[Hotels] Hotels count after budget filtering:", budgetFilteredHotels.length);
-
-    if (budgetFilteredHotels.length === 0) {
-      console.log("[Hotels] No hotels matched budget; returning unfiltered top hotels fallback.");
-    }
-
-    const finalHotels = budgetFilteredHotels.length > 0 ? budgetFilteredHotels : hotels;
+    // Fallback: if nothing fits the ceiling, return all sorted cheapest-first
+    const finalHotels = budgetFilteredHotels.length > 0
+      ? budgetFilteredHotels
+      : [...hotels].sort((a, b) => (parsePrice(a.rate_per_night?.lowest) ?? Infinity) - (parsePrice(b.rate_per_night?.lowest) ?? Infinity));
 
     // =========================
-    // Ranking
+    // Ranking — quality-first, premium options surface before budget ones
     // =========================
 
     const rankedHotels = finalHotels
-      .map((h) => {
-        const price = parsePrice(h.rate_per_night?.lowest);
-        return {
-          ...h,
-          parsed_price: price,
-          weighted_score: price ? calculateHotelScore(h, price) : 0,
-        };
+      .map((h) => ({
+        ...h,
+        parsed_price: parsePrice(h.rate_per_night?.lowest),
+        weighted_score: calculateHotelScore(h),
+      }))
+      .sort((a, b) => {
+        // Primary: quality score descending
+        const scoreDiff = b.weighted_score - a.weighted_score;
+        if (Math.abs(scoreDiff) > 0.1) return scoreDiff;
+        // Tiebreak: higher price first (more premium)
+        return (b.parsed_price ?? 0) - (a.parsed_price ?? 0);
       })
-      .sort((a, b) => b.weighted_score - a.weighted_score)
       .slice(0, limit);
 
     // =========================
@@ -212,13 +166,6 @@ export const getHotelsFromBooking = async (
         extracted_hotel_class: h.extracted_hotel_class || null,
         link: h.link || null,
       }));
-
-    // Temporary log: cleaned first hotel
-    if (cleanedHotels.length > 0) {
-      console.log("[Hotels] Cleaned first hotel name:", cleanedHotels[0].name);
-      console.log("[Hotels] Cleaned first hotel images:", cleanedHotels[0].images);
-      console.log("[Hotels] Cleaned first hotel thumbnail:", cleanedHotels[0].thumbnail);
-    }
 
     return {
       destination,

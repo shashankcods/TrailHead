@@ -1,5 +1,6 @@
 import React from "react";
 import type { Currency } from "@/components/Navbar";
+import { currencies } from "@/components/Navbar";
 import type { PlannerData } from "@/types/planner";
 
 const getItineraryDays = (plannerData: PlannerData) => {
@@ -27,8 +28,12 @@ const TripSummaryContent: React.FC<TripSummaryContentProps> = ({
   const totalBudget = plannerData.budgets?.total ?? 0;
   const allocations = plannerData.budgets?.allocations ?? {};
 
+  const resolvedCurrency =
+    currencies.find((c) => c.code === plannerData.budgets?.currency) ??
+    selectedCurrency;
+
   const formatMoney = (amount: number) =>
-    `${selectedCurrency.symbol}${amount.toLocaleString()}`;
+    `${resolvedCurrency.symbol}${amount.toLocaleString()}`;
 
   const allocationEntries = [
     { key: "travel", label: "Travel" },

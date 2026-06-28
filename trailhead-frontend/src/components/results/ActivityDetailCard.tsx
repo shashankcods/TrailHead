@@ -28,6 +28,8 @@ const ActivityDetailCard: React.FC<ActivityDetailCardProps> = ({ activity }) => 
               src={activity.imageUrl}
               alt={activity.title}
               className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
               onError={() => setImageError(true)}
             />
           ) : (

@@ -1,4 +1,4 @@
-import { timeToMinutes, addMinutes } from "./time.js";
+import { timeToMinutes, minutesToTime, addMinutes } from "./time.js";
 import {
   ensureScheduledTime,
   getScheduledEnd,
@@ -98,12 +98,29 @@ export const repairItinerary = ({
 
       return activity;
     });
-  });
 
-  console.log(
-    "[repairItinerary] repaired itinerary:",
-    JSON.stringify(normalized, null, 2)
-  );
+    // Sort by start time, then shift any overlapping activities forward
+    dayObj.activities.sort((a, b) => {
+      const aStart = timeToMinutes(getScheduledStart(a)) ?? 0;
+      const bStart = timeToMinutes(getScheduledStart(b)) ?? 0;
+      return aStart - bStart;
+    });
+
+    for (let i = 1; i < dayObj.activities.length; i++) {
+      const prev = dayObj.activities[i - 1];
+      const curr = dayObj.activities[i];
+      const prevEnd = timeToMinutes(getScheduledEnd(prev));
+      const currStart = timeToMinutes(getScheduledStart(curr));
+      const currEnd = timeToMinutes(getScheduledEnd(curr));
+
+      if (prevEnd !== null && currStart !== null && currStart < prevEnd) {
+        const duration = currEnd !== null ? currEnd - currStart : 90;
+        const newStart = minutesToTime(prevEnd);
+        const newEnd = minutesToTime(prevEnd + duration);
+        setScheduledTimes(curr, newStart, newEnd);
+      }
+    }
+  });
 
   return normalized;
 };

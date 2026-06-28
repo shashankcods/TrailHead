@@ -82,6 +82,7 @@ const getAmenityIcon = (amenityName: string) => {
 
 const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency, destination }) => {
   const record = hotel;
+  const [imgFailed, setImgFailed] = React.useState(false);
 
   const hotelName = pickField(record, ["name", "title"]);
   const description = pickField(record, ["description", "summary", "shortDescription"]);
@@ -135,11 +136,18 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel, index, defaultCurrency, de
     <article className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/85 dark:bg-black/35 shadow-sm p-4 md:p-5 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex gap-4 items-start">
-          {thumbnail && (
-            <div className="rounded-xl overflow-hidden border border-black/10 dark:border-white/15 w-24 h-24 flex-shrink-0">
-              <img src={thumbnail} alt={hotelName ?? "Hotel"} className="w-full h-full object-cover" />
-            </div>
-          )}
+          <div className="rounded-xl overflow-hidden border border-black/10 dark:border-white/15 w-24 h-24 flex-shrink-0 bg-black/5 dark:bg-white/5 flex items-center justify-center text-center">
+            {thumbnail && !imgFailed ? (
+              <img
+                src={thumbnail}
+                alt={hotelName ?? "Hotel"}
+                className="w-full h-full object-cover"
+                onError={() => setImgFailed(true)}
+              />
+            ) : (
+              <span className="text-2xl opacity-30">🏨</span>
+            )}
+          </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-black/55 dark:text-white/55">
               Hotel {index + 1}

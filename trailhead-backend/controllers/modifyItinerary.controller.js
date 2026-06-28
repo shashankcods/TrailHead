@@ -6,45 +6,95 @@ import {
   enrichItinerary
 } from "../utils/enrichItinerary.js";
 
-export const modifyItineraryController =
-  async (req, res) => {
+import { GoogleGenAI } from "@google/genai";
 
-    const result =
-      await itineraryGraph.invoke({
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-        itinerary:
-          req.body.itinerary,
+const SUMMARY_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
 
-        userMessage:
-          req.body.userMessage,
+async function generateSummary(itinerary, trip) {
+  const days = (itinerary?.days ?? []).map((d) => ({
+    day: d.day ?? d.dayNumber,
+    title: d.title ?? d.theme,
+    activities: (d.activities ?? []).map((a) => a.title ?? a.name).filter(Boolean),
+  }));
 
-        activities:
-          req.body.activities,
+  const prompt = `You are a friendly travel assistant. Summarize this itinerary in 3-4 sentences. Be specific about highlights and the overall vibe. Keep it conversational, not bullet points.
 
-        budget:
-          req.body.budget,
+Trip: ${trip?.source ?? "Origin"} → ${trip?.destination ?? "Destination"} (${trip?.trip_days ?? days.length} days, ${trip?.adults ?? 1} traveler(s))
 
-        repairAttempts: 0,
-      });
+Itinerary:
+${days.map((d) => `Day ${d.day} – ${d.title}: ${d.activities.join(", ")}`).join("\n")}`;
 
-    const enrichedItinerary =
-      enrichItinerary({
+  for (const model of SUMMARY_MODELS) {
+    try {
+      const response = await ai.models.generateContent({ model, contents: prompt });
+      const text = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (text) return text;
+    } catch {
+      // try next model
+    }
+  }
+  return null;
+}
 
-        itinerary:
-          result.itinerary,
+export const modifyItineraryController = async (req, res) => {
+  try {
+    const originalItinerary = req.body.itinerary;
 
-        activities:
-          req.body.activities
+    const result = await itineraryGraph.invoke({
+      itinerary: req.body.itinerary,
+      userMessage: req.body.userMessage,
+      activities: req.body.activities,
+      budget: req.body.budget,
+      repairAttempts: 0,
     });
+
+    const intent = result.intent ?? {};
+
+    if (intent.action === "summarize") {
+      const summary = await generateSummary(result.itinerary, req.body.trip);
+      return res.status(200).json({
+        success: true,
+        itinerary: originalItinerary,
+        intent,
+        message: summary ?? "Here's your itinerary! It covers multiple days of activities across your destination.",
+      });
+    }
+
+    if (result.validationResult?.valid === false) {
+      return res.status(200).json({
+        success: true,
+        itinerary: originalItinerary,
+        intent,
+        message: "Sorry, I couldn't apply that change without creating scheduling conflicts. Try a more specific request.",
+      });
+    }
+
+    const activityMap = new Map(
+      (req.body.activities ?? []).map((a) => [a.id ?? a.activityId, a])
+    );
+
+    const enrichedItinerary = enrichItinerary({
+      itinerary: result.itinerary,
+      activityMap,
+    });
+
+    const couldNotUnderstand = !intent.action || intent.action === "unknown";
 
     return res.status(200).json({
-
       success: true,
-
-      itinerary:
-        enrichedItinerary,
-
-      intent:
-        result.intent
+      itinerary: enrichedItinerary,
+      intent,
+      message: couldNotUnderstand
+        ? "Sorry, I couldn't understand that request. Try something like 'remove the museum visit' or 'add nightlife on day 2'."
+        : undefined,
     });
+  } catch (err) {
+    console.error("[modifyItinerary] LangGraph error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || "Failed to modify itinerary",
+    });
+  }
 };

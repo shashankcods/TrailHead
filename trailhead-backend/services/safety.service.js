@@ -191,11 +191,9 @@ export const getSafetyData = async (
     // =========================
 
     const pageUrl =
-      `https://www.numbeo.com/crime/in/${encodeURIComponent(cleanDest)}`;
-
-    console.log(
-      `🔎 Fetching Numbeo data from: ${pageUrl}`
-    );
+      `https://www.numbeo.com/crime/in/${encodeURIComponent(
+        cleanDest.replace(/\s+/g, "-")
+      )}`;
 
     const html =
       await fetchNumbeoPage(
@@ -225,81 +223,6 @@ export const getSafetyData = async (
             safetyMatch[1]
           )
         : null;
-
-    // =========================
-    // Alternate URL Attempt
-    // =========================
-
-    if (
-      crimeIndex === null
-      ||
-      safetyIndex === null
-    ) {
-
-      const altUrl =
-        `https://www.numbeo.com/crime/in/${encodeURIComponent(
-          cleanDest.replace(
-            /\s+/g,
-            "-"
-          )
-        )}`;
-
-      try {
-
-        console.warn(
-          `${cleanDest} not found in Numbeo — trying alternate URL.`
-        );
-
-        const altHtml =
-          await fetchNumbeoPage(
-            altUrl
-          );
-
-        const cAlt =
-          altHtml.match(
-            /Crime Index[^<]*<\/td>\s*<td[^>]*>\s*([\d.]+)/i
-          );
-
-        const sAlt =
-          altHtml.match(
-            /Safety Index[^<]*<\/td>\s*<td[^>]*>\s*([\d.]+)/i
-          );
-
-        if (cAlt) {
-
-          crimeIndex =
-            parseFloat(
-              cAlt[1]
-            );
-        }
-
-        if (sAlt) {
-
-          safetyIndex =
-            parseFloat(
-              sAlt[1]
-            );
-        }
-
-        if (
-          crimeIndex
-          &&
-          safetyIndex
-        ) {
-
-          console.log(
-            `Found Numbeo data via alternate URL: ${altUrl}`
-          );
-        }
-
-      } catch (err) {
-
-        console.warn(
-          "Alternate Numbeo lookup failed:",
-          err.message
-        );
-      }
-    }
 
     // =========================
     // Country-Level Fallback

@@ -7,9 +7,14 @@ export const repairItineraryNode = async (state) => {
     `[repairItineraryNode] repair attempt ${attempts} of 3`
   );
 
+  const activityMap = new Map(
+    (state.activities ?? []).map((a) => [a.id ?? a.activityId, a])
+  );
+
   const repaired = repairItinerary({
     itinerary: state.itinerary,
     activities: state.activities,
+    activityMap,
   });
 
   return {

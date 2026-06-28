@@ -85,10 +85,10 @@ RETURN JSON IN THIS EXACT FORMAT:
 `;
 
     const defaultModels = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
+      "gemini-3.5-flash",
       "gemini-2.5-flash",
-      "gemini-3.5-flash"
+      "gemini-2.0-flash-lite",
+      "gemini-2.0-flash",
     ];
 
     const envModels = process.env.GEMINI_MODELS 

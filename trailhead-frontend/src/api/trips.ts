@@ -12,7 +12,7 @@ export interface Trip {
   tripDays: number;
   adults: number;
   status: "saved" | "upcoming" | "completed";
-  plannerData: any;
+  plannerData?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,10 +49,6 @@ export async function createTrip(
     plannerData: any;
   }
 ): Promise<{ message: string; trip: Trip }> {
-  console.log("[trips.ts createTrip] API_BASE:", API_BASE);
-  console.log("[trips.ts createTrip] accessToken:", accessToken ? "present" : "missing");
-  console.log("[trips.ts createTrip] tripData:", tripData);
-  
   const res = await fetch(`${API_BASE}/api/trips`, {
     method: "POST",
     headers: {
@@ -62,20 +58,7 @@ export async function createTrip(
     body: JSON.stringify(tripData),
   });
   
-  console.log("[trips.ts createTrip] response status:", res.status);
   return parseResponse<{ message: string; trip: Trip }>(res);
-}
-
-export async function getTrips(
-  accessToken: string
-): Promise<{ message: string; trips: Trip[] }> {
-  const res = await fetch(`${API_BASE}/api/trips`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  return parseResponse<{ message: string; trips: Trip[] }>(res);
 }
 
 export async function getTripById(
@@ -89,6 +72,18 @@ export async function getTripById(
     },
   });
   return parseResponse<{ message: string; trip: Trip }>(res);
+}
+
+export async function getTrips(
+  accessToken: string
+): Promise<{ message: string; trips: Trip[] }> {
+  const res = await fetch(`${API_BASE}/api/trips`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return parseResponse<{ message: string; trips: Trip[] }>(res);
 }
 
 export async function updateTrip(
