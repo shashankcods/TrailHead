@@ -124,7 +124,6 @@ After the itinerary is generated, users can interact with a **conversational cha
 - **Map view** of the itinerary
 - **Google OAuth** authentication
 - **Save and manage trips** — revisit, edit, and re-open past plans
-- **Calendar export** — download your itinerary as an `.ics` file
 - **Rate limiting** on the planner endpoint to prevent API cost abuse
 
 ---
@@ -172,19 +171,3 @@ The `GET /api/trips` list endpoint originally returned full `plannerData` blobs 
 
 ### LangGraph Chat Reliability
 The chat agent runs 2–3 sequential LLM calls per message (intent extraction → modification → validation). We added per-call timeouts and a two-model fallback chain to prevent the assistant from hanging indefinitely on slow or failed API responses.
-
-### Split Deployment Constraints
-Railway's build context was limited to the backend subdirectory, making a monorepo Docker build impossible. We resolved this by splitting into two independent deployments — **Railway for the backend** and **Vercel for the frontend** — with CORS and OAuth redirect URIs configured accordingly.
-
-### Case-Sensitive Imports on Linux
-Import paths that worked on Windows (case-insensitive filesystem) failed on Railway's Linux containers. All import paths were audited and corrected to match exact filenames.
-
----
-
-# Future Improvements
-
-- Streaming LLM responses for the chat assistant to reduce perceived latency
-- User preference learning across multiple trips
-- Real-time flight price tracking and alerts
-- Collaborative trip planning for groups
-- Mobile app
