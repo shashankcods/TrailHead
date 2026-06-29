@@ -35,12 +35,25 @@ export function replyFromIntent(intent: Record<string, unknown>): string {
 export async function modifyItinerary(
   payload: ModifyItineraryRequest
 ): Promise<ModifyItineraryResponse> {
-  const res = await fetch(`${API_BASE}/modify-itinerary`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(payload),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/modify-itinerary`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError")
+      throw new Error("Request timed out. The assistant took too long to respond.");
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const result = await res.json().catch(() => ({}));
 

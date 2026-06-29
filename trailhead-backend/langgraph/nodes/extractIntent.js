@@ -65,15 +65,14 @@ ${state.userMessage}
 
 `;
 
-        const response =
-          await ai.models.generateContent({
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Gemini timeout")), 25000)
+        );
 
-            model:
-              model,
-
-            contents:
-              prompt
-          });
+        const response = await Promise.race([
+          ai.models.generateContent({ model, contents: prompt }),
+          timeoutPromise,
+        ]);
 
         const text =
           response
