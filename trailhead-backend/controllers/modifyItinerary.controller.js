@@ -98,7 +98,7 @@ export const modifyItineraryController = async (req, res) => {
         success: true,
         itinerary: req.body.itinerary,
         intent: { action: "unknown" },
-        message: "The AI assistant is temporarily unavailable due to high usage. Please try again in a minute.",
+        message: "The AI assistant is temporarily unavailable due to high usage. Please try again in a while.",
       });
     }
 

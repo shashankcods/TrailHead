@@ -65,6 +65,8 @@ app.use("/api/trips", tripsRoute);
 
 app.use("/modify-itinerary", modifyItineraryRouter);
 
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+
 // If an /api route is not matched above, return JSON 404.
 // This prevents broken API routes from returning React index.html.
 app.use("/api", (req, res) => {

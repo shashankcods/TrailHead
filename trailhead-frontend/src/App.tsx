@@ -4,6 +4,7 @@ import LandingPage from "./pages/Home";
 import MainPage from "./pages/MainPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import { currencies, type Currency } from "./components/Navbar";
+import BackendDownOverlay from "./components/BackendDownOverlay";
 
 const ResultsPage = lazy(() => import("./pages/ResultsPage"));
 const DetailedItineraryPage = lazy(() => import("./pages/DetailedItineraryPage"));
@@ -15,6 +16,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
+      <BackendDownOverlay />
       <Suspense fallback={null}>
       <Routes>
         <Route
