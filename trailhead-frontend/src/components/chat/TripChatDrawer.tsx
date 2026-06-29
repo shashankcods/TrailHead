@@ -86,7 +86,11 @@ const TripChatDrawer: React.FC<TripChatDrawerProps> = ({
         trip: plannerData.trip,
       });
 
-      onItineraryReplaced(response.itinerary);
+      const action = response.intent?.action as string | undefined;
+      const itineraryChanged = action && action !== "unknown" && action !== "summarize";
+      if (itineraryChanged) {
+        onItineraryReplaced(response.itinerary);
+      }
 
       const assistantMessage: ChatMessage = {
         id: createMessageId(),
