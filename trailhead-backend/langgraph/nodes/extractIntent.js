@@ -21,8 +21,6 @@ export const extractIntentNode =
 
     const modelsToTry = [
       "gemini-3.5-flash",
-      "gemini-2.5-flash",
-      "gemini-2.0-flash-lite",
       "gemini-2.0-flash",
     ];
 
@@ -66,7 +64,7 @@ ${state.userMessage}
 `;
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Gemini timeout")), 25000)
+          setTimeout(() => reject(new Error("Gemini timeout")), 50000)
         );
 
         const response = await Promise.race([
