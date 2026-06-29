@@ -1,6 +1,6 @@
 # TrailHead
 
-**TrailHead** is an AI-powered trip planning platform that unifies travel data from multiple sources into a single intelligent itinerary generator. It eliminates the need to switch between different apps for routes, weather, accommodation, events, and food by orchestrating multiple specialized agents that collectively produce a structured travel plan.
+**TrailHead** is an AI-powered trip planning platform that unifies travel data from multiple sources into a single intelligent itinerary generator. It eliminates the need to switch between different apps for flights, hotels, weather, events, and restaurants by orchestrating multiple specialized agents that collectively produce a structured, personalized travel plan.
 
 ---
 
@@ -8,16 +8,16 @@
 
 Planning a trip today typically requires juggling several separate tools:
 
-- Maps for routes and travel times  
-- Weather apps for forecasts  
-- Booking platforms for hotels  
-- Restaurant discovery tools  
-- Event discovery platforms  
-- Safety and sustainability checks  
+- Flight search engines for travel options and pricing
+- Weather apps for destination forecasts
+- Booking platforms for hotels
+- Restaurant and event discovery tools
+- Manual budget tracking across multiple currencies
+- Separate safety lookups for unfamiliar destinations
 
 This fragmented process is **time-consuming, inefficient, and rarely optimized for personal preferences or budget constraints**.
 
-TrailHead addresses this by creating a **unified, orchestrated planning system** that aggregates travel information, processes it intelligently, and generates a **cohesive, personalized itinerary**.
+TrailHead addresses this by creating a **unified, orchestrated planning system** that aggregates travel information, processes it intelligently, and generates a **cohesive, personalized itinerary** — all in one place.
 
 ---
 
@@ -25,9 +25,11 @@ TrailHead addresses this by creating a **unified, orchestrated planning system**
 
 TrailHead acts as a **multi-agent orchestration platform** for travel planning.
 
-At its core is an **Orchestrator inspired by the Model Context Protocol (MCP)**. This orchestrator coordinates multiple specialized agents, each responsible for retrieving and processing a particular type of travel information.
+At its core is an **Orchestrator** running on a Node.js backend. It coordinates multiple specialized agents in parallel, each responsible for retrieving and processing a particular type of travel information.
 
-The orchestrator merges their outputs and produces a **structured AI-generated itinerary** tailored to the user’s preferences, travel dates, weather conditions, and budget.
+The orchestrator merges their outputs and passes the aggregated data to **Gemini** (Google's LLM), which generates a structured day-by-day itinerary tailored to the user's preferences, travel dates, weather conditions, and budget.
+
+Users can then refine their itinerary through a **conversational chat assistant** powered by a **LangGraph** agent graph, save trips to their account, and export plans to their calendar.
 
 ---
 
@@ -37,141 +39,152 @@ The orchestrator merges their outputs and produces a **structured AI-generated i
 User Input
 │
 ▼
-Orchestrator (Node.js Backend)
+Orchestrator (Node.js / Express Backend)
 │
+├── Flights Agent
 ├── Maps Agent
 ├── Weather Agent
 ├── Food Agent
 ├── Events Agent
 ├── Accommodation Agent
-├── Reddit Insights Agent
-└── Safety & Sustainability Agent
+├── Attractions Agent
+└── Safety Agent
 │
 ▼
-Local LLM (Mistral via Ollama)
+Gemini LLM (Google Generative AI)
 │
 ▼
-AI Generated Trip Summary + Day-wise Itinerary
+AI-Generated Day-wise Itinerary
+│
+▼
+LangGraph Chat Agent (real-time itinerary editing)
 ```
 
 ---
 
 # Agents and Data Integrations
 
+### Flights Agent
+Constructs deep-linked **Google Flights** search URLs for the user's route and travel dates, surfacing real flight options with pricing context via **SerpAPI**.
+
 ### Maps Agent
-Uses **OpenRouteService API** to determine optimal travel routes, distances, and estimated travel time.
+Uses **OpenRouteService API** to determine optimal travel routes, distances, and estimated travel times between origin and destination.
 
 ### Weather Agent
-Fetches current and forecast weather data using **Open-Meteo API** to ensure itinerary activities align with weather conditions.
+Fetches current and multi-day forecast data using **Open-Meteo API** to ensure planned activities align with expected conditions at the destination.
 
 ### Food Agent
-Discovers nearby restaurants and local food spots using **Google Places API**.
+Discovers nearby restaurants and local dining spots using **Google Places API**, including ratings, categories, estimated costs, and photos.
 
 ### Events Agent
-Aggregates local events using:
-
-- **PredictHQ API**
-- **TicketMaster API**
+Aggregates local events around the travel dates using **Ticketmaster API**, covering concerts, sports, arts, theatre, and more.
 
 ### Accommodation Agent
-Fetches hotel options and availability through **Booking.com API (RapidAPI)**.
+Fetches hotel options and availability using **SerpAPI (Google Hotels)**, returning pricing, ratings, and booking links.
 
-### Reddit Insights Agent
-Uses the **Reddit API** to gather community discussions and travel advice.
+### Attractions Agent
+Sources local points of interest, museums, landmarks, and experiences using **Google Places API**, enriched with photos and visit duration estimates.
 
-Performs **sentiment analysis** to highlight useful, positive, and authentic travel insights from real travelers.
-
-### Safety & Sustainability Agent
-
-Uses:
-
-- **Overpass API** to analyze nearby infrastructure and safety indicators
-- **Climatiq API** to estimate **carbon footprint and sustainability impact**
+### Safety Agent
+Scrapes destination **crime and safety index data from Numbeo** to give users an honest safety overview of their destination before they travel.
 
 ---
 
 # AI-Powered Itinerary Generation
 
-Once the agents collect travel data, the **Orchestrator aggregates and normalizes the information** into a structured format.
+Once the agents collect travel data in parallel, the **Orchestrator aggregates and normalizes** all outputs into a compact structured format.
 
-This structured data is then passed to a **local LLM (Mistral running via Ollama)**, which generates:
+This data is passed to **Gemini** (via the Google Generative AI SDK), which generates:
 
-- A **coherent travel summary**
-- A **day-by-day itinerary**
-- Recommendations based on **weather, location proximity, and user preferences**
+- A structured **day-by-day itinerary** with scheduled activities, time slots, and themes per day
+- Activities drawn from real fetched data (attractions, restaurants, events)
+- Scheduling that respects opening hours, travel time, and budget constraints
+
+### LangGraph Chat Assistant
+After the itinerary is generated, users can interact with a **conversational chat assistant** to modify it in real time. The assistant is built on **LangGraph** and supports:
+
+- Adding nightlife or restaurants to specific days
+- Removing activities by name
+- Replacing activities with alternatives
+- Relaxing the schedule
+- Reducing the trip budget
+- Summarizing the full trip
 
 ---
 
 # Key Features
 
-- AI-generated **day-by-day itineraries**
-- Unified dashboard for **routes, weather, hotels, restaurants, and events**
-- **Budget-aware planning**
-- Discovery of **real traveler insights from Reddit**
-- **Safety and sustainability insights**
-- Local LLM summarization for **fast and private AI processing**
+- AI-generated **day-by-day itineraries** with real flights, hotels, and local attractions
+- **Multi-agent parallel data fetching** for fast results
+- **Conversational itinerary editor** via LangGraph chat
+- **Budget planner** with multi-currency support and category breakdowns
+- **Live events** discovery via Ticketmaster
+- **Weather forecasts** for each day of the trip
+- **Safety scores** for the destination
+- **Map view** of the itinerary
+- **Google OAuth** authentication
+- **Save and manage trips** — revisit, edit, and re-open past plans
+- **Calendar export** — download your itinerary as an `.ics` file
+- **Rate limiting** on the planner endpoint to prevent API cost abuse
 
 ---
 
 # Technical Stack
 
 ## Frontend
-- React.js
-- TypeScript
+- React.js + TypeScript
 - Tailwind CSS
+- React Router
+- Deployed on **Vercel**
 
 ## Backend
-- Node.js
-- Express.js
+- Node.js + Express.js
+- MongoDB + Mongoose
+- Passport.js (Google OAuth)
+- LangGraph (`@langchain/langgraph`)
+- Deployed on **Railway**
 
 ## AI
-- Local LLM: **Mistral via Ollama**
+- **Gemini** (Google Generative AI) — itinerary generation and chat intent extraction
+- **LangGraph** — agentic itinerary modification workflow
 
 ## Data Sources
-- OpenRouteService
-- Open-Meteo
-- Google Places
-- PredictHQ
-- TicketMaster
-- Booking.com (RapidAPI)
-- Reddit API
-- Overpass API
-- Climatiq API
-
-## Microservices
-- Python FastAPI service for **Reddit scraping and sentiment analysis**
+- Google Flights via SerpAPI
+- Google Hotels via SerpAPI
+- Google Places API (food + attractions)
+- Ticketmaster API (events)
+- OpenRouteService (maps + routing)
+- Open-Meteo (weather)
+- Numbeo (safety data)
 
 ---
 
 # Challenges We Faced
 
-### Orchestrator Design
-Managing multiple asynchronous agents while maintaining consistent data schemas and avoiding race conditions required careful orchestration logic.
+### Parallel Agent Orchestration
+Managing multiple asynchronous agents while maintaining consistent data schemas and avoiding race conditions required careful orchestration logic with `Promise.allSettled` to ensure partial failures don't block the full response.
 
-### Data Normalization
-Each external API returned data in different formats. We implemented normalization layers so that agents produce consistent structures suitable for LLM processing.
+### LLM Token Efficiency
+Passing raw API responses directly into Gemini caused bloated prompts and slower responses. We implemented a **compact activity representation** — stripping fields unused by the LLM (coordinates, photos, addresses) — reducing prompt size and improving generation speed significantly.
 
-### LLM Summarization Performance
-Passing large JSON payloads into the LLM caused high CPU usage and token overflow. We optimized:
+### Payload Optimization
+The `GET /api/trips` list endpoint originally returned full `plannerData` blobs for every saved trip — resulting in extremely large responses. We resolved this by excluding `plannerData` from list queries using MongoDB projection (`.select("-plannerData")`) and fetching it lazily only when a trip is opened.
 
-- Prompt design  
-- Input filtering  
-- Data caching  
+### LangGraph Chat Reliability
+The chat agent runs 2–3 sequential LLM calls per message (intent extraction → modification → validation). We added per-call timeouts and a two-model fallback chain to prevent the assistant from hanging indefinitely on slow or failed API responses.
 
-### Reddit Sentiment Pipeline
-The Reddit insights pipeline required a **Python FastAPI microservice** for scraping and sentiment analysis.
+### Split Deployment Constraints
+Railway's build context was limited to the backend subdirectory, making a monorepo Docker build impossible. We resolved this by splitting into two independent deployments — **Railway for the backend** and **Vercel for the frontend** — with CORS and OAuth redirect URIs configured accordingly.
 
-Integrating this with the **Node.js backend** required managing subprocess communication, rate limits, and reliable sentiment scoring.
-
-### Frontend Synchronization
-Ensuring that the React frontend remained synchronized with orchestrator outputs while maintaining clean state management required careful API design and UI architecture.
+### Case-Sensitive Imports on Linux
+Import paths that worked on Windows (case-insensitive filesystem) failed on Railway's Linux containers. All import paths were audited and corrected to match exact filenames.
 
 ---
 
 # Future Improvements
 
-- Add **LangGraph-based orchestration for agent execution graphs**
-- Improve recommendation quality using **user preference learning**
-- Add **real-time itinerary adjustments**
-- Integrate **flight APIs**
-- Enhance **map-based visual itinerary exploration**
+- Streaming LLM responses for the chat assistant to reduce perceived latency
+- User preference learning across multiple trips
+- Real-time flight price tracking and alerts
+- Collaborative trip planning for groups
+- Mobile app
