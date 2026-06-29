@@ -3,14 +3,18 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
-import path from "path";
-import { fileURLToPath } from "url";
 // Initialize express app instance
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.CORS_ORIGIN,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [process.env.CORS_ORIGIN, "http://localhost:5174"],
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -73,18 +77,6 @@ app.use("/api", (req, res) => {
 
 // Serve calendar_files for direct download
 app.use("/calendar_files", express.static("calendar_files"));
-
-// Serve frontend
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Serve the frontend's built files
-app.use(express.static(path.join(__dirname, "../../trailhead-frontend/dist")));
-
-// Handle React router routes
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "../../trailhead-frontend/dist/index.html"));
-});
 
 // Export the app to be used in server.js
 export default app;
