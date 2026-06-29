@@ -1,6 +1,6 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY . .
+COPY trailhead-backend/ .
 RUN npm install --omit=dev
 EXPOSE 5000
 CMD ["node", "src/server.js"]
