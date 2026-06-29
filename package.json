@@ -1,0 +1,9 @@
+{
+  "name": "trailhead",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd trailhead-frontend && npm install && npm run build && cd ../trailhead-backend && npm install",
+    "start": "node trailhead-backend/src/server.js"
+  }
+}

@@ -1,7 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd trailhead-frontend && npm install && npm run build && cd ../trailhead-backend && npm install"
+buildCommand = "npm run build"
 
 [deploy]
-startCommand = "node trailhead-backend/src/server.js"
+startCommand = "npm start"
 restartPolicyType = "on_failure"
