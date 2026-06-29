@@ -1,6 +1,2 @@
-trailhead-frontend/node_modules
-trailhead-backend/node_modules
-trailhead-frontend/dist
-trailhead-backend/venv
-load-tests
 .git
+trailhead-backend/venv
