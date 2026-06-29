@@ -115,11 +115,13 @@ export const googleCallback = (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, data) => {
     if (err || !data) {
       console.error("Google OAuth Error:", err);
-      return res.redirect("http://localhost:5173/login?error=google_failed");
+      const failUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`;
+      return res.redirect(failUrl);
     }
 
     const { token, user } = data;
-    const redirectUrl = `http://localhost:5173/oauth-success?token=${token}&username=${encodeURIComponent(
+    const base = process.env.FRONTEND_URL || "http://localhost:5173";
+    const redirectUrl = `${base}/oauth-success?token=${token}&username=${encodeURIComponent(
       user.username
     )}`;
 
