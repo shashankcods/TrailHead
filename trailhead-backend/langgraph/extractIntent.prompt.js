@@ -62,6 +62,8 @@ Schema:
 
     "targetActivityId": null,
 
+    "targetActivityTitle": null,
+
     "replacementStyle": null,
 
     "budgetPreference": null
@@ -113,7 +115,7 @@ User:
 Output:
 {
   "action": "remove_activity",
-  "entities": { "day": 3, "targetActivityId": "attr_456", "replacementStyle": null },
+  "entities": { "day": 3, "targetActivityId": "attr_456", "targetActivityTitle": "museum", "replacementStyle": null },
   "confidence": 0.93,
   "reasoning": "User wants to remove the museum activity"
 }

@@ -135,7 +135,10 @@ export const modifyItineraryNode =
             itinerary,
 
             targetActivityId:
-              intent.entities.targetActivityId
+              intent.entities.targetActivityId,
+
+            targetActivityTitle:
+              intent.entities.targetActivityTitle
         });
 
         break;

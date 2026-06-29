@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -34,9 +34,20 @@ const DetailedItineraryPage: React.FC = () => {
   const [savedTripId, setSavedTripId] = useState<string | null>(initialSavedTripId ?? null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const undoSnapshotRef = useRef<PlannerData | null>(null);
+  const plannerDataRef = useRef<PlannerData | undefined>(plannerData);
+  const savedTripIdRef = useRef<string | null>(initialSavedTripId ?? null);
+  const accessTokenRef = useRef<string | null | undefined>(accessToken);
+
+  useEffect(() => { plannerDataRef.current = plannerData; }, [plannerData]);
+  useEffect(() => { savedTripIdRef.current = savedTripId; }, [savedTripId]);
+  useEffect(() => { accessTokenRef.current = accessToken; }, [accessToken]);
 
   const handleItineraryReplaced = useCallback(
     async (newItinerary: PlannerItinerary | PlannerItineraryDay[]) => {
+      const currentPlannerData = plannerDataRef.current;
+      const currentSavedTripId = savedTripIdRef.current;
+      const currentAccessToken = accessTokenRef.current;
+
       setPlannerData((prev) => {
         if (!prev) return prev;
         undoSnapshotRef.current = prev;
@@ -44,22 +55,22 @@ const DetailedItineraryPage: React.FC = () => {
         return { ...prev, itinerary: newItinerary };
       });
 
-      if (savedTripId && accessToken && plannerData) {
-        const updated = { ...plannerData, itinerary: newItinerary };
+      if (currentSavedTripId && currentAccessToken && currentPlannerData) {
+        const updated = { ...currentPlannerData, itinerary: newItinerary };
         try {
-          await updateTrip(accessToken, savedTripId, {
+          await updateTrip(currentAccessToken, currentSavedTripId, {
             plannerData: updated,
-            title: `${plannerData.trip?.source || "Trip"} → ${plannerData.trip?.destination || "Destination"}`,
+            title: `${currentPlannerData.trip?.source || "Trip"} → ${currentPlannerData.trip?.destination || "Destination"}`,
           });
         } catch (err) {
           console.error("[auto-save] Failed to update trip after chat edit:", err);
           setIsSaved(false);
         }
-      } else if (!savedTripId) {
+      } else if (!currentSavedTripId) {
         setIsSaved(false);
       }
     },
-    [savedTripId, accessToken, plannerData]
+    []
   );
 
   const handleUndo = useCallback(() => {

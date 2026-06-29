@@ -1,23 +1,14 @@
-export const removeActivity = ({
-
-  itinerary,
-
-  targetActivityId
-}) => {
-
+export const removeActivity = ({ itinerary, targetActivityId, targetActivityTitle }) => {
   itinerary.days.forEach((day) => {
-
-    day.activities =
-      day.activities.filter(
-        (a) => {
-
-          return (
-            a.activityId !== targetActivityId &&
-            a.id !== targetActivityId
-          );
-        }
-      );
+    day.activities = day.activities.filter((a) => {
+      const idMatch =
+        targetActivityId &&
+        (a.activityId === targetActivityId || a.id === targetActivityId);
+      const titleMatch =
+        targetActivityTitle &&
+        (a.title ?? a.name ?? "").toLowerCase().includes(targetActivityTitle.toLowerCase());
+      return !idMatch && !titleMatch;
+    });
   });
-
   return itinerary;
 };
