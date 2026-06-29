@@ -2,6 +2,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY . .
+RUN ls -la /app
 RUN cd trailhead-frontend && npm install && npm run build
 RUN cd trailhead-backend && npm install --omit=dev
 

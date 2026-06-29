@@ -1,5 +1,11 @@
 import type { PlannerActivity, PlannerData, PlannerItineraryDay } from "@/types/planner";
-import type { ItineraryAction } from "@/types/chat";
+
+export type ItineraryAction =
+  | { type: "ANSWER_ONLY" }
+  | { type: "REMOVE_ACTIVITY"; payload: { dayNumber?: number; fromDayNumber?: number; activityId?: string; activityTitle?: string } }
+  | { type: "ADD_ACTIVITY"; payload: { dayNumber: number; activity: PlannerActivity } }
+  | { type: "MOVE_ACTIVITY"; payload: { fromDayNumber: number; toDayNumber: number; timeLabel?: string; activityId?: string; activityTitle?: string } }
+  | { type: "UPDATE_ACTIVITY"; payload: { dayNumber?: number; updates: Partial<PlannerActivity>; activityId?: string; activityTitle?: string } };
 
 type UnknownRecord = Record<string, unknown>;
 
