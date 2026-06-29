@@ -37,20 +37,19 @@ const DetailedItineraryPage: React.FC = () => {
 
   const handleItineraryReplaced = useCallback(
     async (newItinerary: PlannerItinerary | PlannerItineraryDay[]) => {
-      let updated: PlannerData | undefined;
       setPlannerData((prev) => {
         if (!prev) return prev;
         undoSnapshotRef.current = prev;
         setCanUndo(true);
-        updated = { ...prev, itinerary: newItinerary };
-        return updated;
+        return { ...prev, itinerary: newItinerary };
       });
 
-      if (savedTripId && accessToken && updated) {
+      if (savedTripId && accessToken && plannerData) {
+        const updated = { ...plannerData, itinerary: newItinerary };
         try {
           await updateTrip(accessToken, savedTripId, {
             plannerData: updated,
-            title: `${updated.trip?.source || "Trip"} → ${updated.trip?.destination || "Destination"}`,
+            title: `${plannerData.trip?.source || "Trip"} → ${plannerData.trip?.destination || "Destination"}`,
           });
         } catch {
           setIsSaved(false);
@@ -59,7 +58,7 @@ const DetailedItineraryPage: React.FC = () => {
         setIsSaved(false);
       }
     },
-    [savedTripId, accessToken]
+    [savedTripId, accessToken, plannerData]
   );
 
   const handleUndo = useCallback(() => {
