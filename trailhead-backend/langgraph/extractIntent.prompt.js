@@ -80,20 +80,42 @@ User:
 Output:
 {
   "action": "replace_activity",
-
-  "entities": {
-
-    "day": 1,
-
-    "targetActivityId": "attr_123",
-
-    "replacementStyle": "fun"
-  },
-
+  "entities": { "day": 1, "targetActivityId": "attr_123", "replacementStyle": "fun" },
   "confidence": 0.92,
+  "reasoning": "User wants a more exciting replacement for the museum"
+}
 
-  "reasoning":
-    "User wants a more exciting replacement for the museum"
+User:
+"add nightlife on day 2"
+
+Output:
+{
+  "action": "add_nightlife",
+  "entities": { "day": 2, "targetActivityId": null, "replacementStyle": null },
+  "confidence": 0.95,
+  "reasoning": "User wants nightlife added to day 2"
+}
+
+User:
+"add a restaurant on day 1"
+
+Output:
+{
+  "action": "add_food",
+  "entities": { "day": 1, "targetActivityId": null, "replacementStyle": null },
+  "confidence": 0.95,
+  "reasoning": "User wants a food option added to day 1"
+}
+
+User:
+"remove the museum from day 3"
+
+Output:
+{
+  "action": "remove_activity",
+  "entities": { "day": 3, "targetActivityId": "attr_456", "replacementStyle": null },
+  "confidence": 0.93,
+  "reasoning": "User wants to remove the museum activity"
 }
 
 `;

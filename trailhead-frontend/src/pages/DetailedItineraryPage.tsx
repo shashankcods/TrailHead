@@ -51,10 +51,11 @@ const DetailedItineraryPage: React.FC = () => {
             plannerData: updated,
             title: `${plannerData.trip?.source || "Trip"} → ${plannerData.trip?.destination || "Destination"}`,
           });
-        } catch {
+        } catch (err) {
+          console.error("[auto-save] Failed to update trip after chat edit:", err);
           setIsSaved(false);
         }
-      } else {
+      } else if (!savedTripId) {
         setIsSaved(false);
       }
     },
