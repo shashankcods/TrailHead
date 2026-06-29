@@ -108,7 +108,7 @@ const TripsPage: React.FC = () => {
                 onClick={() => navigate("/main")}
                 className="inline-block py-3 px-6 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold border border-black dark:border-white hover:scale-[1.02] transition"
               >
-                Plan Your Trip
+                Plan New Trip
               </button>
             </div>
           ) : (

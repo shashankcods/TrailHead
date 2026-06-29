@@ -142,7 +142,7 @@ const DetailedItineraryPage: React.FC = () => {
                   to="/main"
                   className="inline-block py-3 px-6 rounded-xl border border-black/25 dark:border-white/30 bg-white dark:bg-black text-black dark:text-white font-bold"
                 >
-                  Plan Your Trip
+                  Plan New Trip
                 </Link>
               </div>
             </div>

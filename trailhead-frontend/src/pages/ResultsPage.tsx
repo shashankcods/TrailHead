@@ -48,13 +48,13 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ selectedCurrency }) => {
               <div className="th-soft-card p-8 text-center max-w-md">
                 <h2 className="th-title mb-2">Nothing is planned yet</h2>
                 <p className="th-subtitle mb-6">
-                  Plan a trip from the Plan Your Trip page to view results here.
+                  Plan a trip from the Plan New Trip page to view results here.
                 </p>
                 <Link
                   to="/main"
                   className="inline-block py-3 px-8 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold border border-black dark:border-white hover:scale-[1.02] transition"
                 >
-                  Plan Your Trip
+                  Plan New Trip
                 </Link>
               </div>
             </main>

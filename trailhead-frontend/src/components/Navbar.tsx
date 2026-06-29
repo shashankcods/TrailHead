@@ -105,7 +105,7 @@ const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => 
                 }`
               }
             >
-              Plan Your Trip
+              Plan New Trip
             </NavLink>
           </div>
         )}
