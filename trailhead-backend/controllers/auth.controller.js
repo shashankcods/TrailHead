@@ -42,6 +42,13 @@ export const registerUser = async (req, res) => {
   }
 };
 
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -50,7 +57,9 @@ export const loginUser = async (req, res) => {
     }
 
     const data = await loginUserService(email, password);
-    res.status(200).json(data);
+    res.cookie("refreshToken", data.refreshToken, REFRESH_COOKIE_OPTIONS);
+    const { refreshToken: _rt, ...responseData } = data;
+    res.status(200).json(responseData);
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
@@ -60,6 +69,7 @@ export const logoutUser = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?._id;
     const data = await logoutUserService(userId);
+    res.clearCookie("refreshToken", REFRESH_COOKIE_OPTIONS);
     res.status(200).json(data);
   } catch (error) {
     const status = error.message === "User not found" ? 404 : 400;
@@ -69,9 +79,11 @@ export const logoutUser = async (req, res) => {
 
 export const refreshAccessToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies?.refreshToken;
     const data = await refreshAccessTokenService(refreshToken);
-    res.status(200).json(data);
+    res.cookie("refreshToken", data.refreshToken, REFRESH_COOKIE_OPTIONS);
+    const { refreshToken: _rt, ...responseData } = data;
+    res.status(200).json(responseData);
   } catch (error) {
     const status =
       error.message === "Refresh token is required" ? 400 : 401;

@@ -10,7 +10,6 @@ export interface AuthUser {
 export interface LoginResponse {
   message: string;
   accessToken: string;
-  refreshToken: string;
   token: string;
   user: AuthUser;
 }
@@ -28,7 +27,6 @@ export interface ProfileResponse {
 export interface RefreshResponse {
   message: string;
   accessToken: string;
-  refreshToken: string;
   token: string;
 }
 
@@ -74,6 +72,7 @@ export async function loginUser(
   const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ email, password }),
   });
   return parseResponse<LoginResponse>(res);
@@ -86,17 +85,15 @@ export async function logoutUser(accessToken: string): Promise<{ message: string
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
+    credentials: "include",
   });
   return parseResponse<{ message: string }>(res);
 }
 
-export async function refreshAccessToken(
-  refreshToken: string
-): Promise<RefreshResponse> {
+export async function refreshAccessToken(): Promise<RefreshResponse> {
   const res = await fetch(`${API_BASE}/api/auth/refresh`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
+    credentials: "include",
   });
   return parseResponse<RefreshResponse>(res);
 }
