@@ -92,6 +92,16 @@ export const modifyItineraryController = async (req, res) => {
     });
   } catch (err) {
     console.error("[modifyItinerary] LangGraph error:", err);
+
+    if (err?.message === "RATE_LIMIT") {
+      return res.status(200).json({
+        success: true,
+        itinerary: req.body.itinerary,
+        intent: { action: "unknown" },
+        message: "The AI assistant is temporarily unavailable due to high usage. Please try again in a minute.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: err?.message || "Failed to modify itinerary",

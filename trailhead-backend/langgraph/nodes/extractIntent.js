@@ -24,6 +24,8 @@ export const extractIntentNode =
       "gemini-2.0-flash",
     ];
 
+    let lastError = null;
+
     for (const model of modelsToTry) {
       try {
 
@@ -117,32 +119,24 @@ ${state.userMessage}
         };
 
       } catch (error) {
+        const msg = error.message || "";
+        console.error(`Extract Intent Error with ${model}:`, msg);
 
-        console.error(
-          `Extract Intent Error with ${model}:`,
-          error.message
-        );
-        // Continue to next model if this one fails
+        if (msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")) {
+          lastError = "rate_limit";
+        } else {
+          lastError = lastError || "api_error";
+        }
       }
     }
 
-    // If all models fail
+    // All models failed — throw so controller can return a meaningful message
+    if (lastError === "rate_limit") {
+      throw new Error("RATE_LIMIT");
+    }
+
     return {
-
       ...state,
-
-      intent: {
-
-        action:
-          "unknown",
-
-        day: null,
-
-        targetActivityId:
-          null,
-
-        targetType:
-          null
-      }
+      intent: { action: "unknown", day: null, targetActivityId: null, targetType: null }
     };
 };
