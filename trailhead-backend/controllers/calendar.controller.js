@@ -1,6 +1,6 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
-import ApiResponse from "../utils/ApiResponse.js";
+import ApiError from "../utils/APIError.js";
+import ApiResponse from "../utils/APIResponse.js";
 
 import { generateCalendar } from "../services/calendar.service.js";
 
