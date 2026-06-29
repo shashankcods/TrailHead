@@ -87,7 +87,7 @@ export const modifyItineraryController = async (req, res) => {
       itinerary: enrichedItinerary,
       intent,
       message: couldNotUnderstand
-        ? "Sorry, I couldn't understand that request. Try something like 'remove the museum visit' or 'add nightlife on day 2'."
+        ? "I can only help with trip planning requests. Try something like 'remove the museum visit', 'add nightlife on day 2', or 'summarize this trip'."
         : undefined,
     });
   } catch (err) {

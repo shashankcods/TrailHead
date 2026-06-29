@@ -49,6 +49,7 @@ Rules:
 - Do NOT wrap in markdown
 - Do NOT explain
 - Do NOT say anything before or after JSON
+- If the message is offensive, inappropriate, abusive, or completely unrelated to trip planning, return action "unknown" with confidence 0.0
 
 Schema:
 
