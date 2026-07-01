@@ -1,26 +1,26 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const OAuthSuccess = () => {
   const navigate = useNavigate();
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     const username = params.get("username");
+    const email = params.get("email");
+    const id = params.get("id");
 
-    if (token) {
-      localStorage.setItem("jwt", token);
-      localStorage.setItem("username", username || "");
-
-      // Delay navigation slightly so React Router is ready
-      setTimeout(() => {
-        navigate("/main", { replace: true });
-      }, 100);
-    } else {
+    if (!token || !username || !email || !id) {
       navigate("/", { replace: true });
+      return;
     }
-  }, [navigate]);
+
+    loginWithToken(token, { id, username, email });
+    navigate("/main", { replace: true });
+  }, [navigate, loginWithToken]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen text-black dark:text-white">

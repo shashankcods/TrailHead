@@ -181,6 +181,30 @@ export const getProfileService = async (userId) => {
   return toPublicUser(user);
 };
 
+export const googleLoginService = async ({ googleId, email, username, profilePic }) => {
+  let user = await User.findOne({ googleId });
+
+  if (!user) {
+    user = await User.findOne({ email });
+    if (user) {
+      user.googleId = googleId;
+      user.profilePic = profilePic;
+      await user.save({ validateBeforeSave: false });
+    } else {
+      user = await User.create({
+        username,
+        email,
+        password: "google_oauth",
+        googleId,
+        profilePic,
+      });
+    }
+  }
+
+  const { accessToken, refreshToken } = await issueAndPersistAuthTokens(user);
+  return { accessToken, refreshToken, user: toPublicUser(user) };
+};
+
 export const deleteUserService = async (userId) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");

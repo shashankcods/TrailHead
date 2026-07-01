@@ -6,6 +6,7 @@ import {
   refreshAccessTokenService,
   getProfileService,
   deleteUserService,
+  googleLoginService,
 } from "../services/auth.service.js";
 
 export const registerUser = async (req, res) => {
@@ -126,25 +127,27 @@ export const deleteAccount = async (req, res) => {
 
 export const googleCallback = (req, res, next) => {
   console.log("[Google OAuth] Callback hit — query:", req.query);
-  passport.authenticate("google", { session: false }, (err, data) => {
+  const base = process.env.FRONTEND_URL || "http://localhost:5173";
+
+  passport.authenticate("google", { session: false }, async (err, profileData) => {
     if (err) {
       console.error("[Google OAuth] Passport error:", err?.message ?? err);
-      const failUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`;
-      return res.redirect(failUrl);
+      return res.redirect(`${base}/login?error=google_failed`);
     }
-    if (!data) {
-      console.error("[Google OAuth] No user data returned from strategy");
-      const failUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`;
-      return res.redirect(failUrl);
+    if (!profileData) {
+      console.error("[Google OAuth] No profile data returned from strategy");
+      return res.redirect(`${base}/login?error=google_failed`);
     }
 
-    console.log("[Google OAuth] Success — user:", data.user?.email);
-    const { token, user } = data;
-    const base = process.env.FRONTEND_URL || "http://localhost:5173";
-    const redirectUrl = `${base}/oauth-success?token=${token}&username=${encodeURIComponent(
-      user.username
-    )}`;
-
-    return res.redirect(redirectUrl);
+    try {
+      const { accessToken, refreshToken, user } = await googleLoginService(profileData);
+      console.log("[Google OAuth] Success — user:", user.email);
+      res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+      const redirectUrl = `${base}/oauth-success?token=${accessToken}&username=${encodeURIComponent(user.username)}&email=${encodeURIComponent(user.email)}&id=${user.id}`;
+      return res.redirect(redirectUrl);
+    } catch (serviceErr) {
+      console.error("[Google OAuth] Service error:", serviceErr?.message ?? serviceErr);
+      return res.redirect(`${base}/login?error=google_failed`);
+    }
   })(req, res, next);
 };
