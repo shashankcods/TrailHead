@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -63,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const oauthSessionRef = useRef(false);
 
   const applyAuthSession = useCallback((data: LoginResponse) => {
     const token = data.accessToken || data.token;
@@ -107,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [accessToken, clearAuth]);
 
   const loginWithToken = useCallback((token: string, authUser: AuthUser) => {
+    oauthSessionRef.current = true;
     persistAuth(authUser);
     setAccessToken(token);
     setUser(authUser);
@@ -141,7 +144,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(profile.user);
         setIsAuthenticated(true);
       } catch {
-        clearAuth();
+        if (!oauthSessionRef.current) {
+          clearAuth();
+        }
       } finally {
         setIsLoading(false);
       }
