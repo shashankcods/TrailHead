@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import LoginPopup from "./LoginPopup";
 
 export type Currency = {
   code: string;
@@ -32,6 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -110,6 +112,15 @@ const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => 
           </div>
         )}
 
+        {!isAuthenticated && (
+          <button
+            onClick={() => setIsLoginOpen(true)}
+            className="px-3 py-2 rounded-lg border border-black/25 dark:border-white/30 bg-white dark:bg-black text-[0.92rem] font-semibold tracking-tight text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-200"
+          >
+            Sign In
+          </button>
+        )}
+
         {isAuthenticated && (
           <div className="relative" ref={dropdownRef}>
             <button
@@ -171,6 +182,8 @@ const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => 
           {isDarkMode ? "Light" : "Dark"}
         </button>
       </div>
+
+      <LoginPopup isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </nav>
   );
 };
