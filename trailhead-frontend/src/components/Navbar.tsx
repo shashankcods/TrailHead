@@ -29,7 +29,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -112,7 +112,7 @@ const Navbar: React.FC<NavbarProps> = ({ showPlanAndResultsButtons = true }) => 
           </div>
         )}
 
-        {!isAuthenticated && (
+        {!isLoading && !isAuthenticated && (
           <button
             onClick={() => setIsLoginOpen(true)}
             className="px-3 py-2 rounded-lg border border-black/25 dark:border-white/30 bg-white dark:bg-black text-[0.92rem] font-semibold tracking-tight text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-200"
