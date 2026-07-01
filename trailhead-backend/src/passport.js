@@ -20,6 +20,7 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log("[Google OAuth] Strategy verify — profile id:", profile.id, "email:", profile.emails?.[0]?.value);
         const googleId = profile.id;
         const email = profile.emails?.[0]?.value;
         const username = profile.displayName || email?.split("@")[0];
@@ -63,6 +64,7 @@ passport.use(
 
         return done(null, result);
       } catch (error) {
+        console.error("[Google OAuth] Strategy error:", error.message);
         return done(error, null);
       }
     }

@@ -106,6 +106,7 @@ export const getProfile = async (req, res) => {
 };
 
 export const googleAuth = (req, res, next) => {
+  console.log("[Google OAuth] Initiating Google auth redirect");
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
 };
 
@@ -124,13 +125,20 @@ export const deleteAccount = async (req, res) => {
 };
 
 export const googleCallback = (req, res, next) => {
+  console.log("[Google OAuth] Callback hit — query:", req.query);
   passport.authenticate("google", { session: false }, (err, data) => {
-    if (err || !data) {
-      console.error("Google OAuth Error:", err);
+    if (err) {
+      console.error("[Google OAuth] Passport error:", err?.message ?? err);
+      const failUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`;
+      return res.redirect(failUrl);
+    }
+    if (!data) {
+      console.error("[Google OAuth] No user data returned from strategy");
       const failUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`;
       return res.redirect(failUrl);
     }
 
+    console.log("[Google OAuth] Success — user:", data.user?.email);
     const { token, user } = data;
     const base = process.env.FRONTEND_URL || "http://localhost:5173";
     const redirectUrl = `${base}/oauth-success?token=${token}&username=${encodeURIComponent(
